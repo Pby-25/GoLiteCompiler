@@ -293,8 +293,8 @@ TYPE *stingToTYPE(char *s) {
         t->t_type = t_string;
     } else if (strcmp(s, "boolean") == 0) {
         t->t_type = t_boolean;
-    } else if (strcmp(s, "float") == 0) {
-        t->t_type = t_float;
+    } else if (strcmp(s, "float64") == 0) {
+        t->t_type = t_float64;
     } else {
         t->t_type = t_int;
     }

@@ -23,17 +23,17 @@ void yyerror(const char *s) { fprintf(stderr, "Error: %s\n", s); }
     struct PROGRAM *prog;
 }
 
-%type <exp> exp
-%type <stmts> stmts stmt dcl ifstmt elseifstmts elseifstmt elsestmt  
-%type <prog> start
-%type <type> Type
-%type <type> tINT tFLOAT tBOOLEAN tSTRING
+// %type <exp> exp
+// %type <stmts> stmts stmt dcl ifstmt elseifstmts elseifstmt elsestmt  
+// %type <prog> start
+// %type <type> Type
+// %type <type> tINT tFLOAT64 tBOOLEAN tSTRING
 
-%token <stringval> tSTRINGVAL 
+// %token <stringval> tSTRINGITPVAL tSTRINGRAWVAL 
 %token <intval> tINTVAL
 %token <floatval> tFLOATVAL
 %token <identifier> tIDENTIFIER
-%token tVAR tFLOAT tINT tSTRING tBOOLEAN tIF tELSE tWHILE tREAD tPRINT tTRUE tFALSE
+%token tVAR tFLOAT64 tINT tSTRING tBOOLEAN tIF tELSE tWHILE tREAD tPRINT tTRUE tFALSE
 %token tCOLON tASSIGN tSEMICOLON tLEFTPAREN tRIGHTPAREN tLEFTBRACE tRIGHTBRACE tBANG
 %token tPLUS tMINUS tTIMES tDIV tEQUALS tNOTEQUALS tGREATEREQUALS tLESSEQUALS tGREATER tLESS tAND tOR
 %token tSTRUCT tSELECT tRETURN tRANGE tPACKAGE tMAP tINTERFACE tIMPORT tGOTO tGO tFOR tDEFER tDEFAULT
@@ -41,7 +41,7 @@ void yyerror(const char *s) { fprintf(stderr, "Error: %s\n", s); }
 %token tMOD tBITWISEAND tBITWISEOR tBITWISEXOR tBITCLEAR tLEFTSHIFT tRIGHTSHIFT tPLUSEQUAL
 %token tMINUSEQUAL tTIMESEQUAL tDIVEQUAL tMODEQUAL tPLUSPLUS tMINUSMINUS tANDEQUAL tOREQUAL 
 %token tXOREQUAL tLEFTSHIFTEQUAL tRIGHTSHIFTEQUAL tBITCLEAREQUAL tCOLONEQUAL tDOTDOTDOT tCOMMA
-%token tDOT tLEFTSQUAREBRACKET tRIGHTSQUAREBRACKET tRUNEVAL tSTRINGITPVAL tSTRINGRAWVAL
+%token tDOT tLEFTSQUAREBRACKET tRIGHTSQUAREBRACKET tRUNEVAL tSTRINGITPVAL tSTRINGRAWVAL tFUNC
 
 
 %left tOR
@@ -55,70 +55,126 @@ void yyerror(const char *s) { fprintf(stderr, "Error: %s\n", s); }
 
 %start prog
 %%
-Type: tINT { $$ = $1; }
-    | tFLOAT { $$ = $1; }
-    | tBOOLEAN { $$ = $1; }
-    | tSTRING { $$ = $1; }
+Slices: tLEFTSQUAREBRACKET tRIGHTSQUAREBRACKET
+    | tLEFTSQUAREBRACKET exp tRIGHTSQUAREBRACKET
 ;
 
-prog: start { root=$1; }
+Type: tINT 
+    | tFLOAT64
+    | tBOOLEAN
+    | tSTRING
+    | Slices Type
 ;
 
-start: stmts { $$=makeProgram($1); }
+prog: start
 ;
 
-stmts: { $$ = NULL; }
-    | stmt stmts {  $$ = makeStatememnt_list($1, $2, @1.first_line); }
+start: stmts {printf("start\n");}
 ;
 
-
-dcl: tVAR exp tCOLON Type tSEMICOLON { $$ = makeStatememnt_dcl($2,$4,NULL, @1.first_line); }
-    | tVAR exp tCOLON Type tASSIGN exp tSEMICOLON { $$ = makeStatememnt_dcl($2,$4,$6, @1.first_line); }
+package: tPACKAGE tIDENTIFIER tSEMICOLON{printf("package\n");}
 ;
 
-stmt: tREAD tLEFTPAREN exp tRIGHTPAREN tSEMICOLON { $$=makeStatememnt_read($3, @1.first_line); }
-    | tPRINT tLEFTPAREN exp tRIGHTPAREN tSEMICOLON { $$=makeStatememnt_print($3, @1.first_line); }
-    | exp tASSIGN exp tSEMICOLON { $$=makeStatement_assign($1,$3, @1.first_line); }
-    | tWHILE tLEFTPAREN exp tRIGHTPAREN tLEFTBRACE stmts tRIGHTBRACE {  $$= makeStatememnt_while($3, $6, @1.first_line);}
+import: tIMPORT tSTRINGITPVAL tSEMICOLON{printf("import\n");}
+;
+
+dcl_id_list: {printf("dcl_id_list empty\n");}
+    | tCOMMA exp dcl_id_list {printf("dcl_id_list , exp dcl list\n");}
+;
+
+var_dcl: tVAR var_dcl_details  {printf("var_dcl\n");}
+    | tVAR tLEFTPAREN var_dcl_details_list tRIGHTPAREN tSEMICOLON {printf("var_dcl 1\n");}
+;
+
+var_dcl_details_list:{}
+    | var_dcl_details var_dcl_details_list
+;
+
+var_dcl_details: exp dcl_id_list Type tSEMICOLON{printf("var_dcl_details \n");}
+    | exp dcl_id_list Type tASSIGN exp dcl_id_list tSEMICOLON{printf("var_dcl_details \n");}
+    | exp dcl_id_list Type Type tASSIGN exp dcl_id_list tSEMICOLON{printf("var_dcl_details \n");}
+;
+
+type_dcl: tTYPE type_dcl_details_list
+    | tTYPE tLEFTPAREN type_dcl_details_list tRIGHTPAREN tSEMICOLON
+;
+
+type_dcl_details_list: {}
+    | type_dcl_details type_dcl_details_list
+;
+
+type_dcl_details: exp Type tSEMICOLON{printf("var_dcl_details \n");}
+    | exp tSTRUCT tLEFTBRACE type_dcl_mul_var tRIGHTBRACE tSEMICOLON
+;
+
+type_dcl_mul_var: {}
+    | exp dcl_id_list Type tSEMICOLON type_dcl_mul_var
+;
+
+func_dcl: tFUNC exp tLEFTPAREN func_param tRIGHTPAREN tLEFTBRACE stmt stmts tRIGHTBRACE tSEMICOLON {printf("func\n")}
+;
+
+func_param: {}
+    | exp dcl_id_list Type func_param{printf("short parm\n")}
+    | tCOMMA func_param
+    | exp Type func_param {printf("long parm\n")}
+    | tCOMMA func_param
+;
+
+stmts: {}
+    | stmt stmts {printf("stmts\n");}
+;
+
+stmt: tREAD tLEFTPAREN exp tRIGHTPAREN tSEMICOLON
+    | tPRINT tLEFTPAREN exp tRIGHTPAREN tSEMICOLON
+    | exp tASSIGN exp tSEMICOLON
+    | tWHILE tLEFTPAREN exp tRIGHTPAREN tLEFTBRACE stmts tRIGHTBRACE
     | ifstmt
-    | dcl
+    | var_dcl {printf("stmt var_dcl\n");}
+    | type_dcl {printf("stmt type_dcl\n");}
+    | package
+    | import
+    | func_dcl
+    | tLEFTBRACE stmts tRIGHTBRACE
 ;
 
-elseifstmt: tELSE tIF tLEFTPAREN exp tRIGHTPAREN tLEFTBRACE stmts tRIGHTBRACE { $$= makeStatememnt_elseifstmt($4,$7, @1.first_line);  }
+elseifstmt: tELSE tIF tLEFTPAREN exp tRIGHTPAREN tLEFTBRACE stmts tRIGHTBRACE
 ;
 
-elseifstmts: {$$=NULL;}
-    | elseifstmts elseifstmt {$$ = makeStatememnt_elseifstmt_list($1,$2, @1.first_line);  }
+elseifstmts: {}
+    | elseifstmts elseifstmt
 ;
 
-elsestmt: {$$ = NULL;}
-    | tELSE tLEFTBRACE stmts tRIGHTBRACE { $$=makeStatememnt_else($3, @1.first_line);  }
+elsestmt: {}
+    | tELSE tLEFTBRACE stmts tRIGHTBRACE
 ;
 
-ifstmt: tIF tLEFTPAREN exp tRIGHTPAREN tLEFTBRACE stmts tRIGHTBRACE elseifstmts elsestmt { $$ = makeStatememnt_if($3,$6,$8,$9, @1.first_line);  }
+ifstmt: tIF tLEFTPAREN exp tRIGHTPAREN tLEFTBRACE stmts tRIGHTBRACE elseifstmts elsestmt
 ;
 
-exp: tIDENTIFIER { $$ = makeEXP_ID($1, @1.first_line);  }
-    | tINTVAL { $$ = makeEXP_intLiteral($1, @1.first_line); }
-    | tSTRINGVAL { $$ = makeEXP_StringLiteral($1, @1.first_line); }
-    | tFLOATVAL {$$ = makeEXP_FloatLiteral($1, @1.first_line); }
-    | tTRUE { $$ = makeEXP_BooleanLiteral(1, @1.first_line); }
-    | tFALSE { $$ = makeEXP_BooleanLiteral(0, @1.first_line); }
-    | exp tPLUS exp { $$ = makeEXP_plus($1, $3, @1.first_line);  }
-    | exp tMINUS exp { $$ = makeEXP_minus($1, $3, @1.first_line); }
-    | exp tTIMES exp { $$ = makeEXP_times($1, $3, @1.first_line); }
-    | exp tDIV exp { $$ = makeEXP_div($1, $3, @1.first_line); }
-    | exp tEQUALS exp { $$ = makeEXP_eq($1, $3, @1.first_line); }
-    | exp tNOTEQUALS exp { $$ = makeEXP_neq($1, $3, @1.first_line); }
-    | exp tGREATEREQUALS exp { $$ = makeEXP_geq($1, $3, @1.first_line); }
-    | exp tLESSEQUALS exp { $$ = makeEXP_leq($1, $3, @1.first_line); }
-    | exp tGREATER exp { $$ = makeEXP_greater($1, $3, @1.first_line); }
-    | exp tLESS exp { $$ = makeEXP_less($1, $3, @1.first_line); }
-    | exp tAND exp { $$ = makeEXP_and($1, $3, @1.first_line); }
-    | exp tOR exp { $$ = makeEXP_or($1, $3, @1.first_line); }
-    | tLEFTPAREN exp tRIGHTPAREN { $$ = makeEXP_Paren($2, @1.first_line); }
-    | tBANG exp { $$ = makeEXP_Bang($2, @1.first_line); }
-    | tMINUS exp %prec UMINUS { $$ = makeEXP_Neg($2, @1.first_line); }
+exp: tIDENTIFIER 
+    | tINTVAL
+    | tSTRINGITPVAL 
+    | tFLOATVAL 
+    | tTRUE 
+    | tFALSE
+    | exp tPLUS exp
+    | exp tMINUS exp
+    | exp tTIMES exp
+    | exp tDIV exp
+    | exp tEQUALS exp
+    | exp tNOTEQUALS exp
+    | exp tGREATEREQUALS exp
+    | exp tLESSEQUALS exp
+    | exp tGREATER exp
+    | exp tLESS exp
+    | exp tAND exp
+    | exp tOR exp
+    | tLEFTPAREN exp tRIGHTPAREN
+    | tBANG exp
+    | tMINUS exp %prec UMINUS
+    | tIDENTIFIER Slices
+    | tIDENTIFIER tDOT tIDENTIFIER
 ;
 
 %%

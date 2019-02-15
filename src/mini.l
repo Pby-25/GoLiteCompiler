@@ -33,7 +33,15 @@ STRING_RAW '[^']*'
 
 %%
 
-"//".*
+"//".* {
+    if(NEED_SEMI_CONLON){
+        if(g_tokens){
+            printf("tSEMICOLON\n");
+        }
+        NEED_SEMI_CONLON = 0;
+        return tSEMICOLON;
+    }
+}
 "/*"	BEGIN(BLOCK_COMMENT);
 <BLOCK_COMMENT>"*/"	BEGIN(INITIAL);
 <BLOCK_COMMENT>[^*\n]+
@@ -42,106 +50,121 @@ STRING_RAW '[^']*'
 
 
 [\r\n]+ {
-    if(g_tokens && NEED_SEMI_CONLON){
-        printf("tSEMICOLON\n");
+    if(NEED_SEMI_CONLON){
+        if(g_tokens){
+            printf("tSEMICOLON\n");
+        }
+        NEED_SEMI_CONLON = 0;
         return tSEMICOLON;
     }
 }
-[ \t]+
+
+<<EOF>>  {
+    if(NEED_SEMI_CONLON){
+        if(g_tokens){
+            printf("tSEMICOLON\n");
+        }
+        NEED_SEMI_CONLON = 0;
+        return tSEMICOLON;
+    } else {
+        yyterminate();
+    }
+}
+
+[ \t]+ {}
 
 break       {if (g_tokens) printf("tBREAK\n"); NEED_SEMI_CONLON = 1; return tBREAK; }
-case       {if (g_tokens) printf("tCASE\n"); return tCASE; }
-chan       {if (g_tokens) printf("tCHAN\n"); return tCHAN; }
-const      {if (g_tokens) printf("tCONST\n"); return tCONST; }
+case       {if (g_tokens) printf("tCASE\n"); NEED_SEMI_CONLON = 0; return tCASE; }
+chan       {if (g_tokens) printf("tCHAN\n"); NEED_SEMI_CONLON = 0;return tCHAN; }
+const      {if (g_tokens) printf("tCONST\n"); NEED_SEMI_CONLON = 0;return tCONST; }
 continue   {if (g_tokens) printf("tCONTINUE\n"); NEED_SEMI_CONLON = 1; return tCONTINUE; }
-default    {if (g_tokens) printf("tDEFAULT\n"); return tDEFAULT; }
-defer      {if (g_tokens) printf("tDEFER\n"); return tDEFER; }
+default    {if (g_tokens) printf("tDEFAULT\n"); NEED_SEMI_CONLON = 0;return tDEFAULT; }
+defer      {if (g_tokens) printf("tDEFER\n"); NEED_SEMI_CONLON = 0;return tDEFER; }
 fallthrough {if (g_tokens) printf("tFALLTHROUGH\n"); NEED_SEMI_CONLON = 1; return tFALLTHROUGH;}
-for         {if (g_tokens) printf("tFOR\n"); return tFOR; }
-go          {if (g_tokens) printf("tGO\n"); return tGO; }
-goto        {if (g_tokens) printf("tGOTO\n"); return tGOTO; }
-import      {if (g_tokens) printf("tIMPORT\n"); return tIMPORT; }
-interface   {if (g_tokens) printf("tINTERFACE\n"); return tINTERFACE;}
-map         {if (g_tokens) printf("tMAP\n"); return tMAP; }
-package     {if (g_tokens) printf("tPACKAGE\n"); return tPACKAGE; }
-range       {if (g_tokens) printf("tRANGE\n"); return tRANGE;}
+for         {if (g_tokens) printf("tFOR\n"); NEED_SEMI_CONLON = 0;return tFOR; }
+go          {if (g_tokens) printf("tGO\n"); NEED_SEMI_CONLON = 0;return tGO; }
+goto        {if (g_tokens) printf("tGOTO\n"); NEED_SEMI_CONLON = 0;return tGOTO; }
+import      {if (g_tokens) printf("tIMPORT\n"); NEED_SEMI_CONLON = 0;return tIMPORT; }
+interface   {if (g_tokens) printf("tINTERFACE\n"); NEED_SEMI_CONLON = 0;return tINTERFACE;}
+map         {if (g_tokens) printf("tMAP\n"); NEED_SEMI_CONLON = 0;return tMAP; }
+package     {if (g_tokens) printf("tPACKAGE\n"); NEED_SEMI_CONLON = 0;return tPACKAGE; }
+range       {if (g_tokens) printf("tRANGE\n"); NEED_SEMI_CONLON = 0;return tRANGE;}
 return      {if (g_tokens) printf("tRETURN\n"); NEED_SEMI_CONLON = 1; return tRETURN; }
-select      {if (g_tokens) printf("tSELECT\n"); return tSELECT; }
-struct      {if (g_tokens) printf("tSTRUCT\n"); return tSTRUCT; }
-switch      {if (g_tokens) printf("tSWITCH\n"); return tSWITCH; }
-type        {if (g_tokens) printf("tTYPE\n"); return tTYPE;}
-println      {if (g_tokens) printf("tPRINTLN\n"); return tPRINTLN;}
-append       {if (g_tokens) printf("tAPPEND\n"); return tAPPEND;}
-len          {if (g_tokens) printf("tLEN\n"); return tLEN;}
-cap          {if (g_tokens) printf("tCAP\n"); return tCAP;}
+select      {if (g_tokens) printf("tSELECT\n"); NEED_SEMI_CONLON = 0;return tSELECT; }
+struct      {if (g_tokens) printf("tSTRUCT\n"); NEED_SEMI_CONLON = 0;return tSTRUCT; }
+switch      {if (g_tokens) printf("tSWITCH\n"); NEED_SEMI_CONLON = 0;return tSWITCH; }
+type        {if (g_tokens) printf("tTYPE\n"); NEED_SEMI_CONLON = 0;return tTYPE;}
+println      {if (g_tokens) printf("tPRINTLN\n"); NEED_SEMI_CONLON = 0;return tPRINTLN;}
+append       {if (g_tokens) printf("tAPPEND\n"); NEED_SEMI_CONLON = 0;return tAPPEND;}
+len          {if (g_tokens) printf("tLEN\n"); NEED_SEMI_CONLON = 0;return tLEN;}
+cap          {if (g_tokens) printf("tCAP\n"); NEED_SEMI_CONLON = 0;return tCAP;}
 
-"%"         {if (g_tokens) printf("tMOD\n");return tMOD;}
-"&"         {if (g_tokens) printf("tBITWISEAND\n");return tBITWISEAND;}
-"|"         {if (g_tokens) printf("tBITWISEOR\n");return tBITWISEOR;}
-"^"         {if (g_tokens) printf("tBITWISEXOR\n");return tBITWISEXOR;}
-"&^"         {if (g_tokens) printf("tBITCLEAR\n");return tBITCLEAR;}
+"%"         {if (g_tokens) printf("tMOD\n");NEED_SEMI_CONLON = 0;return tMOD;}
+"&"         {if (g_tokens) printf("tBITWISEAND\n");NEED_SEMI_CONLON = 0;return tBITWISEAND;}
+"|"         {if (g_tokens) printf("tBITWISEOR\n");NEED_SEMI_CONLON = 0;return tBITWISEOR;}
+"^"         {if (g_tokens) printf("tBITWISEXOR\n");NEED_SEMI_CONLON = 0;return tBITWISEXOR;}
+"&^"         {if (g_tokens) printf("tBITCLEAR\n");NEED_SEMI_CONLON = 0;return tBITCLEAR;}
 
-"<<"         {if (g_tokens) printf("tLEFTSHIFT\n");return tLEFTSHIFT;}
-">>"         {if (g_tokens) printf("tRIGHTSHIFT\n");return tRIGHTSHIFT;}
+"<<"         {if (g_tokens) printf("tLEFTSHIFT\n");NEED_SEMI_CONLON = 0;return tLEFTSHIFT;}
+">>"         {if (g_tokens) printf("tRIGHTSHIFT\n");NEED_SEMI_CONLON = 0;return tRIGHTSHIFT;}
 
-"+="         {if (g_tokens) printf("tPLUSEQUAL\n");return tPLUSEQUAL;}
-"-="         {if (g_tokens) printf("tMINUSEQUAL\n");return tMINUSEQUAL;}
-"*="         {if (g_tokens) printf("tTIMESEQUAL\n");return tTIMESEQUAL;}
-"/="         {if (g_tokens) printf("tDIVEQUAL\n");return tDIVEQUAL;}
-"%="         {if (g_tokens) printf("tMODEQUAL\n");return tMODEQUAL;}
+"+="         {if (g_tokens) printf("tPLUSEQUAL\n");NEED_SEMI_CONLON = 0;return tPLUSEQUAL;}
+"-="         {if (g_tokens) printf("tMINUSEQUAL\n");NEED_SEMI_CONLON = 0;return tMINUSEQUAL;}
+"*="         {if (g_tokens) printf("tTIMESEQUAL\n");NEED_SEMI_CONLON = 0;return tTIMESEQUAL;}
+"/="         {if (g_tokens) printf("tDIVEQUAL\n");NEED_SEMI_CONLON = 0;return tDIVEQUAL;}
+"%="         {if (g_tokens) printf("tMODEQUAL\n");NEED_SEMI_CONLON = 0;return tMODEQUAL;}
 
-"++"         {if (g_tokens) printf("tPLUSPLUS\n");NEED_SEMI_CONLON = 1;
-return tPLUSPLUS;}
-"--"         {if (g_tokens) printf("tMINUSMINUS\n");NEED_SEMI_CONLON = 1;
-return tMINUSMINUS;}
+"++"         {if (g_tokens) printf("tPLUSPLUS\n");NEED_SEMI_CONLON = 1;return tPLUSPLUS;}
+"--"         {if (g_tokens) printf("tMINUSMINUS\n");NEED_SEMI_CONLON = 1;return tMINUSMINUS;}
 
-"&="         {if (g_tokens) printf("tANDEQUAL\n");return tANDEQUAL;}
-"|="         {if (g_tokens) printf("tOREQUAL\n");return tOREQUAL;}
-"^="         {if (g_tokens) printf("tXOREQUAL\n");return tXOREQUAL;}
-"<<="         {if (g_tokens) printf("tLEFTSHIFTEQUAL\n");return tLEFTSHIFTEQUAL;}
-">>="         {if (g_tokens) printf("tRIGHTSHIFTEQUAL\n");return tRIGHTSHIFTEQUAL;}
-"&^="         {if (g_tokens) printf("tBITCLEAREQUAL\n");return tBITCLEAREQUAL;}
+"&="         {if (g_tokens) printf("tANDEQUAL\n");NEED_SEMI_CONLON = 0;return tANDEQUAL;}
+"|="         {if (g_tokens) printf("tOREQUAL\n");NEED_SEMI_CONLON = 0;return tOREQUAL;}
+"^="         {if (g_tokens) printf("tXOREQUAL\n");NEED_SEMI_CONLON = 0;return tXOREQUAL;}
+"<<="         {if (g_tokens) printf("tLEFTSHIFTEQUAL\n");NEED_SEMI_CONLON = 0;return tLEFTSHIFTEQUAL;}
+">>="         {if (g_tokens) printf("tRIGHTSHIFTEQUAL\n");NEED_SEMI_CONLON = 0;return tRIGHTSHIFTEQUAL;}
+"&^="         {if (g_tokens) printf("tBITCLEAREQUAL\n");NEED_SEMI_CONLON = 0;return tBITCLEAREQUAL;}
 
-":="         {if (g_tokens) printf("tCOLONEQUAL\n");return tCOLONEQUAL;}
-"..."         {if (g_tokens) printf("tDOTDOTDOT\n");return tDOTDOTDOT;}
-","         {if (g_tokens) printf("tCOMMA\n");return tCOMMA;}
-"."         {if (g_tokens) printf("tDOT\n");return tDOT;}
+":="         {if (g_tokens) printf("tCOLONEQUAL\n");NEED_SEMI_CONLON = 0;return tCOLONEQUAL;}
+"..."         {if (g_tokens) printf("tDOTDOTDOT\n");NEED_SEMI_CONLON = 0;return tDOTDOTDOT;}
+","         {if (g_tokens) printf("tCOMMA\n");NEED_SEMI_CONLON = 0;return tCOMMA;}
+"."         {if (g_tokens) printf("tDOT\n");NEED_SEMI_CONLON = 0;return tDOT;}
 
-var         {if (g_tokens) printf("tVAR\n");return tVAR;}
-float       {yylval.type = stingToTYPE("float"); if (g_tokens) printf("tFLOAT\n");return tFLOAT;}
-int         {yylval.type = stingToTYPE("int"); if (g_tokens) printf("tINT\n");return tINT;}
-string      {yylval.type = stingToTYPE("string"); if (g_tokens) printf("tSTRING\n");return tSTRING;}
-boolean     {yylval.type = stingToTYPE("boolean"); if (g_tokens) printf("tBOOLEAN\n");return tBOOLEAN;}
-if          {if (g_tokens) printf("tIF\n");return tIF;}
-else        {if (g_tokens) printf("tELSE\n");return tELSE;}
-while       {if (g_tokens) printf("tWHILE\n");return tWHILE;}
-read        {if (g_tokens) printf("tREAD\n");return tREAD;}
-print       {if (g_tokens) printf("tPRINT\n");return tPRINT;}
-true        {if (g_tokens) printf("tTRUE\n");return tTRUE;}
-false       {if (g_tokens) printf("tFALSE\n");return tFALSE;}
-:           {if (g_tokens) printf("tCOLON\n");return tCOLON;}
-=           {if (g_tokens) printf("tASSIGN\n");return tASSIGN;}
+func        {if (g_tokens) printf("tFUNC\n"); NEED_SEMI_CONLON = 0;return tFUNC;}
+var         {if (g_tokens) printf("tVAR\n");NEED_SEMI_CONLON = 0;return tVAR;}
+float64       {yylval.type = stingToTYPE("float64"); if (g_tokens) printf("tFLOAT64\n");NEED_SEMI_CONLON = 1;return tFLOAT64;}
+int         {yylval.type = stingToTYPE("int"); if (g_tokens) printf("tINT\n");NEED_SEMI_CONLON = 1;return tINT;}
+string      {yylval.type = stingToTYPE("string"); if (g_tokens) printf("tSTRING\n");NEED_SEMI_CONLON = 1;return tSTRING;}
+boolean     {yylval.type = stingToTYPE("boolean"); if (g_tokens) printf("tBOOLEAN\n");NEED_SEMI_CONLON = 1;return tBOOLEAN;}
+if          {if (g_tokens) printf("tIF\n");NEED_SEMI_CONLON = 0;return tIF;}
+else        {if (g_tokens) printf("tELSE\n");NEED_SEMI_CONLON = 0;return tELSE;}
+while       {if (g_tokens) printf("tWHILE\n");NEED_SEMI_CONLON = 0;return tWHILE;}
+read        {if (g_tokens) printf("tREAD\n");NEED_SEMI_CONLON = 0;return tREAD;}
+print       {if (g_tokens) printf("tPRINT\n");NEED_SEMI_CONLON = 0;return tPRINT;}
+true        {if (g_tokens) printf("tTRUE\n");NEED_SEMI_CONLON = 0;return tTRUE;}
+false       {if (g_tokens) printf("tFALSE\n");NEED_SEMI_CONLON = 0;return tFALSE;}
+:           {if (g_tokens) printf("tCOLON\n");NEED_SEMI_CONLON = 0;return tCOLON;}
+=           {if (g_tokens) printf("tASSIGN\n");NEED_SEMI_CONLON = 0;return tASSIGN;}
 ;           {if (g_tokens) printf("tSEMICOLON\n"); NEED_SEMI_CONLON = 0; return tSEMICOLON;}
 
-"+"         {if (g_tokens) printf("tPLUS\n");return tPLUS;}
-"-"         {if (g_tokens) printf("tMINUS\n");return tMINUS;}
-"*"         {if (g_tokens) printf("tTIMES\n");return tTIMES;}
-"/"         {if (g_tokens) printf("tDIV\n");return tDIV;}
+"+"         {if (g_tokens) printf("tPLUS\n");NEED_SEMI_CONLON = 0;return tPLUS;}
+"-"         {if (g_tokens) printf("tMINUS\n");NEED_SEMI_CONLON = 0;return tMINUS;}
+"*"         {if (g_tokens) printf("tTIMES\n");NEED_SEMI_CONLON = 0;return tTIMES;}
+"/"         {if (g_tokens) printf("tDIV\n");NEED_SEMI_CONLON = 0;return tDIV;}
 
-"=="        {if (g_tokens) printf("tEQUALS\n");return tEQUALS;}
-"!="        {if (g_tokens) printf("tNOTEQUALS\n");return tNOTEQUALS;}
-">="        {if (g_tokens) printf("tGREATEREQUALS\n");return tGREATEREQUALS;}
-"<="        {if (g_tokens) printf("tLESSEQUALS\n");return tLESSEQUALS;}
-">"         {if (g_tokens) printf("tGREATER\n");return tGREATER;}
-"<"         {if (g_tokens) printf("tLESS\n");return tLESS;}
-"&&"        {if (g_tokens) printf("tAND\n");return tAND;}
-"||"        {if (g_tokens) printf("tOR\n");return tOR;}
+"=="        {if (g_tokens) printf("tEQUALS\n");NEED_SEMI_CONLON = 0;return tEQUALS;}
+"!="        {if (g_tokens) printf("tNOTEQUALS\n");NEED_SEMI_CONLON = 0;return tNOTEQUALS;}
+">="        {if (g_tokens) printf("tGREATEREQUALS\n");NEED_SEMI_CONLON = 0;return tGREATEREQUALS;}
+"<="        {if (g_tokens) printf("tLESSEQUALS\n");NEED_SEMI_CONLON = 0;return tLESSEQUALS;}
+">"         {if (g_tokens) printf("tGREATER\n");NEED_SEMI_CONLON = 0;return tGREATER;}
+"<"         {if (g_tokens) printf("tLESS\n");NEED_SEMI_CONLON = 0;return tLESS;}
+"&&"        {if (g_tokens) printf("tAND\n");NEED_SEMI_CONLON = 0;return tAND;}
+"||"        {if (g_tokens) printf("tOR\n");NEED_SEMI_CONLON = 0;return tOR;}
 
-"("         {if (g_tokens) printf("tLEFTPAREN\n");return tLEFTPAREN;}
+"("         {if (g_tokens) printf("tLEFTPAREN\n");NEED_SEMI_CONLON = 0;return tLEFTPAREN;}
 ")"         {if (g_tokens) printf("tRIGHTPAREN\n"); NEED_SEMI_CONLON = 1; return tRIGHTPAREN;}
-"["         {if (g_tokens) printf("tLEFTSQUAREBRACKET\n");return tLEFTSQUAREBRACKET;}
+"["         {if (g_tokens) printf("tLEFTSQUAREBRACKET\n");NEED_SEMI_CONLON = 0;return tLEFTSQUAREBRACKET;}
 "]"         {if (g_tokens) printf("tRIGHTSQUAREBRACKET\n"); NEED_SEMI_CONLON = 1; return tRIGHTSQUAREBRACKET;}
-"{"         {if (g_tokens) printf("tLEFTBRACE\n");return tLEFTBRACE;}
+"{"         {if (g_tokens) printf("tLEFTBRACE\n");NEED_SEMI_CONLON = 0; return tLEFTBRACE;}
 "}"         {if (g_tokens) printf("tRIGHTBRACE\n"); NEED_SEMI_CONLON = 1; return tRIGHTBRACE;}
 
 
@@ -201,6 +224,7 @@ _|([a-zA-Z_][a-zA-Z0-9_]*) {
 
 ! {
     if (g_tokens) printf("tBANG");
+    NEED_SEMI_CONLON = 0;
     return tBANG;
 }
 

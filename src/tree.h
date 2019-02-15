@@ -1,7 +1,7 @@
 #ifndef _treeH
 #define _treeH
 typedef struct TYPE {
-    enum { t_int, t_float, t_boolean, t_string } t_type;
+    enum { t_int, t_float64, t_boolean, t_string } t_type;
     char *string_val;
 } TYPE;
 
