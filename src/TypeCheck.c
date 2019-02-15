@@ -37,9 +37,9 @@ void typeExp(EXP *e) {
             e->type = e->val.binary.lhs->type;
         } else {
             if (e->val.binary.lhs->type->t_type == t_int &&
-                e->val.binary.rhs->type->t_type == t_float) {
+                e->val.binary.rhs->type->t_type == t_float64) {
                 e->type = e->val.binary.rhs->type;
-            } else if (e->val.binary.lhs->type->t_type == t_float &&
+            } else if (e->val.binary.lhs->type->t_type == t_float64 &&
                        e->val.binary.rhs->type->t_type == t_int) {
                 e->type = e->val.binary.lhs->type;
             } else {
@@ -58,9 +58,9 @@ void typeExp(EXP *e) {
             e->type = e->val.binary.lhs->type;
         } else {
             if (e->val.binary.lhs->type->t_type == t_int &&
-                e->val.binary.rhs->type->t_type == t_float) {
+                e->val.binary.rhs->type->t_type == t_float64) {
                 e->type = e->val.binary.rhs->type;
-            } else if (e->val.binary.lhs->type->t_type == t_float &&
+            } else if (e->val.binary.lhs->type->t_type == t_float64 &&
                        e->val.binary.rhs->type->t_type == t_int) {
                 e->type = e->val.binary.lhs->type;
             } else {
@@ -79,9 +79,9 @@ void typeExp(EXP *e) {
             e->type = e->val.binary.lhs->type;
         } else {
             if (e->val.binary.lhs->type->t_type == t_int &&
-                e->val.binary.rhs->type->t_type == t_float) {
+                e->val.binary.rhs->type->t_type == t_float64) {
                 e->type = e->val.binary.rhs->type;
-            } else if (e->val.binary.lhs->type->t_type == t_float &&
+            } else if (e->val.binary.lhs->type->t_type == t_float64 &&
                        e->val.binary.rhs->type->t_type == t_int) {
                 e->type = e->val.binary.lhs->type;
             } else {
@@ -100,9 +100,9 @@ void typeExp(EXP *e) {
             e->type = e->val.binary.lhs->type;
         } else {
             if (e->val.binary.lhs->type->t_type == t_int &&
-                e->val.binary.rhs->type->t_type == t_float) {
+                e->val.binary.rhs->type->t_type == t_float64) {
                 e->type = e->val.binary.rhs->type;
-            } else if (e->val.binary.lhs->type->t_type == t_float &&
+            } else if (e->val.binary.lhs->type->t_type == t_float64 &&
                        e->val.binary.rhs->type->t_type == t_int) {
                 e->type = e->val.binary.lhs->type;
             } else {
@@ -211,7 +211,7 @@ void typeExp(EXP *e) {
         break;
     case k_expressionKindNegExp:
         typeExp(e->exp);
-        if (e->exp->type->t_type == t_int || e->exp->type->t_type == t_float) {
+        if (e->exp->type->t_type == t_int || e->exp->type->t_type == t_float64) {
             e->type = e->exp->type;
         } else {
             errorType("int or float", e->exp->type->string_val, e->lineno);
@@ -237,17 +237,17 @@ int checkSameType(TYPE *t1, TYPE *t2) {
     case t_int:
         if (t2->t_type == t_int)
             return 1;
-        if (t2->t_type == t_float)
+        if (t2->t_type == t_float64)
             return 0;
         if (t2->t_type == t_string)
             return 0;
         if (t2->t_type == t_boolean)
             return 0;
         break;
-    case t_float:
+    case t_float64:
         if (t2->t_type == t_int)
             return 1;
-        if (t2->t_type == t_float)
+        if (t2->t_type == t_float64)
             return 1;
         if (t2->t_type == t_string)
             return 0;
@@ -257,7 +257,7 @@ int checkSameType(TYPE *t1, TYPE *t2) {
     case t_string:
         if (t2->t_type == t_int)
             return 0;
-        if (t2->t_type == t_float)
+        if (t2->t_type == t_float64)
             return 0;
         if (t2->t_type == t_string)
             return 1;
@@ -267,7 +267,7 @@ int checkSameType(TYPE *t1, TYPE *t2) {
     case t_boolean:
         if (t2->t_type == t_int)
             return 0;
-        if (t2->t_type == t_float)
+        if (t2->t_type == t_float64)
             return 0;
         if (t2->t_type == t_string)
             return 0;

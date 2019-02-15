@@ -164,7 +164,7 @@ void codeGenStatement(STATEMENT *r, int indentation) {
             printf("scanf(\"%%d\", &%s);\n",
                    r->val.read.identifier->val.id_string);
             break;
-        case t_float:
+        case t_float64:
             printf("scanf(\"%%f\", &%s);\n",
                    r->val.read.identifier->val.id_string);
             break;
@@ -199,7 +199,7 @@ void codeGenStatement(STATEMENT *r, int indentation) {
             codeGenExp(r->val.print.exp);
             printf(");\n");
             break;
-        case t_float:
+        case t_float64:
             printf("printf(\"%%f\", ");
             codeGenExp(r->val.print.exp);
             printf(");\n");
@@ -272,7 +272,7 @@ void codeGenStatement(STATEMENT *r, int indentation) {
             } else if (r->val.dcl.type->t_type == t_boolean) {
                 printf("%s %s = false;\n", "bool",
                        r->val.dcl.identifier->val.id_string);
-            } else if (r->val.dcl.type->t_type == t_float) {
+            } else if (r->val.dcl.type->t_type == t_float64) {
                 printf("%s %s = 0.0;\n", r->val.dcl.type->string_val,
                        r->val.dcl.identifier->val.id_string);
             } else {
