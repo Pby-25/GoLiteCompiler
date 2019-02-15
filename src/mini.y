@@ -69,30 +69,30 @@ Type: tINT
 prog: start
 ;
 
-start: stmts {printf("start\n");}
+start: stmts
 ;
 
-package: tPACKAGE tIDENTIFIER tSEMICOLON{printf("package\n");}
+package: tPACKAGE tIDENTIFIER tSEMICOLON 
 ;
 
-import: tIMPORT tSTRINGITPVAL tSEMICOLON{printf("import\n");}
+import: tIMPORT tSTRINGITPVAL tSEMICOLON 
 ;
 
-dcl_id_list: {printf("dcl_id_list empty\n");}
-    | tCOMMA exp dcl_id_list {printf("dcl_id_list , exp dcl list\n");}
+dcl_id_list: { }
+    | tCOMMA exp dcl_id_list 
 ;
 
-var_dcl: tVAR var_dcl_details  {printf("var_dcl\n");}
-    | tVAR tLEFTPAREN var_dcl_details_list tRIGHTPAREN tSEMICOLON {printf("var_dcl 1\n");}
+var_dcl: tVAR var_dcl_details   
+    | tVAR tLEFTPAREN var_dcl_details_list tRIGHTPAREN tSEMICOLON 
 ;
 
 var_dcl_details_list:{}
     | var_dcl_details var_dcl_details_list
 ;
 
-var_dcl_details: exp dcl_id_list Type tSEMICOLON{printf("var_dcl_details \n");}
-    | exp dcl_id_list Type tASSIGN exp dcl_id_list tSEMICOLON{printf("var_dcl_details \n");}
-    | exp dcl_id_list Type Type tASSIGN exp dcl_id_list tSEMICOLON{printf("var_dcl_details \n");}
+var_dcl_details: exp dcl_id_list Type tSEMICOLON 
+    | exp dcl_id_list Type tASSIGN exp dcl_id_list tSEMICOLON 
+    | exp dcl_id_list tASSIGN exp dcl_id_list tSEMICOLON 
 ;
 
 type_dcl: tTYPE type_dcl_details_list
@@ -103,7 +103,7 @@ type_dcl_details_list: {}
     | type_dcl_details type_dcl_details_list
 ;
 
-type_dcl_details: exp Type tSEMICOLON{printf("var_dcl_details \n");}
+type_dcl_details: exp Type tSEMICOLON 
     | exp tSTRUCT tLEFTBRACE type_dcl_mul_var tRIGHTBRACE tSEMICOLON
 ;
 
@@ -111,18 +111,18 @@ type_dcl_mul_var: {}
     | exp dcl_id_list Type tSEMICOLON type_dcl_mul_var
 ;
 
-func_dcl: tFUNC exp tLEFTPAREN func_param tRIGHTPAREN tLEFTBRACE stmt stmts tRIGHTBRACE tSEMICOLON {printf("func\n")}
+func_dcl: tFUNC exp tLEFTPAREN func_param tRIGHTPAREN tLEFTBRACE stmt stmts tRIGHTBRACE tSEMICOLON  
 ;
 
 func_param: {}
-    | exp dcl_id_list Type func_param{printf("short parm\n")}
+    | exp dcl_id_list Type func_param 
     | tCOMMA func_param
-    | exp Type func_param {printf("long parm\n")}
+    | exp Type func_param 
     | tCOMMA func_param
 ;
 
 stmts: {}
-    | stmt stmts {printf("stmts\n");}
+    | stmt stmts 
 ;
 
 stmt: tREAD tLEFTPAREN exp tRIGHTPAREN tSEMICOLON
@@ -130,8 +130,8 @@ stmt: tREAD tLEFTPAREN exp tRIGHTPAREN tSEMICOLON
     | exp tASSIGN exp tSEMICOLON
     | tWHILE tLEFTPAREN exp tRIGHTPAREN tLEFTBRACE stmts tRIGHTBRACE
     | ifstmt
-    | var_dcl {printf("stmt var_dcl\n");}
-    | type_dcl {printf("stmt type_dcl\n");}
+    | var_dcl
+    | type_dcl
     | package
     | import
     | func_dcl
