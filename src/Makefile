@@ -3,7 +3,7 @@ minic: mini.tab.o lex.yy.o main.o tree.o pretty.o SymbolTable.o TypeCheck.o Code
 lex.yy.c: mini.l mini.tab.h
 	flex mini.l
 mini.tab.c mini.tab.h: mini.y
-	bison -d mini.y
+	bison -d -v mini.y
 tree.o: tree.c tree.h
 	gcc -c -g tree.c
 pretty.o: pretty.c pretty.h

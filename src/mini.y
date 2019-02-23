@@ -33,7 +33,7 @@ void yyerror(const char *s) { fprintf(stderr, "Error: %s\n", s); }
 %token <intval> tINTVAL
 %token <floatval> tFLOATVAL
 %token <identifier> tIDENTIFIER
-%token tVAR tFLOAT64 tINT tSTRING tBOOLEAN tIF tELSE tWHILE tREAD tPRINT tTRUE tFALSE
+%token tVAR tIF tELSE tWHILE tREAD tPRINT tTRUE tFALSE
 %token tCOLON tASSIGN tSEMICOLON tLEFTPAREN tRIGHTPAREN tLEFTBRACE tRIGHTBRACE tBANG
 %token tPLUS tMINUS tTIMES tDIV tEQUALS tNOTEQUALS tGREATEREQUALS tLESSEQUALS tGREATER tLESS tAND tOR
 %token tSTRUCT tSELECT tRETURN tRANGE tPACKAGE tMAP tINTERFACE tIMPORT tGOTO tGO tFOR tDEFER tDEFAULT
@@ -46,30 +46,51 @@ void yyerror(const char *s) { fprintf(stderr, "Error: %s\n", s); }
 
 %left tOR
 %left tAND
-%left tEQUALS tNOTEQUALS
-%left tGREATEREQUALS tLESSEQUALS tGREATER tLESS
-%left tPLUS tMINUS
-%left tTIMES tDIV
-%left tBANG UMINUS
+%left tEQUALS tNOTEQUALS tLESS tLESSEQUALS tGREATER tGREATEREQUALS 
+%left tPLUS tMINUS tBITWISEOR tBITWISEXOR
+%left tTIMES tDIV tMOD tLEFTSHIFT tRIGHTSHIFT tBITWISEAND tBITCLEAR
+%left tBANG UMINUS UPLUS UCARET
 
 
 %start prog
 %%
-Slices: tLEFTSQUAREBRACKET tRIGHTSQUAREBRACKET
-    | tLEFTSQUAREBRACKET exp tRIGHTSQUAREBRACKET
+slices_type: tLEFTSQUAREBRACKET tRIGHTSQUAREBRACKET element_type
 ;
 
-Type: tINT 
-    | tFLOAT64
-    | tBOOLEAN
-    | tSTRING
-    | Slices Type
+element_type: Type
+;
+
+array_type: tLEFTSQUAREBRACKET tINTVAL tRIGHTSQUAREBRACKET element_type
+;
+
+
+Type: type_name
+    | type_lit
+    | tLEFTPAREN Type tRIGHTPAREN
+;
+
+type_name: tIDENTIFIER
+;
+
+type_lit: slices_type
+    | array_type
+    | struct_type
+;
+
+struct_type: tSTRUCT tLEFTBRACE field_dcls tRIGHTBRACE
+;
+
+field_dcls: {}
+    | field_dcls field_dcl 
+;
+
+field_dcl: ident_list Type tSEMICOLON
 ;
 
 prog: start
 ;
 
-start: stmts
+start: package stmts
 ;
 
 package: tPACKAGE tIDENTIFIER tSEMICOLON 
@@ -78,67 +99,117 @@ package: tPACKAGE tIDENTIFIER tSEMICOLON
 import: tIMPORT tSTRINGITPVAL tSEMICOLON 
 ;
 
-dcl_id_list: { }
-    | tCOMMA exp dcl_id_list 
+comma_id_list: {}
+    | tCOMMA exp comma_id_list 
 ;
 
-var_dcl: tVAR var_dcl_details   
-    | tVAR tLEFTPAREN var_dcl_details_list tRIGHTPAREN tSEMICOLON 
+var_dcl: tVAR var_specs
+    | tVAR tLEFTPAREN var_specs tRIGHTPAREN tSEMICOLON 
 ;
 
-var_dcl_details_list:{}
-    | var_dcl_details var_dcl_details_list
+var_specs: {}
+    | var_specs var_spec
 ;
 
-var_dcl_details: exp dcl_id_list Type tSEMICOLON 
-    | exp dcl_id_list Type tASSIGN exp dcl_id_list tSEMICOLON 
-    | exp dcl_id_list tASSIGN exp dcl_id_list tSEMICOLON 
+var_spec: ident_list Type tASSIGN exp_list tSEMICOLON
+    | ident_list Type tSEMICOLON
+    | ident_list tASSIGN exp_list tSEMICOLON
 ;
 
-type_dcl: tTYPE type_dcl_details_list
-    | tTYPE tLEFTPAREN type_dcl_details_list tRIGHTPAREN tSEMICOLON
+type_dcl: tTYPE type_spec
+    | tTYPE tLEFTPAREN type_specs tRIGHTPAREN tSEMICOLON
 ;
 
-type_dcl_details_list: {}
-    | type_dcl_details type_dcl_details_list
+type_specs: {}
+    | type_specs type_spec
 ;
 
-type_dcl_details: exp Type tSEMICOLON 
-    | exp tSTRUCT tLEFTBRACE type_dcl_mul_var tRIGHTBRACE tSEMICOLON
-;
-
-type_dcl_mul_var: {}
-    | exp dcl_id_list Type tSEMICOLON type_dcl_mul_var
+type_spec: tIDENTIFIER tASSIGN Type tSEMICOLON 
+    | tIDENTIFIER Type tSEMICOLON
 ;
 
 func_dcl: tFUNC exp tLEFTPAREN func_param tRIGHTPAREN tLEFTBRACE stmt stmts tRIGHTBRACE tSEMICOLON  
 ;
 
 func_param: {}
-    | exp dcl_id_list Type func_param 
+    | exp comma_id_list Type func_param 
     | tCOMMA func_param
     | exp Type func_param 
-    | tCOMMA func_param
+;
+
+assign_stmt: exp_list assign_op exp_list
+;
+
+assign_op: add_op tASSIGN
+    | mul_op tASSIGN
+    | tASSIGN
 ;
 
 stmts: {}
-    | stmt stmts 
+    | stmts stmt
 ;
 
-stmt: tREAD tLEFTPAREN exp tRIGHTPAREN tSEMICOLON
-    | tPRINT tLEFTPAREN exp tRIGHTPAREN tSEMICOLON
-    | exp tASSIGN exp tSEMICOLON
-    | tWHILE tLEFTPAREN exp tRIGHTPAREN tLEFTBRACE stmts tRIGHTBRACE
-    | ifstmt
-    | var_dcl
-    | type_dcl
-    | package
+dcl_stmt: type_dcl 
+    | var_dcl 
+;
+
+stmt: exp_list tEQUALS exp_list
+    | continue_stmt
+    | break_stmt
     | import
-    | func_dcl
-    | tLEFTBRACE stmts tRIGHTBRACE
+    | block_stmt
+    | func_dcl // TODO, not a stmt
+    | ifstmt
+    | tPRINT tLEFTPAREN exp_list tRIGHTPAREN
+    | tPRINTLN tLEFTPAREN exp_list tRIGHTPAREN
+    | tRETURN 
+    | tRETURN exp
+    | switch_stmt           // To be tested!
+    | simple_stmt
+    | dcl_stmt
+    | for_stmt
+    ;
+
+simple_stmt: {}                                 // empty_stmt
+           | exp_stmt                           // exp_stmt
+           | assign_stmt                    
+           | ident_list tCOLONEQUAL exp_list    // short_decl
+           | exp tPLUSPLUS                      // inc
+           | exp tMINUSMINUS                    // dec
+           ;
+
+exp_stmt: exp
 ;
 
-elseifstmt: tELSE tIF tLEFTPAREN exp tRIGHTPAREN tLEFTBRACE stmts tRIGHTBRACE
+ident_list: ident_list tCOMMA tIDENTIFIER
+          | tIDENTIFIER
+          | {}
+;
+
+exp_list: exp_list tCOMMA exp 
+        | exp 
+        | {}
+;
+
+switch_stmt: tSWITCH switch_simple_stmt switch_exp tLEFTBRACE expr_case_clause tRIGHTBRACE 
+           ;
+
+switch_simple_stmt: simple_stmt tSEMICOLON
+                | {}
+                ;
+
+switch_exp: exp
+          | {}
+          ;
+
+expr_case_clause: expr_switch_case tCOLON stmts
+; 
+
+expr_switch_case: tCASE exp_list 
+                | tDEFAULT
+;
+
+elseifstmt: tELSE tIF exp_list tLEFTBRACE stmts tRIGHTBRACE
 ;
 
 elseifstmts: {}
@@ -149,32 +220,97 @@ elsestmt: {}
     | tELSE tLEFTBRACE stmts tRIGHTBRACE
 ;
 
-ifstmt: tIF tLEFTPAREN exp tRIGHTPAREN tLEFTBRACE stmts tRIGHTBRACE elseifstmts elsestmt
+ifstmt: tIF exp_list tLEFTBRACE stmts tRIGHTBRACE elseifstmts elsestmt
 ;
 
+block_stmt: tLEFTBRACE stmts tRIGHTBRACE
+;
+
+for_stmt: tFOR for_condition block_stmt
+    | tFOR for_clause block_stmt
+;
+
+for_condition: {}
+    | exp
+;
+
+for_clause: for_init_stmt tSEMICOLON for_condition tSEMICOLON for_post_stmt
+;
+
+for_post_stmt: {}
+    | simple_stmt
+;
+
+for_init_stmt: {}
+    | simple_stmt
+;
+
+break_stmt: tBREAK tSEMICOLON
+;
+
+continue_stmt: tCONTINUE tSEMICOLON
+;
+
+
 exp: tIDENTIFIER 
-    | tINTVAL
-    | tSTRINGITPVAL 
-    | tFLOATVAL 
-    | tTRUE 
-    | tFALSE
-    | exp tPLUS exp
-    | exp tMINUS exp
-    | exp tTIMES exp
-    | exp tDIV exp
-    | exp tEQUALS exp
-    | exp tNOTEQUALS exp
-    | exp tGREATEREQUALS exp
-    | exp tLESSEQUALS exp
-    | exp tGREATER exp
-    | exp tLESS exp
-    | exp tAND exp
-    | exp tOR exp
     | tLEFTPAREN exp tRIGHTPAREN
-    | tBANG exp
-    | tMINUS exp %prec UMINUS
-    | tIDENTIFIER Slices
-    | tIDENTIFIER tDOT tIDENTIFIER
+    | literals
+    | unary_op exp 
+    | exp binary_op exp
+    | tAPPEND tLEFTPAREN exp tCOMMA exp tRIGHTPAREN
+    | tLEN tLEFTPAREN exp tRIGHTPAREN
+    | tCAP tLEFTPAREN exp tRIGHTPAREN
+    | func_call
+    | type_cast
+    | tIDENTIFIER tLEFTSQUAREBRACKET tINTVAL tRIGHTSQUAREBRACKET  // array index
+;
+
+literals: tINTVAL
+        | tSTRINGITPVAL 
+        | tFLOATVAL 
+        | tRUNEVAL
+        ;
+
+unary_op: tPLUS %prec UPLUS
+        | tMINUS %prec UMINUS
+        | tBANG 
+        | tBITWISEXOR %prec UCARET
+        ;
+
+binary_op: tOR
+    | tAND
+    | rel_op 
+    | add_op 
+    | mul_op 
+;
+
+rel_op: tEQUALS
+    | tNOTEQUALS
+    | tLESS
+    | tLESSEQUALS
+    | tGREATER
+    | tGREATEREQUALS
+;
+
+add_op: tPLUS
+    | tMINUS
+    | tBITWISEOR
+    | tBITWISEXOR
+;
+
+mul_op: tTIMES
+    | tDIV
+    | tMOD
+    | tLEFTSHIFT 
+    | tRIGHTSHIFT
+    | tBITWISEAND
+    | tBITCLEAR
+;
+
+func_call: exp tLEFTPAREN exp comma_id_list tRIGHTPAREN tSEMICOLON
+;
+
+type_cast: Type tLEFTPAREN exp tRIGHTPAREN
 ;
 
 %%

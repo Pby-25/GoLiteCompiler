@@ -46,8 +46,12 @@ STRING_RAW '[^']*'
 <BLOCK_COMMENT>"*/"	BEGIN(INITIAL);
 <BLOCK_COMMENT>[^*\n]+
 <BLOCK_COMMENT>"*"
-<BLOCK_COMMENT>\n	yylineno++;
-
+<BLOCK_COMMENT>\n	{ 
+        yylineno++;
+        NEED_SEMI_CONLON = 0;
+        return tSEMICOLON;
+    }
+<BLOCK_COMMENT><<EOF>> {fprintf (stderr, "Error: (line %d) block comment not closed\n", yylineno); exit(1);}
 
 [\r\n]+ {
     if(NEED_SEMI_CONLON){
@@ -131,10 +135,6 @@ cap          {if (g_tokens) printf("tCAP\n"); NEED_SEMI_CONLON = 0;return tCAP;}
 
 func        {if (g_tokens) printf("tFUNC\n"); NEED_SEMI_CONLON = 0;return tFUNC;}
 var         {if (g_tokens) printf("tVAR\n");NEED_SEMI_CONLON = 0;return tVAR;}
-float64       {yylval.type = stingToTYPE("float64"); if (g_tokens) printf("tFLOAT64\n");NEED_SEMI_CONLON = 1;return tFLOAT64;}
-int         {yylval.type = stingToTYPE("int"); if (g_tokens) printf("tINT\n");NEED_SEMI_CONLON = 1;return tINT;}
-string      {yylval.type = stingToTYPE("string"); if (g_tokens) printf("tSTRING\n");NEED_SEMI_CONLON = 1;return tSTRING;}
-boolean     {yylval.type = stingToTYPE("boolean"); if (g_tokens) printf("tBOOLEAN\n");NEED_SEMI_CONLON = 1;return tBOOLEAN;}
 if          {if (g_tokens) printf("tIF\n");NEED_SEMI_CONLON = 0;return tIF;}
 else        {if (g_tokens) printf("tELSE\n");NEED_SEMI_CONLON = 0;return tELSE;}
 while       {if (g_tokens) printf("tWHILE\n");NEED_SEMI_CONLON = 0;return tWHILE;}
