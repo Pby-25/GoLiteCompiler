@@ -19,7 +19,7 @@ INT ({INT_DECIMAL}|{INT_OCTAL}|{INT_HEX})
 FLOAT {INT_DECIMAL}?\.{DIGIT}*
 RUNE '(.|\\a|\\b|\\f|\\n|\\r|\\t|\\v|\\\\|\\')'
 STRING_ITP \"([a-zA-Z0-9 ~!@#$%^&*\-+\/`<>=_|';:.,?{}\[\]\(\)]*([\\]["'abfnrtv\\])*)*\"
-STRING_RAW '[^']*'
+STRING_RAW `[^`]*`
 
 
 %option yylineno

@@ -15,4 +15,4 @@ TypeCheck.o: TypeCheck.c TypeCheck.h
 CodeGen.o: CodeGen.c CodeGen.h
 	gcc -c -g CodeGen.c
 clean:
-	rm -f lex.yy.* main.o mini.tab.* minic mini.output *.o
+	rm -f lex.yy.* main.o mini.tab.* minic mini.output *.o y.tab.c y.tab.h
