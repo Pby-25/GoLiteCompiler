@@ -49,7 +49,7 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 %left tEQUALS tNOTEQUALS tLESS tLESSEQUALS tGREATER tGREATEREQUALS 
 %left tPLUS tMINUS tBITWISEOR tBITWISEXOR
 %left tTIMES tDIV tMOD tLEFTSHIFT tRIGHTSHIFT tBITWISEAND tBITCLEAR
-// %precedence UBANG UMINUS UPLUS UCARET UBITWISEAND
+%precedence UBANG UMINUS UPLUS UCARET UBITWISEAND
 
 %glr-parser
 %expect-rr 1
@@ -229,15 +229,17 @@ expr_switch_case: tCASE exp_list
 ;
 
 ifstmt: tIF simple_stmt tSEMICOLON exp block_stmt else_stmts
+    | tIF simple_stmt tSEMICOLON exp block_stmt
     | tIF exp block_stmt else_stmts
+    | tIF exp block_stmt
 ;
 
-else_stmts: {}
-    | tELSE ifstmt
+else_stmts: tELSE ifstmt
     | tELSE block_stmt
 ;
 
 block_stmt: tLEFTBRACE stmts tRIGHTBRACE
+    | tLEFTBRACE tRIGHTBRACE
 ;
 
 
@@ -289,7 +291,7 @@ exp:  exp tOR exp
    // add_ops
     | exp tPLUS exp
     | exp tMINUS exp
-    | exp tBITWISEOR
+    | exp tBITWISEOR exp
     | exp tBITWISEXOR exp
     // mul_op
     | exp tTIMES exp
@@ -307,11 +309,11 @@ unary_exp:  primary_exp
          | unary_op unary_exp  
 ;
 
-unary_op: tPLUS   //%prec UPLUS
-        | tMINUS  //%prec UMINUS
-        | tBANG   //%prec UBANG 
-        | tBITWISEXOR //%prec UCARET
-        | tBITWISEAND //%prec UBITWISEAND
+unary_op: tPLUS   %prec UPLUS
+        | tMINUS  %prec UMINUS
+        | tBANG   %prec UBANG 
+        | tBITWISEXOR %prec UCARET
+        | tBITWISEAND %prec UBITWISEAND
 ;
 
 %%

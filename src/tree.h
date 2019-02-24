@@ -10,6 +10,7 @@ typedef enum {
     k_expressionKindStringLiteral,
     k_expressionKindFloatLiteral,
     k_expressionKindBooleanLiteral,
+    
     k_expressionKindPlusExp,
     k_expressionKindMinusExp,
     k_expressionKindTimesExp,
@@ -24,8 +25,13 @@ typedef enum {
     k_expressionKindOrExp,
     k_expressionKindBangExp,
     k_expressionKindNegExp,
+
+    // New operators 
+
     k_expressionKindIDExp,
-    k_expressionKindParen,
+
+    k_expressionKindParen
+
 } ExpressionKind;
 
 typedef struct EXP EXP;
@@ -70,8 +76,10 @@ EXP *makeEXP_ID(char *identifier, int lineno);
 EXP *makeEXP_Paren(EXP *exp, int lineno);
 
 typedef enum {
+    k_stmt_append,
     k_stmt_read,
     k_stmt_print,
+    k_stmt_println,
     k_stmt_assign,
     k_stmt_if,
     k_stmt_dcl,
@@ -132,7 +140,7 @@ struct STATEMENT {
     STATEMENT *next;
 };
 
-STATEMENT *makeStatememnt_read(EXP *identifier, int lineno);
+// STATEMENT *makeStatememnt_read(EXP *identifier, int lineno);
 STATEMENT *makeStatememnt_print(EXP *exp, int lineno);
 STATEMENT *makeStatement_assign(EXP *identifier, EXP *exp, int lineno);
 STATEMENT *makeStatememnt_while(EXP *exp, STATEMENT *stmts, int lineno);
