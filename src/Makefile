@@ -1,5 +1,5 @@
-minic: mini.tab.o lex.yy.o main.o tree.o pretty.o SymbolTable.o TypeCheck.o CodeGen.o
-	gcc -g CodeGen.o TypeCheck.o SymbolTable.o pretty.o tree.o lex.yy.o mini.tab.o main.o -o minic -ll
+minic: mini.tab.o lex.yy.o main.o tree.o pretty.o SymbolTable.o TypeCheck.o CodeGen.o weed.o
+	gcc -g weed.o CodeGen.o TypeCheck.o SymbolTable.o pretty.o tree.o lex.yy.o mini.tab.o main.o -o minic -ll
 lex.yy.c: mini.l mini.tab.h
 	flex mini.l
 mini.tab.c mini.tab.h: mini.y
@@ -14,5 +14,7 @@ TypeCheck.o: TypeCheck.c TypeCheck.h
 	gcc -c -g TypeCheck.c
 CodeGen.o: CodeGen.c CodeGen.h
 	gcc -c -g CodeGen.c
+weed.o: weed.c weed.h
+	gcc -c -g weed.c
 clean:
 	rm -f lex.yy.* main.o mini.tab.* minic mini.output *.o y.tab.c y.tab.h
