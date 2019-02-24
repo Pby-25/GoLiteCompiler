@@ -33,7 +33,7 @@ void yyerror(const char *s) { fprintf(stderr, "Error: %s\n", s); }
 %token <intval> tINTVAL
 %token <floatval> tFLOATVAL
 %token <identifier> tIDENTIFIER
-%token tVAR tIF tELSE tWHILE tREAD tPRINT tTRUE tFALSE
+%token tVAR tIF tELSE tPRINT
 %token tCOLON tASSIGN tSEMICOLON tLEFTPAREN tRIGHTPAREN tLEFTBRACE tRIGHTBRACE tBANG
 %token tPLUS tMINUS tTIMES tDIV tEQUALS tNOTEQUALS tGREATEREQUALS tLESSEQUALS tGREATER tLESS tAND tOR
 %token tSTRUCT tSELECT tRETURN tRANGE tPACKAGE tMAP tINTERFACE tIMPORT tGOTO tGO tFOR tDEFER tDEFAULT
@@ -49,42 +49,11 @@ void yyerror(const char *s) { fprintf(stderr, "Error: %s\n", s); }
 %left tEQUALS tNOTEQUALS tLESS tLESSEQUALS tGREATER tGREATEREQUALS 
 %left tPLUS tMINUS tBITWISEOR tBITWISEXOR
 %left tTIMES tDIV tMOD tLEFTSHIFT tRIGHTSHIFT tBITWISEAND tBITCLEAR
-%left tBANG UMINUS UPLUS UCARET
+// %left tBANG UMINUS UPLUS UCARET
 
 
 %start prog
 %%
-slices_type: tLEFTSQUAREBRACKET tRIGHTSQUAREBRACKET element_type
-;
-
-element_type: Type
-;
-
-array_type: tLEFTSQUAREBRACKET tINTVAL tRIGHTSQUAREBRACKET element_type
-;
-
-Type: type_name
-    | type_lit
-    | tLEFTPAREN Type tRIGHTPAREN
-;
-
-type_name: tIDENTIFIER
-;
-
-type_lit: slices_type
-    | array_type
-    | struct_type
-;
-
-struct_type: tSTRUCT tLEFTBRACE field_dcls tRIGHTBRACE
-;
-
-field_dcls: {}
-    | field_dcls field_dcl tSEMICOLON
-;
-
-field_dcl: ident_list Type
-;
 
 prog: start
 ;
@@ -105,6 +74,45 @@ package: tPACKAGE tIDENTIFIER tSEMICOLON
 
 import: tIMPORT tSTRINGITPVAL 
 ;
+
+dcl: type_dcl
+    | var_dcl
+;
+
+top_level_dcl: dcl
+    | func_dcl
+;
+
+slices_type: tLEFTSQUAREBRACKET tRIGHTSQUAREBRACKET element_type
+;
+
+element_type: Type
+;
+
+array_type: tLEFTSQUAREBRACKET tINTVAL tRIGHTSQUAREBRACKET element_type
+;
+
+Type: tIDENTIFIER
+    | type_lit
+    | tLEFTPAREN Type tRIGHTPAREN
+;
+
+type_lit: slices_type
+    | array_type
+    | struct_type
+;
+
+struct_type: tSTRUCT tLEFTBRACE field_dcls tRIGHTBRACE
+;
+
+field_dcls: {}
+    | field_dcls field_dcl tSEMICOLON
+;
+
+field_dcl: ident_list Type
+;
+
+
 
 var_dcl: tVAR var_spec
     | tVAR tLEFTPAREN var_specs tRIGHTPAREN 
@@ -162,20 +170,22 @@ param_dcl:  Type {}
 ;
 
 assign_stmt: exp_list assign_op exp_list
-    | ident_list assign_op exp_list
+            | exp tPLUSEQUAL exp   
+            | exp tMINUSEQUAL exp    
+            | exp tOREQUAL exp
+            | exp tXOREQUAL exp   
+            | exp tTIMESEQUAL exp   
+            | exp tDIVEQUAL exp  
+            | exp tMODEQUAL exp  
+            | exp tLEFTSHIFTEQUAL exp 
+            | exp tRIGHTSHIFTEQUAL exp
+            | exp tANDEQUAL exp 
+            | exp tBITCLEAREQUAL exp  
 ;
 
 assign_op: add_op tASSIGN
     | mul_op tASSIGN
     | tASSIGN
-;
-
-dcl: type_dcl
-    | var_dcl
-;
-
-top_level_dcl: dcl
-    | func_dcl
 ;
 
 stmt: exp_list tEQUALS exp_list
@@ -222,11 +232,8 @@ ident_list: tIDENTIFIER
     | ident_list tCOMMA tIDENTIFIER
 ;
 
-switch_stmt: tSWITCH simple_stmt exp_0_1 tLEFTBRACE expr_case_clause tRIGHTBRACE
-;
-
-simpel_stmt_0_1: {}
-    | simple_stmt tSEMICOLON
+switch_stmt: tSWITCH simple_stmt tSEMICOLON exp_0_1 tLEFTBRACE expr_case_clause tRIGHTBRACE
+    | tSWITCH exp_0_1 tLEFTBRACE expr_case_clause tRIGHTBRACE
 ;
 
 exp_0_1: {}
@@ -260,23 +267,12 @@ block_stmt: {}
 ;
 
 
-for_stmt: tFOR for_condition block_stmt
+for_stmt: tFOR block_stmt
+    | tFOR exp block_stmt
     | tFOR for_clause block_stmt
 ;
 
-for_condition: {}
-    | exp
-;
-
-for_clause: for_init_stmt tSEMICOLON for_condition tSEMICOLON for_post_stmt
-;
-
-for_post_stmt: {}
-    | simple_stmt
-;
-
-for_init_stmt: {}
-    | simple_stmt
+for_clause: simple_stmt tSEMICOLON simple_stmt tSEMICOLON simple_stmt
 ;
 
 break_stmt: tBREAK
@@ -285,21 +281,15 @@ break_stmt: tBREAK
 continue_stmt: tCONTINUE
 ;
 
-exp:  exp binary_op exp  
-   | unary_exp 
-;
-
-unary_exp:  primary_exp 
-         |  unary_op unary_exp  
-;
-
-primary_exp: operand
-           | tAPPEND tLEFTPAREN tIDENTIFIER tCOMMA exp tRIGHTPAREN
-           | tLEN tLEFTPAREN exp tRIGHTPAREN
-           | tCAP tLEFTPAREN exp tRIGHTPAREN
-           | primary_exp tLEFTSQUAREBRACKET tINTVAL tRIGHTSQUAREBRACKET 
-           | primary_exp selector
-           | primary_exp tLEFTPAREN exp_list_0_1 tRIGHTPAREN
+primary_exp: tLEFTPAREN exp tRIGHTPAREN 
+            | literals
+            | tIDENTIFIER 
+            | tAPPEND tLEFTPAREN tIDENTIFIER tCOMMA exp tRIGHTPAREN
+            | tLEN tLEFTPAREN exp tRIGHTPAREN
+            | tCAP tLEFTPAREN exp tRIGHTPAREN
+            | primary_exp tLEFTSQUAREBRACKET exp tRIGHTSQUAREBRACKET 
+            | primary_exp selector
+            | primary_exp tLEFTPAREN exp_list_0_1 tRIGHTPAREN
 ;
 
 exp_list_0_1: {}
@@ -309,11 +299,6 @@ exp_list_0_1: {}
 selector: tDOT tIDENTIFIER 
 ;
 
-operand: tLEFTPAREN exp tRIGHTPAREN 
-    | literals
-    | tIDENTIFIER 
-;
-
 literals: tINTVAL
         | tSTRINGITPVAL 
         | tSTRINGRAWVAL
@@ -321,11 +306,18 @@ literals: tINTVAL
         | tRUNEVAL
         ;
 
+exp:  exp binary_op exp  
+   | unary_exp 
+;
 
-unary_op: tPLUS %prec UPLUS
-        | tMINUS %prec UMINUS
+unary_exp:  primary_exp 
+         |  unary_op unary_exp  
+;
+
+unary_op: tPLUS // %prec UPLUS
+        | tMINUS // %prec UMINUS
         | tBANG 
-        | tBITWISEXOR %prec UCARET
+        | tBITWISEXOR // %prec UCARET
         | tBITWISEAND
         ;
 

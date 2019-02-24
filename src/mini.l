@@ -49,7 +49,6 @@ STRING_RAW `[^`]*`
 <BLOCK_COMMENT>\n	{ 
         yylineno++;
         NEED_SEMI_CONLON = 0;
-        return tSEMICOLON;
     }
 <BLOCK_COMMENT><<EOF>> {fprintf (stderr, "Error: (line %d) block comment not closed\n", yylineno); exit(1);}
 
@@ -137,11 +136,7 @@ func        {if (g_tokens) printf("tFUNC\n"); NEED_SEMI_CONLON = 0;return tFUNC;
 var         {if (g_tokens) printf("tVAR\n");NEED_SEMI_CONLON = 0;return tVAR;}
 if          {if (g_tokens) printf("tIF\n");NEED_SEMI_CONLON = 0;return tIF;}
 else        {if (g_tokens) printf("tELSE\n");NEED_SEMI_CONLON = 0;return tELSE;}
-while       {if (g_tokens) printf("tWHILE\n");NEED_SEMI_CONLON = 0;return tWHILE;}
-read        {if (g_tokens) printf("tREAD\n");NEED_SEMI_CONLON = 0;return tREAD;}
 print       {if (g_tokens) printf("tPRINT\n");NEED_SEMI_CONLON = 0;return tPRINT;}
-true        {if (g_tokens) printf("tTRUE\n");NEED_SEMI_CONLON = 0;return tTRUE;}
-false       {if (g_tokens) printf("tFALSE\n");NEED_SEMI_CONLON = 0;return tFALSE;}
 :           {if (g_tokens) printf("tCOLON\n");NEED_SEMI_CONLON = 0;return tCOLON;}
 =           {if (g_tokens) printf("tASSIGN\n");NEED_SEMI_CONLON = 0;return tASSIGN;}
 ;           {if (g_tokens) printf("tSEMICOLON\n"); NEED_SEMI_CONLON = 0; return tSEMICOLON;}
