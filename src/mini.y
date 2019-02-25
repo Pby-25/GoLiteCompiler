@@ -71,10 +71,6 @@ top_level_dcls: {$$ = NULL;}
     | top_level_dcls top_level_dcl tSEMICOLON
 ;
 
-top_level_dcl: dcl
-    | func_dcl
-;
-
 
 package: tPACKAGE tIDENTIFIER tSEMICOLON { $$ = makePackage($2, yylineno);}
 ;
@@ -82,8 +78,11 @@ package: tPACKAGE tIDENTIFIER tSEMICOLON { $$ = makePackage($2, yylineno);}
 import: tIMPORT tSTRINGITPVAL { $$ = makeImport($2, yylineno); }
 ;
 
-dcl: type_dcl
+dcl: type_dcl               
     | var_dcl
+;
+top_level_dcl: dcl
+    | func_dcl
 ;
 
 Type: tIDENTIFIER {$$ = makeTypeId($1, yylineno);}
@@ -174,10 +173,10 @@ stmts: stmts stmt tSEMICOLON;
     | stmt tSEMICOLON;
 ;
 
-print_stmt: tPRINT tLEFTPAREN exp_list tRIGHTPAREN { $$ = makePrintStmt($3, yylineno); }
-    | tPRINT tLEFTPAREN tRIGHTPAREN  { $$ = makePrintStmt(NULL, yylineno); }
-    | tPRINTLN tLEFTPAREN exp_list tRIGHTPAREN { $$ = makePrintlnStmt($3, yylineno); }
-    | tPRINTLN tLEFTPAREN tRIGHTPAREN { $$ = makePrintlnStmt(NULL, yylineno); }
+print_stmt: tPRINT tLEFTPAREN exp_list tRIGHTPAREN          { $$ = makePrintStmt($3, yylineno); }
+    | tPRINT tLEFTPAREN tRIGHTPAREN                         { $$ = makePrintStmt(NULL, yylineno); }
+    | tPRINTLN tLEFTPAREN exp_list tRIGHTPAREN              { $$ = makePrintlnStmt($3, yylineno); }
+    | tPRINTLN tLEFTPAREN tRIGHTPAREN                       { $$ = makePrintlnStmt(NULL, yylineno); }
 ;
 
 short_var_dec: ident_list tCOLONEQUAL exp_list { $$ = makeShortVarDecStmt($1, $3, yylineno); }
@@ -227,13 +226,12 @@ block_stmt: tLEFTBRACE stmts tRIGHTBRACE { $$ = makeBlockStmt($2, yylineno); }
     | tLEFTBRACE tRIGHTBRACE { $$ = makeBlockStmt(NULL, yylineno); }
 ;
 
-
-for_stmt: tFOR block_stmt   { $$ = makeForStmt(, yylineno);}
-    | tFOR exp block_stmt
-    | tFOR for_clause block_stmt
+for_stmt: tFOR block_stmt           { $$ = makeForStmt(NULL, NULL, $2, yylineno); }
+    | tFOR exp block_stmt           { $$ = makeForStmt($2, NULL, $3, yylineno); }
+    | tFOR for_clause block_stmt    { $$ = makeForStmt(NULL $2, $3, yylineno); }
 ;
 
-for_clause: simple_stmt tSEMICOLON simple_stmt tSEMICOLON simple_stmt
+for_clause: simple_stmt tSEMICOLON simple_stmt tSEMICOLON simple_stmt   { $$ = makeForClause($1, $3, $5); }
 ;
 
 break_stmt: tBREAK { $$ = makeBreakStmt(yylineno); }
