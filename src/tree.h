@@ -108,6 +108,7 @@ struct EXP {
         char *stringVal;
         char runeVal;
         int intVal;
+        bool boolVal;
         double floatVal;
         struct {
             EXP *lhs;
@@ -200,7 +201,11 @@ struct CASE_CLAUSE {
     STMT *caseStmt;
     CASE_CLAUSE *next;
 };
-
+TYPE *makeTypeId(char *id, int lineno);
+TYPE *makeTypeSlices(TYPE *type, int lineno);
+TYPE *makeTypeArray(int size, TYPE *type, int lineno);
+TYPE *makeTypeStruct(FIELD_DCL *f, int lineno);
+TYPE *makeTypeT(TYPE *t1, int lineno);
 
 typedef struct FOR_CLAUSE FOR_CLAUSE;
 struct FOR_CLAUSE {
@@ -214,6 +219,15 @@ typedef struct DCL DCL;
 struct DCL {
     FUNCDECL *funcDecl;
     VARDECL *valDecl;
+};
+
+
+typedef struct CASE_CLAUSE CASE_CLAUSE;
+struct CASE_CLAUSE {
+    int lineno;
+    EXP *caseExp;
+    STMT *caseStmt;
+    CASE_CLAUSE *next;
 };
 
 // k
@@ -262,6 +276,14 @@ struct STMT {
         DCL *decStmtVal;
     } val;
     STMT *next;
+};
+
+typedef struct TYPESPEC TYPESPEC;
+struct TYPESPEC {
+    int lineno;
+    char *id;
+    TYPE *type;
+    TYPESPEC *next;
 };
 
 typedef struct TYPESPEC TYPESPEC;
@@ -338,16 +360,16 @@ PARAMS *makeParamsList(PARAMS *p, ID_LIST *id_list, TYPE *type, int lineno);
 typedef struct TOPDECL TOPDECL;
 struct TOPDECL {
     int lineno;
-    enum { varDeclK, typeDeclK, funcDeclK } kind;
+    enum { dcl, funcDeclK } kind;
     union {
-        TYPEDECL *typeDecl;
-        VARDECL *varDecl;
+        // TYPEDECL *typeDecl;
+        // VARDECL *varDecl;
         FUNCDECL *funcDecl;
     } val;
     TOPDECL *next;
 };
 
-TOPDECL *makeTopDecl(TYPEDECL *d, TOPDECL *next, int lineno);
+TOPDECL *makeTopDecl(TYPEDECL *t, TOPDECL *t2, int lineno);
 
 // du
 typedef struct PACKAGE PACKAGE;
@@ -384,7 +406,6 @@ IMPORT *makeImport(char *id, int lineno);
 IMPORT *makeImportList(IMPORT *list, IMPORT *elem);
 
 CASE_CLAUSE *makeCaseClause(CASE_CLAUSE *list, EXP *caseExp, STMT *caseStmt, int lineno);
-
 FOR_CLAUSE *makeForClause(STMT *first, STMT *last, STMT *doStmt, int lineno);
 
 STMT *makeContinueStmt(int lineno);
@@ -404,5 +425,20 @@ STMT *makeDecStmt(EXP *decExp, int lineno);
 STMT *makeShortVarDecStmt(ID_LIST *ids, EXP *exps, int lineno);
 STMT *makeForStmt(EXP *forCond, FOR_CLAUSE *forClause, STMT *forBody, int lineno);
 
+STMT *makeContinueStmt(int lineno);
+STMT *makeBreakStmt(int lineno);
+STMT *makeBlockStmt(STMT *block, int lineno);
+STMT *makeIfStmt(STMT *ifSimpleStmt, EXP *ifCond, STMT *ifBody, STMT *elseStmt, int lineno);
+STMT *makeElseStmt(STMT *elseBody, STMT *ifStmt, int lineno);
+STMT *makePrintStmt(EXP *printExpList, int lineno);
+STMT *makePrintlnStmt(EXP *printlnExpList, int lineno);
+STMT *makeReturnStmt(EXP *returnExp, int lineno);
+STMT *makeSwitchStmt(STMT *switchSimpleStmt, EXP *switchExp, CASE_CLAUSE *switchCases, int lineno);
+STMT *makeEmptyStmt(int yylineno);
+STMT *makeExpStmt(EXP *expStmtVal, int yylineno);
+STMT *makeAssignStmt(EXP *lhs, EXP *rhs, AssignKind assignKind, int lineno);
+STMT *makeIncStmt(EXP *incExp, int lineno);
+STMT *makeDecStmt(EXP *decExp, int lineno);
+STMT *makeShortVarDecStmt(ID_LIST *ids, EXP *exps, int lineno);
 
 #endif

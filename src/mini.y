@@ -67,9 +67,10 @@ imports: {}
     | imports import tSEMICOLON { $$ = makeImportList($1, $2); }
 ;
 
-top_level_dcls: {}
+top_level_dcls: {$$ = NULL;}
     | top_level_dcls top_level_dcl tSEMICOLON
 ;
+
 
 package: tPACKAGE tIDENTIFIER tSEMICOLON { $$ = makePackage($2, yylineno);}
 ;
@@ -80,7 +81,6 @@ import: tIMPORT tSTRINGITPVAL { $$ = makeImport($2, yylineno); }
 dcl: type_dcl               
     | var_dcl
 ;
-
 top_level_dcl: dcl
     | func_dcl
 ;
@@ -225,7 +225,6 @@ else_stmts: tELSE ifstmt { $$ = makeElseStmt(NULL, $2, yylineno); }
 block_stmt: tLEFTBRACE stmts tRIGHTBRACE { $$ = makeBlockStmt($2, yylineno); }
     | tLEFTBRACE tRIGHTBRACE { $$ = makeBlockStmt(NULL, yylineno); }
 ;
-
 
 for_stmt: tFOR block_stmt           { $$ = makeForStmt(NULL, NULL, $2, yylineno); }
     | tFOR exp block_stmt           { $$ = makeForStmt($2, NULL, $3, yylineno); }

@@ -75,8 +75,7 @@ STRING_RAW `[^`]*`
 }
 
 [ \t]+ {}
-
-break       {if (g_tokens) printf("tBREAK\n"); NEED_SEMI_CONLON = 1; return tBREAK; }
+break       {if (g_tokens) printf("tBREAK\n"); NEED_SEMI_CONLON = 1; return tBREAK;}
 case       {if (g_tokens) printf("tCASE\n"); NEED_SEMI_CONLON = 0; return tCASE; }
 chan       {if (g_tokens) printf("tCHAN\n"); NEED_SEMI_CONLON = 0;return tCHAN; }
 const      {if (g_tokens) printf("tCONST\n"); NEED_SEMI_CONLON = 0;return tCONST; }
