@@ -1,5 +1,5 @@
 minic: mini.tab.o lex.yy.o main.o tree.o pretty.o SymbolTable.o TypeCheck.o CodeGen.o weed.o
-	gcc -g weed.o CodeGen.o TypeCheck.o SymbolTable.o pretty.o tree.o lex.yy.o mini.tab.o main.o -o minic -ll
+	gcc -g weed.o CodeGen.o TypeCheck.o SymbolTable.o pretty.o tree.o lex.yy.o mini.tab.o main.o -o minic -lfl
 lex.yy.c: mini.l mini.tab.h
 	flex mini.l
 mini.tab.c mini.tab.h: mini.y

@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
             int r = yyparse();
             if (r == 0) {
                 if (root != NULL) {
-                    prettyProg(root);
+                    // prettyProg(root);
                 } else {
                     printf("root null\n");
                     exit(1);
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
             int r = yyparse();
             if (r == 0) {
                 if (root != NULL) {
-                    makeSymbolTable(root, 1);
+                    // makeSymbolTable(root, 1);
                 } else {
                     printf("root null\n");
                     exit(1);
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
             int r = yyparse();
             if (r == 0) {
                 if (root != NULL) {
-                    typeCheckProgram(root);
+                    // typeCheckProgram(root);
                     printf("OK\n");
                 } else {
                     printf("root null\n");
@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
             int r = yyparse();
             if (r == 0) {
                 if (root != NULL) {
-                    codeGenProgram(root, argv[2]);
+                    // codeGenProgram(root, argv[2]);
                     printf("OK\n");
                 } else {
                     printf("root null\n");

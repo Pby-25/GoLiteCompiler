@@ -16,24 +16,59 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 %union {
     int intval;
     struct TYPE *type;
-    char *identifier;
+    char runeval;
+    char *id;
     char *stringval;
     float floatval;
-    struct EXP *exp;
-    struct STATEMENT *stmts;
-    struct PROGRAM *prog;
+    struct EXP *EXP;
+    struct STMT *STMT;
+    struct PROGRAM *PROGRAM;
+    struct TYPE *TYPE;
+    struct FIELD_DCL *FIELD_DCL;
+    struct ID_LIST *ID_LIST;
+    struct VARDECL *VARDECL;
+    struct PARAMS *PARAMS;
+    struct RESULT *RESULT;
+    struct SIGNATURE *SIGNATURE;
+    struct FUNCDECL *FUNCDECL;
+    struct VARSPEC *VARSPEC;
+    struct IMPORT *IMPORT;
+    struct PACKAGE *PACKAGE;
+    struct TOPDECL *TOPDECL;
+    struct TYPEDECL *TYPEDECL;
+    struct CASE_CLAUSE *CASE_CLAUSE;
+    struct TYPESPEC *TYPESPEC;
+    struct FOR_CLAUSE *FOR_CLAUSE;
+    struct DCL *DCL;
 }
 
-// %type <exp> exp
-// %type <stmts> stmts stmt dcl ifstmt elseifstmts elseifstmt elsestmt  
-// %type <prog> start
-// %type <type> Type
-// %type <type> tINT tFLOAT64 tBOOLEAN tSTRING
+%type <TYPE> Type
+%type <FIELD_DCL> field_dcls field_dcl
+%type <ID_LIST> ident_list
+%type <VARDECL> var_dcl 
+%type <VARSPEC> var_specs var_spec
+%type <PARAMS> params param_ls
+%type <RESULT> result
+%type <SIGNATURE> signature
+%type <FUNCDECL> func_dcl
+%type <PROGRAM> prog start
+%type <EXP> exp unary_exp primary_exp exp_list literals expr_switch_case
+%type <STMT> stmt stmts break_stmt continue_stmt assign_stmt simple_stmt print_stmt short_var_dec switch_stmt ifstmt else_stmts block_stmt for_stmt 
+%type <IMPORT> import imports
+%type <PACKAGE> package
+%type <TOPDECL> top_level_dcl top_level_dcls
+%type <TYPEDECL> type_dcl
+%type <CASE_CLAUSE> expr_case_clause
+%type <TYPESPEC> type_spec type_specs
+%type <FOR_CLAUSE> for_clause
+%type <DCL> dcl
 
-// %token <stringval> tSTRINGITPVAL tSTRINGRAWVAL 
+%token <runeval> tRUNEVAL
+%token <stringval> tSTRINGITPVAL tSTRINGRAWVAL 
 %token <intval> tINTVAL
 %token <floatval> tFLOATVAL
-%token <identifier> tIDENTIFIER
+%token <id> tIDENTIFIER
+
 %token tVAR tIF tELSE tPRINT
 %token tCOLON tASSIGN tSEMICOLON tLEFTPAREN tRIGHTPAREN tLEFTBRACE tRIGHTBRACE tBANG
 %token tPLUS tMINUS tTIMES tDIV tEQUALS tNOTEQUALS tGREATEREQUALS tLESSEQUALS tGREATER tLESS tAND tOR
@@ -42,7 +77,7 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 %token tMOD tBITWISEAND tBITWISEOR tBITWISEXOR tBITCLEAR tLEFTSHIFT tRIGHTSHIFT tPLUSEQUAL
 %token tMINUSEQUAL tTIMESEQUAL tDIVEQUAL tMODEQUAL tPLUSPLUS tMINUSMINUS tANDEQUAL tOREQUAL 
 %token tXOREQUAL tLEFTSHIFTEQUAL tRIGHTSHIFTEQUAL tBITCLEAREQUAL tCOLONEQUAL tDOTDOTDOT tCOMMA
-%token tDOT tLEFTSQUAREBRACKET tRIGHTSQUAREBRACKET tRUNEVAL tSTRINGITPVAL tSTRINGRAWVAL tFUNC
+%token tDOT tLEFTSQUAREBRACKET tRIGHTSQUAREBRACKET tFUNC
 
 %left tOR
 %left tAND
@@ -57,18 +92,18 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 %start prog
 %%
 
-prog: start
+prog: start {root = $1;}
 ;
 
-start: package imports top_level_dcls
+start: package imports top_level_dcls { $$ = makeProgram($1, $2, $3, yylineno); }
 ;
 
-imports: {}
+imports: {$$ = NULL;}
     | imports import tSEMICOLON { $$ = makeImportList($1, $2); }
 ;
 
 top_level_dcls: {$$ = NULL;}
-    | top_level_dcls top_level_dcl tSEMICOLON
+    | top_level_dcls top_level_dcl tSEMICOLON { $$ = makeTopVarDeclList($1, $2, yylineno);}
 ;
 
 
@@ -78,18 +113,19 @@ package: tPACKAGE tIDENTIFIER tSEMICOLON { $$ = makePackage($2, yylineno);}
 import: tIMPORT tSTRINGITPVAL { $$ = makeImport($2, yylineno); }
 ;
 
-dcl: type_dcl               
-    | var_dcl
+dcl: type_dcl      { $$ = makeTypeDcl($1, yylineno); }         
+    | var_dcl      { $$ = makeVarDcl($1, yylineno); }   
 ;
-top_level_dcl: dcl
-    | func_dcl
+
+top_level_dcl: dcl { $$ = makeTopDeclFromDcl($1); }
+    | func_dcl { $$ = makeTopDeclFromFuncDcl($1); }
 ;
 
 Type: tIDENTIFIER {$$ = makeTypeId($1, yylineno);}
     | tLEFTSQUAREBRACKET tRIGHTSQUAREBRACKET Type {$$ = makeTypeSlices($3, yylineno);}
     | tLEFTSQUAREBRACKET tINTVAL tRIGHTSQUAREBRACKET Type {$$ = makeTypeArray($2,$4, yylineno);}
     | tSTRUCT tLEFTBRACE field_dcls tRIGHTBRACE {$$ = makeTypeStruct($3, yylineno);}
-    | tLEFTPAREN Type tRIGHTPAREN {$$ = makeTypeT($1, yylineno);}
+    | tLEFTPAREN Type tRIGHTPAREN {$$ = makeTypeT($2, yylineno);}
 ;
 
 field_dcls: {$$ == NULL;}
@@ -99,8 +135,8 @@ field_dcls: {$$ == NULL;}
 field_dcl: ident_list Type {$$ = makeFieldDcl($1, $2, yylineno);}
 ;
 
-var_dcl: tVAR var_spec {$$ = makeVarDecl($1);}
-    | tVAR tLEFTPAREN var_specs tRIGHTPAREN {$$ = makeVarDecl($3);}
+var_dcl: tVAR var_spec {$$ = makeVarDecl($2, yylineno);}
+    | tVAR tLEFTPAREN var_specs tRIGHTPAREN {$$ = makeVarDecl($3, yylineno);}
 ;
 
 var_specs: {$$ == NULL;}
@@ -134,7 +170,7 @@ result: params {$$ = makeResultP($1, yylineno);}
     | Type {$$ = makeResultType($1, yylineno);}
 ;
 
-params: tLEFTPAREN param_ls tRIGHTPAREN {$$ = $1;}
+params: tLEFTPAREN param_ls tRIGHTPAREN {$$ = $2;}
 ;
 
 param_ls: {$$ == NULL;}
@@ -142,18 +178,18 @@ param_ls: {$$ == NULL;}
     | param_ls tCOMMA ident_list Type {$$ = makeParamsList($1, $3, $4, yylineno);}
 ;
 
-assign_stmt: exp_list tASSIGN exp_list { $$ = makeAssignStmt($1, $2, normal, yylineno); }
-            | exp tPLUSEQUAL exp       { $$ = makeAssignStmt($1, $2, plus, yylineno); }
-            | exp tMINUSEQUAL exp      { $$ = makeAssignStmt($1, $2, minus, yylineno); }
-            | exp tOREQUAL exp         { $$ = makeAssignStmt($1, $2, or, yylineno); }
-            | exp tXOREQUAL exp        { $$ = makeAssignStmt($1, $2, xor, yylineno); }
-            | exp tTIMESEQUAL exp      { $$ = makeAssignStmt($1, $2, mult, yylineno); } 
-            | exp tDIVEQUAL exp        { $$ = makeAssignStmt($1, $2, divide, yylineno); }
-            | exp tMODEQUAL exp        { $$ = makeAssignStmt($1, $2, mod, yylineno); }
-            | exp tLEFTSHIFTEQUAL exp  { $$ = makeAssignStmt($1, $2, leftShift, yylineno); }
-            | exp tRIGHTSHIFTEQUAL exp { $$ = makeAssignStmt($1, $2, rightShift, yylineno); }
-            | exp tANDEQUAL exp        { $$ = makeAssignStmt($1, $2, and, yylineno); }
-            | exp tBITCLEAREQUAL exp   { $$ = makeAssignStmt($1, $2, bitclear, yylineno); }
+assign_stmt: exp_list tASSIGN exp_list { $$ = makeAssignStmt($1, $3, normal, yylineno); }
+            | exp tPLUSEQUAL exp       { $$ = makeAssignStmt($1, $3, plus, yylineno); }
+            | exp tMINUSEQUAL exp      { $$ = makeAssignStmt($1, $3, minus, yylineno); }
+            | exp tOREQUAL exp         { $$ = makeAssignStmt($1, $3, or, yylineno); }
+            | exp tXOREQUAL exp        { $$ = makeAssignStmt($1, $3, xor, yylineno); }
+            | exp tTIMESEQUAL exp      { $$ = makeAssignStmt($1, $3, mult, yylineno); } 
+            | exp tDIVEQUAL exp        { $$ = makeAssignStmt($1, $3, divide, yylineno); }
+            | exp tMODEQUAL exp        { $$ = makeAssignStmt($1, $3, mod, yylineno); }
+            | exp tLEFTSHIFTEQUAL exp  { $$ = makeAssignStmt($1, $3, leftShift, yylineno); }
+            | exp tRIGHTSHIFTEQUAL exp { $$ = makeAssignStmt($1, $3, rightShift, yylineno); }
+            | exp tANDEQUAL exp        { $$ = makeAssignStmt($1, $3, and, yylineno); }
+            | exp tBITCLEAREQUAL exp   { $$ = makeAssignStmt($1, $3, bitclear, yylineno); }
 ;
 
 stmt: continue_stmt { $$ = $1; }
@@ -166,11 +202,11 @@ stmt: continue_stmt { $$ = $1; }
     | switch_stmt   { $$ = $1; }        
     | simple_stmt   { $$ = $1; }
     | for_stmt      { $$ = $1; }
-    | dcl           { $$ = $1; }
+    | dcl           { $$ = makeDclStmt($1, yylineno); }
 ;
 
-stmts: stmts stmt tSEMICOLON;
-    | stmt tSEMICOLON;
+stmts: stmts stmt tSEMICOLON {$$ = makeStmtList($1,$2,yylineno);}
+    | stmt tSEMICOLON {$$ = $1;}
 ;
 
 print_stmt: tPRINT tLEFTPAREN exp_list tRIGHTPAREN          { $$ = makePrintStmt($3, yylineno); }
@@ -190,8 +226,8 @@ simple_stmt: {}                         { $$ = makeEmptyStmt(yylineno); }
            | short_var_dec              { $$ = $1; }
 ;
 
-exp_list: exp 
-    | exp_list tCOMMA exp
+exp_list: exp { $$ = makeExpList(NULL, $1, yylineno);}
+    | exp_list tCOMMA exp { $$ = makeExpList($1, $3, yylineno);}
 ;
 
 ident_list: tIDENTIFIER {$$ = makeIdList(NULL, $1, yylineno);}
@@ -205,14 +241,14 @@ switch_stmt: tSWITCH simple_stmt tSEMICOLON exp tLEFTBRACE expr_case_clause tRIG
 ;
 
 expr_case_clause: { $$ = NULL; }
-    | expr_case_clause expr_switch_case tCOLON stmts { $$ = makeCaseClause($1, $2, $4); }
+    | expr_case_clause expr_switch_case tCOLON stmts { $$ = makeCaseClause($1, $2, $4, yylineno); }
 ; 
 
 expr_switch_case: tCASE exp_list { $$ = $2; }
     | tDEFAULT { $$ = NULL; }
 ;
 
-ifstmt: tIF simple_stmt tSEMICOLON exp block_stmt else_stmts { $$ = makeIfStmt($2, $4, $5, yylineno); }
+ifstmt: tIF simple_stmt tSEMICOLON exp block_stmt else_stmts { $$ = makeIfStmt($2, $4, $5, $6, yylineno); }
     | tIF simple_stmt tSEMICOLON exp block_stmt { $$ = makeIfStmt($2, $4, $5, NULL, yylineno); }
     | tIF exp block_stmt else_stmts { $$ = makeIfStmt(NULL, $2, $3, $4, yylineno); }
     | tIF exp block_stmt { $$ = makeIfStmt(NULL, $2, $3, NULL, yylineno); }
@@ -228,10 +264,10 @@ block_stmt: tLEFTBRACE stmts tRIGHTBRACE { $$ = makeBlockStmt($2, yylineno); }
 
 for_stmt: tFOR block_stmt           { $$ = makeForStmt(NULL, NULL, $2, yylineno); }
     | tFOR exp block_stmt           { $$ = makeForStmt($2, NULL, $3, yylineno); }
-    | tFOR for_clause block_stmt    { $$ = makeForStmt(NULL $2, $3, yylineno); }
+    | tFOR for_clause block_stmt    { $$ = makeForStmt(NULL, $2, $3, yylineno); }
 ;
 
-for_clause: simple_stmt tSEMICOLON simple_stmt tSEMICOLON simple_stmt   { $$ = makeForClause($1, $3, $5); }
+for_clause: simple_stmt tSEMICOLON simple_stmt tSEMICOLON simple_stmt   { $$ = makeForClause($1, $3, $5, yylineno); }
 ;
 
 break_stmt: tBREAK { $$ = makeBreakStmt(yylineno); }
@@ -253,10 +289,10 @@ primary_exp: tLEFTPAREN exp tRIGHTPAREN { $$ = $2; }
 ;
 
 literals: tINTVAL { $$ = makeIntExp($1, yylineno); }
-        | tSTRINGITPVAL { $$ = makeStringItpExp($1 yylineno); }
+        | tSTRINGITPVAL { $$ = makeStringItpExp($1, yylineno); }
         | tSTRINGRAWVAL { $$ = makeStringRawExp($1, yylineno); }
-        | tFLOATVAL { $$ = makeFloat64Expr($1, yylineno); } 
-        | tRUNEVAL { $$ = makeRuneExpr($1, yylineno); }
+        | tFLOATVAL { $$ = makeFloat64Exp($1, yylineno); } 
+        | tRUNEVAL { $$ = makeRuneExp($1, yylineno); }
         ;
 
 exp:  exp tOR exp { $$ = makeBinaryExp(orExpr, $1, $3, yylineno); }

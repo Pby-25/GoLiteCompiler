@@ -3,6 +3,11 @@
 #include <stdbool.h>
 
 typedef enum {
+    typeDcl,
+    varDcl
+} DclKind;
+
+typedef enum {
     normal, 
     plus, 
     minus,
@@ -84,12 +89,64 @@ typedef enum {
     selectorExpr,
     funcExpr,
     castExpr,
-    lenExpr,
-    capExpr
+    expList
 } ExpKind;
 
-// j
+typedef struct FIELD_DCL FIELD_DCL;
+typedef struct TYPE TYPE;
 typedef struct ID_LIST ID_LIST;
+typedef struct EXP EXP;
+typedef struct DCL DCL;
+typedef struct STMT STMT;
+typedef struct TYPESPEC TYPESPEC;
+typedef struct TYPEDECL TYPEDECL;
+typedef struct VARSPEC VARSPEC;
+typedef struct VARDECL VARDECL;
+typedef struct PARAMS PARAMS;
+typedef struct RESULT RESULT;
+typedef struct SIGNATURE SIGNATURE;
+typedef struct FUNCDECL FUNCDECL;
+typedef struct TOPDECL TOPDECL;
+typedef struct PACKAGE PACKAGE;
+typedef struct IMPORT IMPORT;
+typedef struct PROGRAM PROGRAM;
+
+struct FIELD_DCL {
+    ID_LIST *id_list;
+    TYPE *type;
+    FIELD_DCL *next;
+    int lineno;
+};
+FIELD_DCL *makeFieldDcl(ID_LIST *id_list, TYPE *type, int lineno);
+FIELD_DCL *makeFieldDclList(FIELD_DCL *f, FIELD_DCL *f1, int lineno);
+// j
+
+
+struct TYPE {
+    int lineno;
+    char *id;
+    TypeKind kind;
+    struct {
+        TYPE *type;
+    } slices_type;
+    struct {
+        int size;
+        TYPE *type;
+    } array_type;
+    struct {
+        FIELD_DCL *field_dcls;
+    } struct_type;
+
+    TYPE *types;
+};
+TYPE *makeTypeId(char *id, int lineno);
+TYPE *makeTypeSlices(TYPE *type, int lineno);
+TYPE *makeTypeArray(int size, TYPE *type, int lineno);
+TYPE *makeTypeStruct(FIELD_DCL *f, int lineno);
+TYPE *makeTypeT(TYPE *t1, int lineno);
+
+// j
+
 struct ID_LIST {
     int lineno;
     char *id;
@@ -99,7 +156,7 @@ struct ID_LIST {
 ID_LIST *makeIdList(ID_LIST *l, char *id, int lineno);
 
 // du
-typedef struct EXP EXP;
+
 struct EXP {
     int lineno;
     ExpKind kind;
@@ -131,7 +188,7 @@ struct EXP {
         } append;
         struct {
             EXP *exp;
-            int *index;
+            EXP *index;
         } array;
         struct {
             EXP *exp;
@@ -145,7 +202,8 @@ struct EXP {
 EXP *makeExpList();
 EXP *makeBooleanExp(bool boolean, int lineno);
 EXP *makeIdentifierExp(char *identifier, int lineno);
-EXP *makeStringExp(char *stringval, int lineno);
+EXP *makeStringItpExp(char *stringval, int lineno);
+EXP *makeStringRawExp(char *stringval, int lineno);
 EXP *makeRuneExp(char runeval, int lineno);
 EXP *makeIntExp(int intval, int lineno);
 EXP *makeFloat64Exp(double float64val, int lineno);
@@ -160,78 +218,21 @@ EXP *makeSelectorExp(EXP *struct_exp, char *field_name, int lineno);
 EXP *makeLenExp(EXP *exp, int lineno);
 EXP *makeCapExp(EXP *exp, int lineno);
 
-typedef struct FIELD_DCL FIELD_DCL;
-struct FIELD_DCL {
-    ID_LIST *id_list;
-    TYPE *type;
-    FIELD_DCL *next;
-    int lineno;
-};
-FIELD_DCL *makeFieldDcl(ID_LIST *id_list, TYPE *type, int lineno);
-FIELD_DCL *makeFieldDclList(FIELD_DCL *f, FIELD_DCL *f1, int lineno);
-// j
-typedef struct TYPE TYPE;
-struct TYPE {
-    int lineno;
-    char *id;
-    TypeKind kind;
-    struct {
-        TYPE *type;
-    } slices_type;
-    struct {
-        int size;
-        TYPE *type;
-    } array_type;
-    struct {
-        FIELD_DCL *field_dcls;
-    } struct_type;
 
-    TYPE *types;
-};
-TYPE *makeTypeId(char *id, int lineno);
-TYPE *makeTypeSlices(TYPE *type, int lineno);
-TYPE *makeTypeArray(int size, TYPE *type, int lineno);
-TYPE *makeTypeStruct(FIELD_DCL *f, int lineno);
-TYPE *makeTypeT(TYPE *t1, int lineno);
 
-typedef struct CASE_CLAUSE CASE_CLAUSE;
-struct CASE_CLAUSE {
+struct DCL {
     int lineno;
-    EXP *caseExp;
-    STMT *caseStmt;
-    CASE_CLAUSE *next;
+    DclKind kind;
+    union {
+        TYPEDECL *typeDecl;
+        VARDECL *varDecl;
+    } val;
 };
-TYPE *makeTypeId(char *id, int lineno);
-TYPE *makeTypeSlices(TYPE *type, int lineno);
-TYPE *makeTypeArray(int size, TYPE *type, int lineno);
-TYPE *makeTypeStruct(FIELD_DCL *f, int lineno);
-TYPE *makeTypeT(TYPE *t1, int lineno);
 
 typedef struct FOR_CLAUSE FOR_CLAUSE;
-struct FOR_CLAUSE {
-    int lineno;
-    STMT *first;
-    STMT *last;
-    STMT *doStmt;
-};
-
-typedef struct DCL DCL;
-struct DCL {
-    FUNCDECL *funcDecl;
-    VARDECL *valDecl;
-};
-
-
 typedef struct CASE_CLAUSE CASE_CLAUSE;
-struct CASE_CLAUSE {
-    int lineno;
-    EXP *caseExp;
-    STMT *caseStmt;
-    CASE_CLAUSE *next;
-};
 
-// k
-typedef struct STMT STMT;
+
 struct STMT {
     int lineno;
     int isSimpleStmt;
@@ -278,15 +279,22 @@ struct STMT {
     STMT *next;
 };
 
-typedef struct TYPESPEC TYPESPEC;
-struct TYPESPEC {
+
+struct FOR_CLAUSE {
     int lineno;
-    char *id;
-    TYPE *type;
-    TYPESPEC *next;
+    STMT *first;
+    STMT *last;
+    STMT *doStmt;
 };
 
-typedef struct TYPESPEC TYPESPEC;
+struct CASE_CLAUSE {
+    int lineno;
+    EXP *caseExp;
+    STMT *caseStmt;
+    CASE_CLAUSE *next;
+};
+
+
 struct TYPESPEC {
     int lineno;
     char *id;
@@ -295,13 +303,13 @@ struct TYPESPEC {
 };
 
 // K
-typedef struct TYPEDECL TYPEDECL;
+
 struct TYPEDECL {
     int lineno;
     TYPESPEC *typeSpec;
 };
 
-typedef struct VARSPEC VARSPEC;
+
 struct VARSPEC {
     int lineno;
     ID_LIST *id_list;
@@ -312,28 +320,29 @@ struct VARSPEC {
 VARSPEC *makeVarSpec(ID_LIST *id_list, TYPE *type, EXP *exp, int lineno);
 VARSPEC *makeVarSpecList(VARSPEC *v, VARSPEC *v2, int lineno);
 // j
-typedef struct VARDECL VARDECL;
+
 struct VARDECL {
     int lineno;
     struct VARSPEC *var_specs;
 };
 VARDECL *makeVarDecl(VARSPEC *vs, int lineno);
 
-typedef struct PARAMS PARAMS;
+
 struct PARAMS {
+    int lineno;
     PARAMS *next;
     ID_LIST *id_list;
     TYPE *type;
 };
 
-typedef struct RESULT RESULT;
+
 struct RESULT {
     int lineno;
     PARAMS *params;
     TYPE *type;
 };
 
-typedef struct SIGNATURE SIGNATURE;
+
 struct SIGNATURE {
     int lineno;
     PARAMS *params;
@@ -341,7 +350,7 @@ struct SIGNATURE {
 };
 
 // j
-typedef struct FUNCDECL FUNCDECL;
+
 struct FUNCDECL {
     int lineno;
     char *id;
@@ -357,13 +366,12 @@ PARAMS *makeParams(ID_LIST *id_list, TYPE *type, int lineno);
 PARAMS *makeParamsList(PARAMS *p, ID_LIST *id_list, TYPE *type, int lineno);
 
 // du
-typedef struct TOPDECL TOPDECL;
+
 struct TOPDECL {
     int lineno;
-    enum { dcl, funcDeclK } kind;
+    enum { dclK, funcDeclK } kind;
     union {
-        // TYPEDECL *typeDecl;
-        // VARDECL *varDecl;
+        DCL *dcl;
         FUNCDECL *funcDecl;
     } val;
     TOPDECL *next;
@@ -372,7 +380,7 @@ struct TOPDECL {
 TOPDECL *makeTopDecl(TYPEDECL *t, TOPDECL *t2, int lineno);
 
 // du
-typedef struct PACKAGE PACKAGE;
+
 struct PACKAGE {
     int lineno;
     char *id;
@@ -381,21 +389,22 @@ struct PACKAGE {
 PACKAGE *makePackage(char *id, int lineno);
 
 // k
-typedef struct IMPORT IMPORT;
+
 struct IMPORT {
     int lineno;
     char *id;
     IMPORT *next;
 };
 
-typedef struct PROGRAM PROGRAM;
+
 struct PROGRAM {
+    int lineno;
     PACKAGE *package;
     IMPORT *imports;
     TOPDECL *top_decl;
 };
 
-PROGRAM *makeProgram(PACKAGE *p, IMPORT *i, TOPDECL *decl);
+PROGRAM *makeProgram(PACKAGE *p, IMPORT *i, TOPDECL *decl, int lineno);
 
 // K
 TYPESPEC *makeTypeSpec(char *id, TYPE *type, int lineno);
@@ -406,7 +415,11 @@ IMPORT *makeImport(char *id, int lineno);
 IMPORT *makeImportList(IMPORT *list, IMPORT *elem);
 
 CASE_CLAUSE *makeCaseClause(CASE_CLAUSE *list, EXP *caseExp, STMT *caseStmt, int lineno);
+
 FOR_CLAUSE *makeForClause(STMT *first, STMT *last, STMT *doStmt, int lineno);
+
+DCL *makeVarDcl(VARDECL *dcl, int lineno);
+DCL *makeTypeDcl(TYPEDECL *dcl, int lineno);
 
 STMT *makeContinueStmt(int lineno);
 STMT *makeBreakStmt(int lineno);
@@ -424,21 +437,11 @@ STMT *makeIncStmt(EXP *incExp, int lineno);
 STMT *makeDecStmt(EXP *decExp, int lineno);
 STMT *makeShortVarDecStmt(ID_LIST *ids, EXP *exps, int lineno);
 STMT *makeForStmt(EXP *forCond, FOR_CLAUSE *forClause, STMT *forBody, int lineno);
+STMT *makeDclStmt(DCL *dcl, int lineno);
+STMT *makeStmtList(STMT *list, STMT *current, int lineno);
 
-STMT *makeContinueStmt(int lineno);
-STMT *makeBreakStmt(int lineno);
-STMT *makeBlockStmt(STMT *block, int lineno);
-STMT *makeIfStmt(STMT *ifSimpleStmt, EXP *ifCond, STMT *ifBody, STMT *elseStmt, int lineno);
-STMT *makeElseStmt(STMT *elseBody, STMT *ifStmt, int lineno);
-STMT *makePrintStmt(EXP *printExpList, int lineno);
-STMT *makePrintlnStmt(EXP *printlnExpList, int lineno);
-STMT *makeReturnStmt(EXP *returnExp, int lineno);
-STMT *makeSwitchStmt(STMT *switchSimpleStmt, EXP *switchExp, CASE_CLAUSE *switchCases, int lineno);
-STMT *makeEmptyStmt(int yylineno);
-STMT *makeExpStmt(EXP *expStmtVal, int yylineno);
-STMT *makeAssignStmt(EXP *lhs, EXP *rhs, AssignKind assignKind, int lineno);
-STMT *makeIncStmt(EXP *incExp, int lineno);
-STMT *makeDecStmt(EXP *decExp, int lineno);
-STMT *makeShortVarDecStmt(ID_LIST *ids, EXP *exps, int lineno);
+TOPDECL *makeTopDeclFromDcl(DCL *d);
+TOPDECL *makeTopDeclFromFuncDcl(FUNCDECL *d);
+TOPDECL *makeTopVarDeclList(TOPDECL *l, TOPDECL *next, int lineno);
 
 #endif
