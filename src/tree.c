@@ -3,30 +3,28 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-STMT *makeStmtList(STMT *list, STMT *current, int lineno){
-    STMT *e = malloc(sizeof(STMT));
-    e->lineno = lineno;
+STMT *makeStmtList(STMT *list, STMT *v, int lineno) {
     if (list == NULL) {
-        return current;
-    } else {
-        list->next = current;
-        return list;
+        return v;
     }
+    STMT *cur = list;
+    while (cur->next != NULL) {
+        cur = cur->next;
+    }
+    cur->next = v;
+    return list;
 }
 
-
-EXP *makeExpList(EXP *list, EXP *current, int lineno){
-    EXP *e = malloc(sizeof(EXP));
-    e->kind = expList;
-    e->val.expr = current;
-    e->lineno = lineno;
+EXP *makeExpList(EXP *list, EXP *v, int lineno) {
     if (list == NULL) {
-        return current;
-    } else {
-        list->next = current;
-        return list;
+        return v;
     }
+    EXP *cur = list;
+    while (cur->next != NULL) {
+        cur = cur->next;
+    }
+    cur->next = v;
+    return list;
 }
 
 EXP *makeBooleanExp(bool boolval, int lineno) {
@@ -166,16 +164,19 @@ EXP *makeCapExp(EXP *exp, int lineno) {
     return e;
 }
 
-ID_LIST *makeIdList(ID_LIST *l, char *id, int lineno) {
+ID_LIST *makeIdList(ID_LIST *list, char *id, int lineno) {
     ID_LIST *idl = malloc(sizeof(ID_LIST));
     idl->id = id;
     idl->lineno = lineno;
-    if (l == NULL) {
+    if (list == NULL) {
         return idl;
-    } else {
-        l->next = idl;
-        return l;
     }
+    ID_LIST *cur = list;
+    while (cur->next != NULL) {
+        cur = cur->next;
+    }
+    cur->next = idl;
+    return list;
 }
 
 TYPE *makeTypeId(char *id, int lineno) {
@@ -222,13 +223,16 @@ FIELD_DCL *makeFieldDcl(ID_LIST *id_list, TYPE *type, int lineno) {
     return f;
 }
 
-FIELD_DCL *makeFieldDclList(FIELD_DCL *f, FIELD_DCL *f1, int lineno) {
-    if (f == NULL) {
-        return f1;
+FIELD_DCL *makeFieldDclList(FIELD_DCL *list, FIELD_DCL *f, int lineno) {
+    if (list == NULL) {
+        return f;
     }
-    f->next = f1;
-    f->lineno = lineno;
-    return f;
+    FIELD_DCL *cur = list;
+    while (cur->next != NULL) {
+        cur = cur->next;
+    }
+    cur->next = f;
+    return list;
 }
 
 SIGNATURE *makeSignature(PARAMS *params, RESULT *result, int lineno) {
@@ -253,7 +257,7 @@ RESULT *makeResultType(TYPE *type, int lineno) {
     return r;
 }
 
-PARAMS *makeParams(ID_LIST *i, TYPE *t, int lineno){
+PARAMS *makeParams(ID_LIST *i, TYPE *t, int lineno) {
     PARAMS *p = malloc(sizeof(PARAMS));
     p->id_list = i;
     p->type = t;
@@ -265,7 +269,11 @@ PARAMS *makeParamsList(PARAMS *p, ID_LIST *id_list, TYPE *type, int lineno) {
     if (p == NULL) {
         return p_new;
     }
-    p->next = p_new;
+    PARAMS *cur = p;
+    while (cur->next != NULL) {
+        cur = cur->next;
+    }
+    cur->next = p_new;
     return p;
 }
 
@@ -287,9 +295,14 @@ TYPESPEC *makeTypeSpec(char *id, TYPE *type, int lineno) {
 }
 
 TYPESPEC *makeTypeSpecList(TYPESPEC *list, TYPESPEC *elem) {
-    if (list != NULL) {
-        list->next = elem;
+    if (list == NULL) {
+        return elem;
     }
+    TYPESPEC *cur = list;
+    while (cur->next != NULL) {
+        cur = cur->next;
+    }
+    cur->next = elem;
     return list;
 }
 
@@ -309,14 +322,16 @@ VARSPEC *makeVarSpec(ID_LIST *id_list, TYPE *type, EXP *exp, int lineno) {
     return vs;
 }
 
-// TODO: NO BUG???????
-VARSPEC *makeVarSpecList(VARSPEC *v, VARSPEC *v2, int lineno) {
-    if (v == NULL) {
-        return v2;
+VARSPEC *makeVarSpecList(VARSPEC *list, VARSPEC *v, int lineno) {
+    if (list == NULL) {
+        return v;
     }
-    v->next = v2;
-    v->lineno = lineno;
-    return v;
+    VARSPEC *cur = list;
+    while (cur->next != NULL) {
+        cur = cur->next;
+    }
+    cur->next = v;
+    return list;
 }
 
 VARDECL *makeVarDecl(VARSPEC *vs, int lineno) {
@@ -487,7 +502,7 @@ DCL *makeTypeDcl(TYPEDECL *dcl, int lineno) {
     d->lineno = lineno;
     d->kind = typeDcl;
     d->val.typeDecl = dcl;
-    return d; 
+    return d;
 }
 
 DCL *makeVarDcl(VARDECL *dcl, int lineno) {
@@ -495,7 +510,7 @@ DCL *makeVarDcl(VARDECL *dcl, int lineno) {
     d->lineno = lineno;
     d->kind = varDcl;
     d->val.varDecl = dcl;
-    return d; 
+    return d;
 }
 
 STMT *makeForStmt(EXP *forCond, FOR_CLAUSE *forClause, STMT *forBody,
@@ -531,26 +546,32 @@ IMPORT *makeImport(char *id, int lineno) {
     return p;
 }
 
-IMPORT *makeImportList(IMPORT *list, IMPORT *elem) {
-    if (list != NULL) {
-        list->next = elem;
+IMPORT *makeImportList(IMPORT *list, IMPORT *v) {
+    if (list == NULL) {
+        return v;
     }
-    return elem;
+    IMPORT *cur = list;
+    while (cur->next != NULL) {
+        cur = cur->next;
+    }
+    cur->next = v;
+    return list;
 }
 
-TOPDECL *makeTopVarDeclList(TOPDECL *l, TOPDECL *next, int lineno) {
-    if(l == NULL){
-        return next;
-    }else{
-        l-> lineno = lineno;
-        l->next = next;
-        return l;
+TOPDECL *makeTopVarDeclList(TOPDECL *list, TOPDECL *v, int lineno) {
+    if (list == NULL) {
+        return v;
     }
+    TOPDECL *cur = list;
+    while (cur->next != NULL) {
+        cur = cur->next;
+    }
+    cur->next = v;
+    return list;
 }
 
 TOPDECL *makeTopTypeDecl(VARDECL *d, TOPDECL *next, int lineno) {}
 TOPDECL *makeTopFuncDecl(FUNCDECL *d, TOPDECL *next, int lineno) {}
-
 
 PROGRAM *makeProgram(PACKAGE *pa, IMPORT *i, TOPDECL *decl, int lineno) {
     PROGRAM *p = malloc(sizeof(PROGRAM));
@@ -561,16 +582,15 @@ PROGRAM *makeProgram(PACKAGE *pa, IMPORT *i, TOPDECL *decl, int lineno) {
     return p;
 }
 
-TOPDECL *makeTopDeclFromDcl(DCL *d){
+TOPDECL *makeTopDeclFromDcl(DCL *d) {
     TOPDECL *t = malloc(sizeof(TOPDECL));
     t->kind = dclK;
     t->val.dcl = d;
     return t;
 }
-TOPDECL *makeTopDeclFromFuncDcl(FUNCDECL *d){
+TOPDECL *makeTopDeclFromFuncDcl(FUNCDECL *d) {
     TOPDECL *t = malloc(sizeof(TOPDECL));
     t->kind = funcDeclK;
     t->val.funcDecl = d;
     return t;
 }
-
