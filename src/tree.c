@@ -196,7 +196,7 @@ TYPE *makeTypeArray(int size, TYPE *type, int lineno) {
     TYPE *t = malloc(sizeof(TYPE));
     t->kind = k_array;
     t->array_type.type = type;
-    t->array_type.type = size;
+    t->array_type.size = size;
     return t;
 }
 
