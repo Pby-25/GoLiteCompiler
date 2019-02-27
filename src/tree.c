@@ -133,7 +133,7 @@ EXP *makeAppendExp(EXP *head, EXP *tail, int lineno) {
 EXP *makeArrayIndexExp(EXP *array_exp, EXP *index, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
-    e->kind = indexExpr;
+    e->kind = arrayExpr;
     e->val.array.exp = array_exp;
     e->val.array.index = index;
     return e;
@@ -262,6 +262,7 @@ PARAMS *makeParams(ID_LIST *i, TYPE *t, int lineno) {
     p->id_list = i;
     p->type = t;
     p->lineno = lineno;
+    return p;
 }
 
 PARAMS *makeParamsList(PARAMS *p, ID_LIST *id_list, TYPE *type, int lineno) {
@@ -419,17 +420,28 @@ STMT *makeSwitchStmt(STMT *switchSimpleStmt, EXP *switchExp,
     return s;
 }
 
-// is next set correctly??
-CASE_CLAUSE *makeCaseClause(CASE_CLAUSE *list, EXP *caseExp, STMT *caseStmt,
-                            int lineno) {
+CASE_CLAUSE *makeCaseClause(int kind, CASE_CLAUSE *list, EXP *caseExp,
+                            STMT *caseStmt, int lineno) {
     CASE_CLAUSE *c = malloc(sizeof(CASE_CLAUSE));
     c->lineno = lineno;
+    if (kind == 0) {
+        c->kind = defaultK;
+    } else {
+        c->kind = caseK;
+    }
+
+    c->caseExp = caseExp;
+    c->caseStmt = caseStmt;
+
     if (list == NULL) {
         return c;
-    } else {
-        list->next = c;
-        return list;
     }
+    CASE_CLAUSE *cur = list;
+    while (cur->next != NULL) {
+        cur = cur->next;
+    }
+    cur->next = c;
+    return list;
 }
 
 STMT *makeEmptyStmt(int lineno) {
@@ -441,6 +453,10 @@ STMT *makeEmptyStmt(int lineno) {
 }
 
 STMT *makeExpStmt(EXP *expStmtVal, int lineno) {
+    if (expStmtVal->kind != funcExpr){
+		fprintf(stderr, "Error: (line %d) Exp stmt must be func call\n", lineno);
+		exit(1);
+	}
     STMT *s = malloc(sizeof(STMT));
     s->lineno = lineno;
     s->kind = expStmt;
@@ -488,7 +504,7 @@ STMT *makeShortVarDecStmt(ID_LIST *ids, EXP *exps, int lineno) {
     return s;
 }
 
-FOR_CLAUSE *makeForClause(STMT *first, STMT *last, STMT *doStmt, int lineno) {
+FOR_CLAUSE *makeForClause(STMT *first, EXP *last, STMT *doStmt, int lineno) {
     FOR_CLAUSE *f = malloc(sizeof(FOR_CLAUSE));
     f->lineno = lineno;
     f->first = first;
@@ -569,9 +585,6 @@ TOPDECL *makeTopVarDeclList(TOPDECL *list, TOPDECL *v, int lineno) {
     cur->next = v;
     return list;
 }
-
-TOPDECL *makeTopTypeDecl(VARDECL *d, TOPDECL *next, int lineno) {}
-TOPDECL *makeTopFuncDecl(FUNCDECL *d, TOPDECL *next, int lineno) {}
 
 PROGRAM *makeProgram(PACKAGE *pa, IMPORT *i, TOPDECL *decl, int lineno) {
     PROGRAM *p = malloc(sizeof(PROGRAM));

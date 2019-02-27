@@ -14,9 +14,9 @@ int NEED_SEMI_CONLON=0;
 DIGIT [0-9]
 INT_DECIMAL 0|([1-9]{DIGIT}*)
 INT_OCTAL 0[0-7]*
-INT_HEX 0x[0-9a-fA-F]*
+INT_HEX 0[xX][0-9a-fA-F]*
 INT ({INT_DECIMAL}|{INT_OCTAL}|{INT_HEX})
-FLOAT {INT_DECIMAL}?\.{DIGIT}*
+FLOAT {DIGIT}*\.{DIGIT}*
 RUNE '(.|\\a|\\b|\\f|\\n|\\r|\\t|\\v|\\\\|\\')'
 STRING_ITP \"([a-zA-Z0-9 ~!@#$%^&*\-+\/`<>=_|';:.,?{}\[\]\(\)]*([\\]["'abfnrtv\\])*)*\"
 STRING_RAW `[^`]*`
@@ -163,28 +163,17 @@ print       {if (g_tokens) printf("tPRINT\n");NEED_SEMI_CONLON = 0;return tPRINT
 
 
 {FLOAT} {
-        if(yytext[0]=='0' && strlen(yytext)>=2 && yytext[1]!='.'){
-            fprintf (stderr, "Error: (line %d) invalid float '%s'\n", yylineno, yytext);
-            exit(1);
-        }else{
-            yylval.floatval = atof(yytext);
-            if (g_tokens) printf ("tFOLATVAL(%s)\n", yytext);
-            NEED_SEMI_CONLON = 1;
-           return tFLOATVAL;
-        }
+    yylval.floatval = atof(yytext);
+    if (g_tokens) printf ("tFOLATVAL(%s)\n", yytext);
+    NEED_SEMI_CONLON = 1;
+    return tFLOATVAL;
 }
 
 {INT} {
-        if(yytext[0]=='0' && strlen(yytext)!=1){
-            fprintf (stderr, "Error: (line %d) invalid integer '%s'\n", yylineno, yytext);
-            exit(1);
-        }else{
-            if (g_tokens) printf ("tINTVAL(%s)\n", yytext);
-            yylval.intval = atoi(yytext);
-            NEED_SEMI_CONLON = 1;
-            return tINTVAL;
-        }
-
+    if (g_tokens) printf ("tINTVAL(%s)\n", yytext);
+    yylval.intval = atoi(yytext);
+    NEED_SEMI_CONLON = 1;
+    return tINTVAL;
 }
 
 _|([a-zA-Z_][a-zA-Z0-9_]*) {

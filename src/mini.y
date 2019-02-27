@@ -52,8 +52,8 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 %type <SIGNATURE> signature
 %type <FUNCDECL> func_dcl
 %type <PROGRAM> prog start
-%type <EXP> exp unary_exp primary_exp exp_list literals expr_switch_case
-%type <STMT> stmt stmts break_stmt continue_stmt assign_stmt simple_stmt print_stmt short_var_dec switch_stmt ifstmt else_stmts block_stmt for_stmt 
+%type <EXP> exp unary_exp primary_exp exp_list literals
+%type <STMT> stmt stmts break_stmt continue_stmt assign_stmt simple_stmt print_stmt short_var_dec switch_stmt ifstmt else_stmts block_stmt for_stmt inc_dec_stmt post_stmt
 %type <IMPORT> import imports
 %type <PACKAGE> package
 %type <TOPDECL> top_level_dcl top_level_dcls
@@ -84,8 +84,8 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 %left tEQUALS tNOTEQUALS tLESS tLESSEQUALS tGREATER tGREATEREQUALS 
 %left tPLUS tMINUS tBITWISEOR tBITWISEXOR
 %left tTIMES tDIV tMOD tLEFTSHIFT tRIGHTSHIFT tBITWISEAND tBITCLEAR
-%precedence UBANG UMINUS UPLUS UCARET UBITWISEAND
-
+%left UBANG UMINUS UPLUS UCARET UBITWISEAND
+// precedence
 %glr-parser
 %expect-rr 1
 
@@ -128,7 +128,7 @@ Type: tIDENTIFIER {$$ = makeTypeId($1, yylineno);}
     | tLEFTPAREN Type tRIGHTPAREN {$$ = makeTypeT($2, yylineno);}
 ;
 
-field_dcls: {$$ == NULL;}
+field_dcls: {$$ = NULL;}
     | field_dcls field_dcl tSEMICOLON {$$ = makeFieldDclList($1, $2, yylineno);}
 ;
 
@@ -139,7 +139,7 @@ var_dcl: tVAR var_spec {$$ = makeVarDecl($2, yylineno);}
     | tVAR tLEFTPAREN var_specs tRIGHTPAREN {$$ = makeVarDecl($3, yylineno);}
 ;
 
-var_specs: {$$ == NULL;}
+var_specs: {$$ = NULL;}
     | var_specs var_spec tSEMICOLON {$$ = makeVarSpecList($1,$2,yylineno);}
 ;
 
@@ -152,7 +152,7 @@ type_dcl: tTYPE type_spec { $$ = makeTypeDecl($2, yylineno); }
     | tTYPE tLEFTPAREN type_specs tRIGHTPAREN { $$ = makeTypeDecl($3, yylineno); }
 ;
 
-type_specs: { $$ == NULL; }
+type_specs: { $$ = NULL; }
     | type_specs type_spec tSEMICOLON { $$ = makeTypeSpecList($1, $2); }
 ;
 
@@ -173,7 +173,7 @@ result: params {$$ = makeResultP($1, yylineno);}
 params: tLEFTPAREN param_ls tRIGHTPAREN {$$ = $2;}
 ;
 
-param_ls: {$$ == NULL;}
+param_ls: {$$ = NULL;}
     | ident_list Type {$$ = makeParams($1, $2, yylineno);}
     | param_ls tCOMMA ident_list Type {$$ = makeParamsList($1, $3, $4, yylineno);}
 ;
@@ -221,9 +221,12 @@ short_var_dec: ident_list tCOLONEQUAL exp_list { $$ = makeShortVarDecStmt($1, $3
 simple_stmt: {}                         { $$ = makeEmptyStmt(yylineno); }
            | exp                        { $$ = makeExpStmt($1, yylineno); }
            | assign_stmt                { $$ = $1; } 
-           | exp tPLUSPLUS              { $$ = makeIncStmt($1, yylineno); }
-           | exp tMINUSMINUS            { $$ = makeDecStmt($1, yylineno); }
+           | inc_dec_stmt               { $$ = $1; }
            | short_var_dec              { $$ = $1; }
+;
+
+inc_dec_stmt: exp tPLUSPLUS              { $$ = makeIncStmt($1, yylineno); }
+           | exp tMINUSMINUS            { $$ = makeDecStmt($1, yylineno); }
 ;
 
 exp_list: exp { $$ = makeExpList(NULL, $1, yylineno);}
@@ -241,12 +244,9 @@ switch_stmt: tSWITCH simple_stmt tSEMICOLON exp tLEFTBRACE expr_case_clause tRIG
 ;
 
 expr_case_clause: { $$ = NULL; }
-    | expr_case_clause expr_switch_case tCOLON stmts { $$ = makeCaseClause($1, $2, $4, yylineno); }
+    | expr_case_clause tCASE exp_list tCOLON stmts { $$ = makeCaseClause(1, $1, $3, $5, yylineno); }
+    | expr_case_clause tDEFAULT tCOLON stmts { $$ = makeCaseClause(0, $1, NULL, $4, yylineno); }
 ; 
-
-expr_switch_case: tCASE exp_list { $$ = $2; }
-    | tDEFAULT { $$ = NULL; }
-;
 
 ifstmt: tIF simple_stmt tSEMICOLON exp block_stmt else_stmts { $$ = makeIfStmt($2, $4, $5, $6, yylineno); }
     | tIF simple_stmt tSEMICOLON exp block_stmt { $$ = makeIfStmt($2, $4, $5, NULL, yylineno); }
@@ -267,7 +267,11 @@ for_stmt: tFOR block_stmt           { $$ = makeForStmt(NULL, NULL, $2, yylineno)
     | tFOR for_clause block_stmt    { $$ = makeForStmt(NULL, $2, $3, yylineno); }
 ;
 
-for_clause: simple_stmt tSEMICOLON simple_stmt tSEMICOLON simple_stmt   { $$ = makeForClause($1, $3, $5, yylineno); }
+for_clause: simple_stmt tSEMICOLON exp tSEMICOLON  post_stmt  { $$ = makeForClause($1, $3, $5, yylineno); }
+;
+
+post_stmt: assign_stmt {$$=$1;}
+    | inc_dec_stmt {$$=$1;}
 ;
 
 break_stmt: tBREAK { $$ = makeBreakStmt(yylineno); }

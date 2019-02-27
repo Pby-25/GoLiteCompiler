@@ -3,6 +3,17 @@
 #include <stdbool.h>
 
 typedef enum {
+    inLoop,
+    inSwitch,
+    other
+} State;
+
+typedef enum {
+    caseK,
+    defaultK
+} SwitchCaseK;
+
+typedef enum {
     typeDcl,
     varDcl
 } DclKind;
@@ -85,7 +96,8 @@ typedef enum {
     appendExpr,
     lenExpr,
     capExpr,
-    indexExpr,
+    arrayExpr,
+    sliceExpr,
     selectorExpr,
     funcExpr,
     castExpr,
@@ -283,12 +295,13 @@ struct STMT {
 struct FOR_CLAUSE {
     int lineno;
     STMT *first;
-    STMT *last;
+    EXP *last;
     STMT *doStmt;
 };
 
 struct CASE_CLAUSE {
     int lineno;
+    SwitchCaseK kind;
     EXP *caseExp;
     STMT *caseStmt;
     CASE_CLAUSE *next;
@@ -414,9 +427,9 @@ TYPEDECL *makeTypeDecl(TYPESPEC *spec, int lineno);
 IMPORT *makeImport(char *id, int lineno);
 IMPORT *makeImportList(IMPORT *list, IMPORT *elem);
 
-CASE_CLAUSE *makeCaseClause(CASE_CLAUSE *list, EXP *caseExp, STMT *caseStmt, int lineno);
+CASE_CLAUSE *makeCaseClause(int kind, CASE_CLAUSE *list, EXP *caseExp, STMT *caseStmt,int lineno);
 
-FOR_CLAUSE *makeForClause(STMT *first, STMT *last, STMT *doStmt, int lineno);
+FOR_CLAUSE *makeForClause(STMT *first, EXP *last, STMT *doStmt, int lineno);
 
 DCL *makeVarDcl(VARDECL *dcl, int lineno);
 DCL *makeTypeDcl(TYPEDECL *dcl, int lineno);

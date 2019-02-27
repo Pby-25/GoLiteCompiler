@@ -6,6 +6,7 @@
 #include "string.h"
 #include "tree.h"
 #include <stdlib.h>
+#include "weed.h"
 
 PROGRAM *root;
 
@@ -28,6 +29,7 @@ int main(int argc, char *argv[]) {
             };
         } else if (strcmp("parse", argv[1]) == 0) {
             int r = yyparse();
+            weedPROGRAM(root);
             if (r == 0) {
                 printf("OK\n");
             } else {
