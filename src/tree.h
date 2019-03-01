@@ -295,8 +295,8 @@ struct STMT {
 struct FOR_CLAUSE {
     int lineno;
     STMT *first;
-    EXP *last;
-    STMT *doStmt;
+    EXP *condtion;
+    STMT *post;
 };
 
 struct CASE_CLAUSE {

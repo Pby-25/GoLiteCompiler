@@ -5,7 +5,304 @@
 #include "tree.h"
 #include <stdlib.h>
 
-// void prettyProg(PROGRAM *root) { prettyStmts(root->statements, 0); }
+void prettyImports(IMPORT *i) {
+    if (i != NULL) {
+        printf("import %s; \n", i->id);
+        prettyImports(i->next);
+    }
+}
+
+void prettyDecl(DCL* d) {
+    if (d != NULL) {
+        
+    }
+}
+
+void prettyIDList(ID_LIST *i) {
+    if (i != NULL) {
+        printf("%s", i->id);
+        if (i->next != NULL) {
+            printf(", ");
+            prettyIDList(i->next);
+        }
+    }
+}
+
+void prettyType(TYPE *t) {
+    if (t != NULL) {
+        
+    }
+}
+
+void prettyParams(PARAMS *p) {
+    if (p != NULL) {
+        prettyIDList(p->id_list);
+        prettyType(p->type);
+        prettyParams(p->next);
+    }
+}
+
+void prettyResult(RESULT *r) {
+    
+}
+
+void prettySig(SIGNATURE *s) {
+    if (s != NULL) {
+        prettyParams(s->params);
+        prettyResult(s->result);
+    }
+}
+
+void prettyFuncDecl(FUNCDECL *f) {
+    if (f != NULL) {
+        printf("func %s", f->id);
+        printf("(");
+        prettySig(f->signature);
+        printf(")");
+        printf("{\n")
+        prettyStmts(f->body);
+        printf("}\n")
+    }
+}
+
+void prettyTopDecl(TOPDECL* t) {
+    if (t != NULL) {
+        switch (t->kind) {
+            case dclK:
+                prettyDecl(t->val.dcl);
+                break;
+            case funcDeclK:
+                prettyFuncDecl(t->val.funcDecl);
+                break;
+        }
+        prettyTopDecl(t->next);
+    }
+}
+
+void prettyProg(PROGRAM *root) { 
+    if (root != NULL) {
+        printf("package %s ;\n", root->package->id);
+        prettyImports(root->imports);
+        prettyTopDecl(root->top_decl);
+    }
+}
+
+
+
+
+
+void prettyEXP(EXP *exp) {
+
+    if (exp == NULL)
+        return;
+    switch (exp->kind) {
+    case orExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" || ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;                                                            
+    case andExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" && ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;
+    case equalsExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" == ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;
+    case notequalsExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" != ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;
+    case lessExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" < ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;        
+    case greaterExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" > ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;        
+    case lessEqualsExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" <= ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;
+    case greaterEqualsExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" >= ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;
+    case plusExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" + ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;
+    case minusExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" - ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;
+    case bitwiseOrExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" | ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;
+    case bitwiseXorExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" ^ ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;
+    case bitwiseAndExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" & ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;
+    case bitClearExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" &^ ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;    
+    case timesExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" * ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;    
+    case divExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" / ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;
+    case modExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" % ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;    
+    case leftShiftExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" << ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;
+    case rightShiftExpr:
+        printf("(");
+        prettyEXP(exp->val.binary.lhs);
+        printf(" >> ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;
+    case uMinusExpr:
+        printf(" - ");
+        prettyEXP(exp->val.binary.rhs);
+        printf(")");
+        break;    
+    case uPlusExpr:
+    case uBangExpr:
+    case uCaretExpr:
+    case uBitwiseAndExpr:
+        weedEXP(exp->val.unary.exp, 0);
+        break;
+
+    case idExpr:
+        if (blank_allow == 0) {
+            if (strcmp(exp->val.id, "_") == 0) {
+                fprintf(stderr,
+                        "Error: (line %d) Illegal use of blank identifier.\n",
+                        exp->lineno);
+                exit(1);
+            }
+        }
+        break;
+
+    case funcExpr:
+        weedEXP(exp->val.func.name, 0);
+        weedEXP(exp->val.func.args, 0);
+        break;
+
+    case castExpr:
+        weedEXP(exp->val.cast.type, 0);
+        weedEXP(exp->val.cast.exp, 0);
+        break;
+
+    case appendExpr:
+        weedEXP(exp->val.append.head, 0);
+        weedEXP(exp->val.append.tail, 0);
+        break;
+
+    case arrayExpr:
+    case sliceExpr:
+        weedEXP(exp->val.array.exp, 0);
+        weedEXP(exp->val.array.index, 0);
+        break;
+
+    case selectorExpr:
+        weedEXP(exp->val.selector.exp, 0);
+        if (blank_allow == 0) {
+            if (strcmp(exp->val.selector.name, "_") == 0) {
+                fprintf(stderr,
+                        "Error: (line %d) Illegal use of blank identifier.\n",
+                        exp->lineno);
+                exit(1);
+            }
+        }
+        break;
+
+    case expList:;
+        EXP *e = exp;
+        while (e->val.expr != NULL) {
+            weedEXP(e->val.expr, blank_allow);
+            e = e->next;
+        }
+
+    case intExpr:
+    case floatExpr:
+    case runeExpr:
+    case stringItpExpr:
+    case stringRawExpr:
+    case idExpr:
+    case boolExpr:
+    default:
+        break;
+    }
+}
 
 // void prettyExp(EXP *e) {
 //     if (e == NULL) {

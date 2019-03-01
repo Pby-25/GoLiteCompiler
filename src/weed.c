@@ -296,12 +296,8 @@ void weedCASE_CLAUSE(CASE_CLAUSE *case_clause, int inLoop, int inSwitch,
 void weedFOR_CLAUSE(FOR_CLAUSE *for_clause, int inLoop, int inSwitch) {
     if (for_clause != NULL) {
         weedSTMT(for_clause->first, inLoop, inSwitch);
-        weedSTMT(for_clause->last, inLoop, inSwitch);
-        if (for_clause->doStmt != NULL && for_clause->doStmt->kind == shortVarDecStmt) {
-            fprintf(stderr, "Error: (line %d) for loop post statement cannot be short declaration.\n", for_clause->doStmt->lineno);
-            exit(1);
-        }
-        weedSTMT(for_clause->doStmt, inLoop, inSwitch);
+        weedEXP(for_clause->condtion, 0);
+        weedSTMT(for_clause->post, inLoop, inSwitch);
     }
 }
 

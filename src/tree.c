@@ -504,12 +504,12 @@ STMT *makeShortVarDecStmt(ID_LIST *ids, EXP *exps, int lineno) {
     return s;
 }
 
-FOR_CLAUSE *makeForClause(STMT *first, EXP *last, STMT *doStmt, int lineno) {
+FOR_CLAUSE *makeForClause(STMT *first, EXP *con, STMT *post, int lineno) {
     FOR_CLAUSE *f = malloc(sizeof(FOR_CLAUSE));
     f->lineno = lineno;
     f->first = first;
-    f->last = last;
-    f->doStmt = doStmt;
+    f->condtion = con;
+    f->post = post;
     return f;
 }
 

@@ -3,7 +3,7 @@
 
 #include "tree.h"
 
-// void prettyProg(PROGRAM *root);
-// void prettyStmts(STATEMENT *r,int indentation);
+void prettyProg(PROGRAM *root);
+void prettyStmts(STMT *s,int indentation);
 
 #endif
