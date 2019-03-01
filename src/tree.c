@@ -453,10 +453,6 @@ STMT *makeEmptyStmt(int lineno) {
 }
 
 STMT *makeExpStmt(EXP *expStmtVal, int lineno) {
-    if (expStmtVal->kind != funcExpr){
-		fprintf(stderr, "Error: (line %d) Exp stmt must be func call\n", lineno);
-		exit(1);
-	}
     STMT *s = malloc(sizeof(STMT));
     s->lineno = lineno;
     s->kind = expStmt;

@@ -368,7 +368,7 @@ void weedSTMT(STMT *stmt, int inLoop, int inSwitch) {
             if(stmt->val.expStmtVal->kind != funcExpr ){
                 fprintf(stderr,
                         "Error: (line %d) Exp stmt must be func call.\n",
-                        stmt->lineno);
+                        stmt->val.expStmtVal->lineno);
                 exit(1);
             }
             weedEXP(stmt->val.expStmtVal, 0);

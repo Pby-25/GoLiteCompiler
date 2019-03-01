@@ -53,7 +53,7 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 %type <FUNCDECL> func_dcl
 %type <PROGRAM> prog start
 %type <EXP> exp unary_exp primary_exp exp_list literals for_exp
-%type <STMT> stmt stmts break_stmt continue_stmt assign_stmt simple_stmt print_stmt short_var_dec switch_stmt ifstmt else_stmts block_stmt for_stmt inc_dec_stmt
+%type <STMT> stmt stmts break_stmt continue_stmt assign_stmt simple_stmt print_stmt short_var_dec switch_stmt ifstmt else_stmts block_stmt for_stmt inc_dec_stmt post_stmt
 %type <IMPORT> import imports
 %type <PACKAGE> package
 %type <TOPDECL> top_level_dcl top_level_dcls
@@ -267,11 +267,16 @@ for_stmt: tFOR block_stmt           { $$ = makeForStmt(NULL, NULL, $2, yylineno)
     | tFOR for_clause block_stmt    { $$ = makeForStmt(NULL, $2, $3, yylineno); }
 ;
 
-for_clause: simple_stmt tSEMICOLON for_exp tSEMICOLON simple_stmt  { $$ = makeForClause($1, $3, $5, yylineno); }
+for_clause: simple_stmt tSEMICOLON for_exp tSEMICOLON post_stmt  { $$ = makeForClause($1, $3, $5, yylineno); }
 ;
 
 for_exp: {$$=NULL;}
     | exp {$$=$1;}
+;
+
+post_stmt: {}
+    | inc_dec_stmt
+    | assign_stmt
 ;
 
 break_stmt: tBREAK { $$ = makeBreakStmt(yylineno); }
