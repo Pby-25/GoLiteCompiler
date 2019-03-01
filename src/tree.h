@@ -148,7 +148,6 @@ struct TYPE {
     struct {
         FIELD_DCL *field_dcls;
     } struct_type;
-
     TYPE *types;
 };
 TYPE *makeTypeId(char *id, int lineno);

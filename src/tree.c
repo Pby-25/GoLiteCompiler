@@ -59,7 +59,16 @@ EXP *makeStringRawExp(char *stringval, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = stringRawExpr;
-    e->val.stringVal = strdup(stringval);
+    char *itpString = malloc(strlen(stringval)*2+1);
+    char *ptrSource = stringval;
+    char *ptrDest = itpString;
+
+    while (*ptrSource){
+        strcpy(ptrDest, ptrSource);
+        ptrDest ++;
+        ptrSource ++;
+    }
+    e->val.stringVal = strdup(itpString);
     return e;
 }
 

@@ -7,16 +7,100 @@
 
 void prettyImports(IMPORT *i) {
     if (i != NULL) {
-        printf("import %s; \n", i->id);
+        printf("import %s \n", i->id);
         prettyImports(i->next);
     }
 }
 
 void prettyDecl(DCL* d) {
     if (d != NULL) {
-        
+        switch (d->kind)
+        {
+            case typeDcl:
+                prettyTypeDcl(d->val.typeDecl);
+                break;
+            case varDcl:
+                prettyVarDcl(d->val.varDecl);
+                break;
+        }
     }
 }
+void prettyTypeDcl(TYPEDECL *t){
+    if(t!=NULL){
+        printf("type ");
+        
+        prettyTypeSpec(t->typeSpec);
+    }
+}
+void prettyVarDcl(VARDECL *v){
+     if(v!=NULL){
+        prettyVarSpec(v->var_specs);
+    }
+}
+
+void prettyTypeSpec(TYPESPEC *ts){
+    if (ts == NULL) {
+            return;
+        }
+        if(ts->next == NULL){
+            printf("(");
+        }
+        printf("%s", ts->id);
+        prettyType(ts->type);
+        prettyTypeSpec(ts->next);
+        if(ts->next == NULL){
+            printf(")");
+        }
+}
+
+void prettyVarSpec(VARSPEC *vs){
+    if (vs == NULL) {
+        return;
+    }
+    prettyIdListExpList(vs->id_list, vs->exp_list, vs->lineno);
+    prettyType(vs->type);
+    prettyVarSpec(vs->next);
+}
+
+void prettType(TYPE *t){
+    if (t == NULL) {
+        return;
+    }
+    switch (t->kind) {
+    case k_slices:
+        printf("[]");
+        prettType(t->slices_type.type);
+        break;
+    case k_array:
+        printf("[%d]", t->array_type.size);
+        prettType(t->array_type.type);
+        break;
+    case k_type_struct:
+        printf("struct ");
+        printf("[");
+        prettyField_Dcl(t->struct_type.field_dcls);
+        printf("]");
+        break;
+    case k_type_id:
+        printf("%s", t->id);
+        break;
+    case k_type_type:
+        printf("(");
+        prettyType(t->types);
+        printf(")");
+        break;
+    }
+}
+
+void prettyField_Dcl(FIELD_DCL *f) {
+    if (f == NULL) {
+        return;
+    }
+    prettyIDList(f->id_list);
+    prettyType(f->type);
+    prettyField_Dcl(f->next);
+}
+
 
 void prettyIDList(ID_LIST *i) {
     if (i != NULL) {
@@ -28,9 +112,33 @@ void prettyIDList(ID_LIST *i) {
     }
 }
 
+   
+    
 void prettyType(TYPE *t) {
     if (t != NULL) {
-        
+        switch (t->kind) {
+            case k_type_id:
+                printf("%s", id);
+                break;
+            case k_slices:
+                printf("[] ", );
+                prettyType(t->slices_type.type);
+                break;
+            case k_array:
+                printf("[%d] ", t->array_type.size);
+                prettyType(t->array_type.type);
+                break;
+            case k_type_struct:
+                printf("struct {\n");
+                prettyField_Dcl(t->struct_type.field_dcls);
+                printf("}\n");
+                break;
+            case k_type_type:
+                printf("(");
+                prettyType(t->types);
+                printf(")");
+                break;
+        }
     }
 }
 
@@ -77,16 +185,13 @@ void prettyTopDecl(TOPDECL* t) {
     }
 }
 
-void prettyProg(PROGRAM *root) { 
+void prettyPROGRAM(PROGRAM *root) { 
     if (root != NULL) {
         printf("package %s ;\n", root->package->id);
         prettyImports(root->imports);
         prettyTopDecl(root->top_decl);
     }
 }
-
-
-
 
 
 void prettyEXP(EXP *exp) {
@@ -263,55 +368,131 @@ void prettyEXP(EXP *exp) {
         break;
 
     case appendExpr:
-        weedEXP(exp->val.append.head, 0);
-        weedEXP(exp->val.append.tail, 0);
+        printf("append(");
+        prettyEXP(exp->val.append.head);
+        printf(",");
+        prettyEXP(exp->val.append.tail);
+        printf(")");
         break;
 
     case arrayExpr:
     case sliceExpr:
-        weedEXP(exp->val.array.exp, 0);
-        weedEXP(exp->val.array.index, 0);
+        prettyEXP(exp->val.array.exp);
+        printf("[");   
+        prettyEXP(exp->val.array.index);                                                                            
+        printf("]");
         break;
 
     case selectorExpr:
-        weedEXP(exp->val.selector.exp, 0);
-        if (blank_allow == 0) {
-            if (strcmp(exp->val.selector.name, "_") == 0) {
-                fprintf(stderr,
-                        "Error: (line %d) Illegal use of blank identifier.\n",
-                        exp->lineno);
-                exit(1);
-            }
-        }
+        prettyEXP(exp->val.selector.exp);
+        printf(".%s", exp->val.selector.name);        
         break;
 
     case expList:;
         EXP *e = exp;
         while (e->val.expr != NULL) {
-            weedEXP(e->val.expr, blank_allow);
+            prettyEXP(e->val.expr);
+            if ( e->next != NULL) {
+                printf(", ");
+            }
             e = e->next;
         }
     
     case idExpr:
-    if (blank_allow == 0) {
-        if (strcmp(exp->val.id, "_") == 0) {
-            fprintf(stderr,
-                    "Error: (line %d) Illegal use of blank identifier.\n",
-                    exp->lineno);
-            exit(1);
-        }
-    }
-    break;
-
+        printf("%s", exp->val.id);
+        break;
     case intExpr:
+        printf("%d", exp->val.intVal);
+        break;                                
     case floatExpr:
+        printf("%f", exp->val.floatVal); 
+        break;               
     case runeExpr:
+        printf("%c", exp->val.runeVal);
+        break;
     case stringItpExpr:
     case stringRawExpr:
-    case idExpr:
+        printf("\"%s\"", exp->val.stringVal);
+        break;       
     case boolExpr:
+        exp->val.boolVal ? printf("true") : printf("false");
+        break;
     default:
         break;
+    }
+}
+
+void prettyCASE_CLAUSE(CASE_CLAUSE *c){
+    if (c != NULL) {
+        switch (c->kind) {
+            case caseK:
+                printf("case ");
+                prettyEXP(c->caseExp);
+                printf(" :\n");
+                prettySTMT(c->caseStmt);
+                break;
+            case defaultK:
+                printf("default:\n");
+                prettySTMT(c->caseStmt);
+                break;
+        }
+        prettyCASE_CLAUSE(c->next);        
+    }
+}
+
+void prettyAssignStmt(STMT *stmt) {
+    if (stmt != NULL) {
+        prettyEXP(stmt->val.assignStmtVal.lhs);
+        switch (stmt->val.assignStmtVal.assignKind) {
+            case normal:
+                printf(" = ");
+                break;
+            case plus:
+                printf(" += ");
+                break;
+            case minus:
+                printf(" -= ");
+                break;
+            case mult:
+                printf(" *= ");
+                break;
+            case divide:
+                printf(" /= ");
+                break;   
+            case or:
+                printf(" |= ");      
+                break;
+            case xor:
+                printf(" ^= ");
+                break;
+            case mod:
+                printf(" \%= ");
+                break;
+            case leftShift:
+                printf(" <<= ");
+                break;   
+            case rightShift:
+                printf(" >>= ");      
+                break;    
+            case and:
+                printf(" &= ");
+                break;   
+            case bitclear:
+                printf(" &^= ");      
+                break;  
+        }
+        prettyEXP(stmt->val.assignStmtVal.rhs);
+        printf("\n");
+    }
+}
+
+void prettyFOR_CLAUSE(FOR_CLAUSE *f) {
+    if (f != NULL) {
+        prettySTMT(f->first);
+        printf(";");
+        prettyEXP(f->condtion);
+        printf(";");
+        prettySTMT(f->post);
     }
 }
 
@@ -361,49 +542,50 @@ void prettySTMT(STMT *stmt) {
             break;
         case switchStmt:
             printf("switch");
-            prettySTMT(stmt->val.switchStmtVal.switchSimpleStmt);
+            if (stmt->val.switchStmtVal.switchSimpleStmt != NULL) {
+                prettySTMT(stmt->val.switchStmtVal.switchSimpleStmt);
+                printf(";");
+            }
             prettyEXP(stmt->val.switchStmtVal.switchExp);
-            
-            weedCASE_CLAUSE(stmt->val.switchStmtVal.switchCases, inLoop, 1, 0);
+            printf("{\n");
+            prettyCASE_CLAUSE(stmt->val.switchStmtVal.switchCases);
+            printf("}\n");
             break;
         case emptyStmt:
             break;
         case expStmt:
-            if(stmt->val.expStmtVal->kind != funcExpr ){
-                fprintf(stderr,
-                        "Error: (line %d) Exp stmt must be func call.\n",
-                        stmt->lineno);
-                exit(1);
-            }
-            weedEXP(stmt->val.expStmtVal, 0);
+            prettyEXP(stmt->val.expStmtVal);
             break;
         case assignStmt:
-            checkExpListLengthEqual(stmt->val.assignStmtVal.lhs, stmt->val.assignStmtVal.rhs);
-            weedEXP(stmt->val.assignStmtVal.lhs, 1);
-            weedEXP(stmt->val.assignStmtVal.rhs, 0);
+            prettyAssignStmt(stmt);
             break;
         case incStmt:
-            weedEXP(stmt->val.incExp, 1);
+            prettyEXP(stmt->val.incExp);
+            printf("++\n");
             break;
         case decStmt:
-            weedEXP(stmt->val.decExp, 1);
+            prettyEXP(stmt->val.decExp);
+            printf("--\n");
             break;
         case shortVarDecStmt:
-            weedIdListExpList(stmt->val.shortVarDecStmtVal.ids,
-                              stmt->val.shortVarDecStmtVal.exps, stmt->lineno);
-            weedEXP(stmt->val.shortVarDecStmtVal.exps, 0);
+            prettyID_LIST(stmt->val.shortVarDecStmtVal.ids);
+            printf(" := ");
+            prettyEXP(stmt->val.shortVarDecStmtVal.exps);
+            printf("\n");
             break;
         case forStmt:
-            weedEXP(stmt->val.forStmtVal.forCond, 0);
-            weedFOR_CLAUSE(stmt->val.forStmtVal.forClause, inLoop, inSwitch);
-            prettySTMT(stmt->val.forStmtVal.forBody, 1, inSwitch);
+            printf("for ");
+            prettyEXP(stmt->val.forStmtVal.forCond);
+            prettyFOR_CLAUSE(stmt->val.forStmtVal.forClause);
+            printf(" ");
+            prettySTMT(stmt->val.forStmtVal.forBody);
             break;
         case dclStmt:
-            weedDECL(stmt->val.decStmtVal);
+            prettyDECL(stmt->val.decStmtVal);
             break;
         default:
             break;
         }
-        prettySTMT(stmt->next, inLoop, inSwitch);
+        prettySTMT(stmt->next);
     }
 }
