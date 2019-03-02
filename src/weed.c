@@ -243,7 +243,7 @@ void weedEXP(EXP *exp, int blank_allow) {
         break;
 
     case arrayExpr:
-    case sliceExpr:
+    // case sliceExpr:
         weedEXP(exp->val.array.exp, 0);
         weedEXP(exp->val.array.index, 0);
         break;
@@ -260,12 +260,12 @@ void weedEXP(EXP *exp, int blank_allow) {
         }
         break;
 
-    case expList:;
-        EXP *e = exp;
-        while (e->val.expr != NULL) {
-            weedEXP(e->val.expr, blank_allow);
-            e = e->next;
-        }
+    // case expList:;
+    //     EXP *e = exp;
+    //     while (e->val.expr != NULL) {
+    //         weedEXP(e->val.expr, blank_allow);
+    //         e = e->next;
+    //     }
 
     default:
         break;

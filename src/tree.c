@@ -64,15 +64,76 @@ EXP *makeStringRawExp(char *stringval, int lineno) {
     char *ptrDest = itpString;
 
     while (*ptrSource){
-        strcpy(ptrDest, ptrSource);
-        ptrDest ++;
+        switch (*ptrSource){
+            case '\\':
+                *ptrDest = '\\';
+                ptrDest ++;
+                *ptrDest = '\\';
+                ptrDest ++;
+                break;
+            case '\a':
+                *ptrDest = '\\';
+                ptrDest ++;
+                *ptrDest = 'a';
+                ptrDest ++;
+                break;
+            case '\b':
+                *ptrDest = '\\';
+                ptrDest ++;
+                *ptrDest = 'b';
+                ptrDest ++;
+                break;
+            case '\f':
+                *ptrDest = '\\';
+                ptrDest ++;
+                *ptrDest = 'f';
+                ptrDest ++;
+                break;
+            case '\n':
+                *ptrDest = '\\';
+                ptrDest ++;
+                *ptrDest = 'n';
+                ptrDest ++;
+                break;
+            case '\r':
+                *ptrDest = '\\';
+                ptrDest ++;
+                *ptrDest = 'r';
+                ptrDest ++;
+                break;
+            case '\t':
+                *ptrDest = '\\';
+                ptrDest ++;
+                *ptrDest = 't';
+                ptrDest ++;
+                break;
+            case '\v':
+                *ptrDest = '\\';
+                ptrDest ++;
+                *ptrDest = 'v';
+                ptrDest ++;
+                break;
+            case '"':
+                *ptrDest = '\\';
+                ptrDest ++;
+                *ptrDest = '"';
+                ptrDest ++;
+                break;
+            case '`':
+                break;
+            default:
+                *ptrDest = *ptrSource;
+                ptrDest ++;
+                break;
+        }   
         ptrSource ++;
     }
+    *ptrDest = '\0';
     e->val.stringVal = strdup(itpString);
     return e;
 }
 
-EXP *makeRuneExp(char runeval, int lineno) {
+EXP *makeRuneExp(char *runeval, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = runeExpr;

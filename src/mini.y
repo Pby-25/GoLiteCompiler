@@ -6,7 +6,7 @@
 extern PROGRAM *root;
 extern int yylineno;
 int yylex();
-void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno, s); }
+int yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno, s); }
 %}
 %locations
 %error-verbose
@@ -16,7 +16,7 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 %union {
     int intval;
     struct TYPE *type;
-    char runeval;
+    char *runeval;
     char *id;
     char *stringval;
     float floatval;

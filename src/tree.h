@@ -97,11 +97,11 @@ typedef enum {
     lenExpr,
     capExpr,
     arrayExpr,
-    sliceExpr,
+    // sliceExpr,
     selectorExpr,
     funcExpr,
     castExpr,
-    expList
+    // expList
 } ExpKind;
 
 typedef struct FIELD_DCL FIELD_DCL;
@@ -174,7 +174,7 @@ struct EXP {
     union {
         char *id;
         char *stringVal;
-        char runeVal;
+        char *runeVal;
         int intVal;
         bool boolVal;
         double floatVal;
@@ -215,7 +215,7 @@ EXP *makeBooleanExp(bool boolean, int lineno);
 EXP *makeIdentifierExp(char *identifier, int lineno);
 EXP *makeStringItpExp(char *stringval, int lineno);
 EXP *makeStringRawExp(char *stringval, int lineno);
-EXP *makeRuneExp(char runeval, int lineno);
+EXP *makeRuneExp(char *runeval, int lineno);
 EXP *makeIntExp(int intval, int lineno);
 EXP *makeFloat64Exp(double float64val, int lineno);
 EXP *makeBoolExp(int boolval, int lineno);

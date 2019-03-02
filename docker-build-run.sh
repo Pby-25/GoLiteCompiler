@@ -1,1 +1,1 @@
-docker build -t minilang . && docker run minilang
+docker build -t minilang . && docker run -it minilang

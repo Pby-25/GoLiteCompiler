@@ -5,13 +5,13 @@
 
 void prettyPROGRAM(PROGRAM *root);
 
-void prettySTMT(STMT *stmt, bool to_indent);
+void prettySTMT(STMT *stmt, bool to_indent, bool new_line);
 void prettyImports(IMPORT *i);
-void prettyDecl(DCL* d);
+void prettyDecl(DCL* d, int infunc);
 void prettyTypeDcl(TYPEDECL *t);
-void prettyVarDcl(VARDECL *v);
-void prettyTypeSpec(TYPESPEC *ts);
-void prettyVarSpec(VARSPEC *vs);
+void prettyVarDcl(VARDECL *v, int infunc);
+void prettyTypeSpec(TYPESPEC *ts, int needParen);
+void prettyVarSpec(VARSPEC *vs, int infunc);
 void prettType(TYPE *t);
 void prettyField_Dcl(FIELD_DCL *f);
 void prettyIDList(ID_LIST *i);

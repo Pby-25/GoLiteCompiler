@@ -184,9 +184,9 @@ _|([a-zA-Z_][a-zA-Z0-9_]*) {
 }
 
 {RUNE}	{
-        yylval.stringval = strdup(yytext);
-        if (g_tokens) printf("tRUNEVAL(%s)\n",yylval.stringval);
-         NEED_SEMI_CONLON = 1;
+        yylval.runeval = strdup(yytext);
+        if (g_tokens) printf("tRUNEVAL(%s)\n",yylval.runeval);
+        NEED_SEMI_CONLON = 1;
         return tRUNEVAL;
 }
 
