@@ -6,7 +6,7 @@ ADD / 520a1
 WORKDIR /520a1
 COPY . ./
 
-# RUN ./build.sh
+RUN ./build.sh
 # CMD bash
 CMD ./test.sh; ./prettytest.sh
 # CMD ./prettytest.sh

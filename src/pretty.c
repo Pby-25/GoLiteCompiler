@@ -8,9 +8,8 @@
 int indentation = 0;
 
 void printIndentation() {
-    // printf("\n");
     for (int i = 0; i < indentation; i++) {
-        // printf("    ");
+        printf("    ");
     }
 }
 
@@ -28,7 +27,6 @@ void prettyDecl(DCL *d, int infunc) {
             prettyTypeDcl(d->val.typeDecl);
             break;
         case varDcl:
-            
             prettyVarDcl(d->val.varDecl,infunc);
             break;
         }
@@ -37,13 +35,13 @@ void prettyDecl(DCL *d, int infunc) {
 void prettyTypeDcl(TYPEDECL *t) {
     if (t != NULL) {
         printf("type ");
-
+        indentation ++;
         prettyTypeSpec(t->typeSpec, 1);
+        indentation --;
     }
 }
 void prettyVarDcl(VARDECL *v, int infunc) {
     if (v != NULL) {
-        
         prettyVarSpec(v->var_specs, infunc);
     }
 }
@@ -56,12 +54,16 @@ void prettyTypeSpec(TYPESPEC *ts, int needParen) {
         printf("(");
     }
     printf("\n");
+    printIndentation();
     printf("%s ", ts->id);
     prettyType(ts->type);
-    printf("\n");
     prettyTypeSpec(ts->next,0);
     if (ts->next == NULL) {
+        printf("\n");
+        indentation --;
+        printIndentation();
         printf(")\n");
+        indentation ++;
     }
 }
 
@@ -69,29 +71,58 @@ void prettyVarSpec(VARSPEC *vs, int infunc) {
     if (vs == NULL) {
         return;
     }
+    VARSPEC *vsPtr = vs;
     printf("var ");
-    prettyIDList(vs->id_list);
-    printf(" ");
-    prettyType(vs->type);
+    if (vsPtr->next){
+        printf("(\n");
+        indentation++;
+        while (vsPtr){
+            printIndentation();
+            prettyIDList(vsPtr->id_list);
+            printf(" ");
+            prettyType(vsPtr->type);
 
-    EXP *c = vs->exp_list;
-    if(c!=NULL){
-         printf("=");
-    }
-    prettyEXP(c);
-    if(vs->next != NULL && infunc){
+            EXP *c = vsPtr->exp_list;
+            if(c!=NULL){
+                printf("= ");
+            }
+            prettyEXP(c);
+            if(vsPtr->next != NULL && infunc){
+                printf("\n");
+            }
+            if(!infunc){
+                printf("\n");
+            }
+            vsPtr = vsPtr->next;
+        }
         printf("\n");
+        indentation--;
+        printIndentation();
+        printf(")\n");
+    } else {
+        prettyIDList(vs->id_list);
+        printf(" ");
+        prettyType(vs->type);
+
+        EXP *c = vs->exp_list;
+        if(c!=NULL){
+            printf("= ");
+        }
+        prettyEXP(c);
+        if(vs->next != NULL && infunc){
+            printf("\n");
+        }
+        if(!infunc){
+            printf("\n");
+        }
     }
-    if(!infunc){
-        printf("\n");
-    }
-    prettyVarSpec(vs->next, infunc);
 }
 
 void prettyField_Dcl(FIELD_DCL *f) {
     if (f == NULL) {
         return;
     }
+    printIndentation();
     prettyIDList(f->id_list);
     printf(" ");
     prettyType(f->type);
@@ -125,7 +156,10 @@ void prettyType(TYPE *t) {
             break;
         case k_type_struct:
             printf("struct {\n");
+            indentation ++;
             prettyField_Dcl(t->struct_type.field_dcls);
+            indentation --;
+            printIndentation();
             printf("}");
             break;
         case k_type_type:
@@ -428,17 +462,18 @@ void prettyEXP(EXP *exp) {
 
 void prettyCASE_CLAUSE(CASE_CLAUSE *c) {
     if (c != NULL) {
+        printIndentation();
         switch (c->kind) {
         case caseK:
             printf("case ");
             prettyEXP(c->caseExp);
-            printf(" :");
+            printf(" :\n");
             indentation++;
             prettySTMT(c->caseStmt, true, true);
             indentation--;
             break;
         case defaultK:
-            printf("default:");
+            printf("default:\n");
             indentation++;
             prettySTMT(c->caseStmt, true, true);
             indentation--;
@@ -504,7 +539,7 @@ void prettyFOR_CLAUSE(FOR_CLAUSE *f) {
 }
 
 void prettySTMT(STMT *stmt, bool to_indent, bool new_line) {
-    if (to_indent) {
+    if (to_indent && stmt!=NULL) {
         printIndentation();
     }
     if (stmt != NULL) {
@@ -519,7 +554,7 @@ void prettySTMT(STMT *stmt, bool to_indent, bool new_line) {
             printf("{");
             printf("\n");
             indentation++;
-            prettySTMT(stmt->val.block, to_indent, true);
+            prettySTMT(stmt->val.block, true, true);
             indentation--;
             printIndentation();
             printf("}");
@@ -527,7 +562,7 @@ void prettySTMT(STMT *stmt, bool to_indent, bool new_line) {
         case ifStmt:
             printf("if ");
             if (stmt->val.ifStmtVal.ifSimpleStmt != NULL) {
-                prettySTMT(stmt->val.ifStmtVal.ifSimpleStmt, to_indent, false);
+                prettySTMT(stmt->val.ifStmtVal.ifSimpleStmt, false, false);
                 printf(";");
             }
             prettyEXP(stmt->val.ifStmtVal.ifCond);
@@ -535,13 +570,13 @@ void prettySTMT(STMT *stmt, bool to_indent, bool new_line) {
             if(stmt->val.ifStmtVal.elseStmt == NULL){
                 newLine = true;
             }
-            prettySTMT(stmt->val.ifStmtVal.ifBody, to_indent, newLine);
-            prettySTMT(stmt->val.ifStmtVal.elseStmt, to_indent, true);
+            prettySTMT(stmt->val.ifStmtVal.ifBody, false, newLine);
+            prettySTMT(stmt->val.ifStmtVal.elseStmt, false, newLine);
             break;
         case elseStmt:
             printf("else ");
-            prettySTMT(stmt->val.elseStmtVal.elseBody, to_indent, true);
-            prettySTMT(stmt->val.elseStmtVal.ifStmt, to_indent, true);
+            prettySTMT(stmt->val.elseStmtVal.elseBody, false, newLine);
+            prettySTMT(stmt->val.elseStmtVal.ifStmt, false, newLine);
             break;
         case printStmt:
             printf("print(");
@@ -560,7 +595,7 @@ void prettySTMT(STMT *stmt, bool to_indent, bool new_line) {
         case switchStmt:
             printf("switch ");
             if (stmt->val.switchStmtVal.switchSimpleStmt != NULL) {
-                prettySTMT(stmt->val.switchStmtVal.switchSimpleStmt, to_indent, false);
+                prettySTMT(stmt->val.switchStmtVal.switchSimpleStmt, false, false);
                 printf(";");
             }
             prettyEXP(stmt->val.switchStmtVal.switchExp);
@@ -597,7 +632,7 @@ void prettySTMT(STMT *stmt, bool to_indent, bool new_line) {
             prettyEXP(stmt->val.forStmtVal.forCond);
             prettyFOR_CLAUSE(stmt->val.forStmtVal.forClause);
             printf(" ");
-            prettySTMT(stmt->val.forStmtVal.forBody, to_indent, true);
+            prettySTMT(stmt->val.forStmtVal.forBody, false, true);
             break;
         case dclStmt:
             prettyDecl(stmt->val.decStmtVal, 1);
@@ -606,6 +641,8 @@ void prettySTMT(STMT *stmt, bool to_indent, bool new_line) {
         if (new_line) {
             printf("\n");
         }
-        prettySTMT(stmt->next, to_indent, new_line);
+        if (stmt->next){
+            prettySTMT(stmt->next, to_indent, new_line);    
+        }
     }
 }
