@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
             int r = yyparse();
             if (r == 0) {
                 if (root != NULL) {
-                    // prettyProg(root);
+                    prettyPROGRAM(root);
                 } else {
                     printf("root null\n");
                     exit(1);
