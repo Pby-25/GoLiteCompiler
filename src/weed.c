@@ -128,6 +128,7 @@ void weedIdListExpList(ID_LIST *i, EXP *e, int lineno) {
             lineno);
         exit(1);
     }
+    
 }
 
 void weedVarDcl(VARDECL *v) {
@@ -146,6 +147,7 @@ void weedVarSpec(VARSPEC *vs) {
         return;
     }
     weedIdListExpList(vs->id_list, vs->exp_list, vs->lineno);
+    weedEXP(vs->exp_list, 0);
     weedType(vs->type);
     weedVarSpec(vs->next);
 }
