@@ -13,11 +13,11 @@ int NEED_SEMI_CONLON=0;
 
 DIGIT [0-9]
 INT_DECIMAL 0|([1-9]{DIGIT}*)
-INT_OCTAL 0[0-7]*
-INT_HEX 0[xX][0-9a-fA-F]*
+INT_OCTAL 0[0-7]+
+INT_HEX 0[xX][0-9a-fA-F]+
 INT ({INT_DECIMAL}|{INT_OCTAL}|{INT_HEX})
 FLOAT {DIGIT}*\.{DIGIT}*
-RUNE '(.|\\a|\\b|\\f|\\n|\\r|\\t|\\v|\\\\|\\')'
+RUNE '([^'\\]|\\a|\\b|\\f|\\n|\\r|\\t|\\v|\\\\|\\')'
 STRING_ITP \"([a-zA-Z0-9 ~!@#$%^&*\-+\/`<>=_|';:.,?{}\[\]\(\)]*([\\]["'abfnrtv\\])*)*\"
 STRING_RAW `[^`]*`
 
@@ -42,7 +42,16 @@ STRING_RAW `[^`]*`
         return tSEMICOLON;
     }
 }
-"/*"	BEGIN(BLOCK_COMMENT);
+"/*"	{ 
+    BEGIN(BLOCK_COMMENT);
+    if(NEED_SEMI_CONLON){
+        if(g_tokens){
+            printf("tSEMICOLON\n");
+        }
+        NEED_SEMI_CONLON = 0;
+        return tSEMICOLON;
+    }
+}
 <BLOCK_COMMENT>"*/"	BEGIN(INITIAL);
 <BLOCK_COMMENT>[^*\n]+
 <BLOCK_COMMENT>"*"

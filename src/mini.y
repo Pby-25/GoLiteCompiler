@@ -53,7 +53,7 @@ int yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno, 
 %type <FUNCDECL> func_dcl
 %type <PROGRAM> prog start
 %type <EXP> exp unary_exp primary_exp exp_list literals for_exp
-%type <STMT> stmt stmts break_stmt continue_stmt assign_stmt simple_stmt print_stmt short_var_dec switch_stmt ifstmt else_stmts block_stmt for_stmt inc_dec_stmt post_stmt
+%type <STMT> stmt stmts break_stmt continue_stmt assign_stmt simple_stmt print_stmt short_var_dec switch_stmt ifstmt else_stmts block_stmt for_stmt inc_dec_stmt post_stmt switch_stmts
 %type <IMPORT> import imports
 %type <PACKAGE> package
 %type <TOPDECL> top_level_dcl top_level_dcls
@@ -244,9 +244,13 @@ switch_stmt: tSWITCH simple_stmt tSEMICOLON exp tLEFTBRACE expr_case_clause tRIG
 ;
 
 expr_case_clause: { $$ = NULL; }
-    | expr_case_clause tCASE exp_list tCOLON stmts { $$ = makeCaseClause(1, $1, $3, $5, yylineno); }
-    | expr_case_clause tDEFAULT tCOLON stmts { $$ = makeCaseClause(0, $1, NULL, $4, yylineno); }
+    | expr_case_clause tCASE exp_list tCOLON switch_stmts { $$ = makeCaseClause(1, $1, $3, $5, yylineno); }
+    | expr_case_clause tDEFAULT tCOLON switch_stmts { $$ = makeCaseClause(0, $1, NULL, $4, yylineno); }
 ; 
+
+switch_stmts: { $$ = NULL; }
+    | stmts { $$ = $1; }
+;
 
 ifstmt: tIF simple_stmt tSEMICOLON exp block_stmt else_stmts { $$ = makeIfStmt($2, $4, $5, $6, yylineno); }
     | tIF simple_stmt tSEMICOLON exp block_stmt { $$ = makeIfStmt($2, $4, $5, NULL, yylineno); }
@@ -335,7 +339,6 @@ unary_exp:  primary_exp { $$ = $1; }
         | tMINUS unary_exp  %prec UMINUS { $$ = makeUnaryExp(uMinusExpr, $2, yylineno); }
         | tBANG unary_exp   %prec UBANG  { $$ = makeUnaryExp(uBangExpr, $2, yylineno); }
         | tBITWISEXOR unary_exp %prec UCARET { $$ = makeUnaryExp(uCaretExpr, $2, yylineno); }
-        | tBITWISEAND unary_exp %prec UBITWISEAND { $$ = makeUnaryExp(uBitwiseAndExpr, $2, yylineno); }
 ;
 
 %%
