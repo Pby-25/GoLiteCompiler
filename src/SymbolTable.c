@@ -4,58 +4,58 @@
 #include <stdlib.h>
 #include <string.h>
 
-// SymbolTable *initSymbolTable() {
-//     SymbolTable *t = malloc(sizeof(SymbolTable));
-//     for (int i = 0; i < HashSize; i++) {
-//         t->table[i] = NULL;
-//     }
-//     t->parent = NULL;
-//     return t;
-// }
+SymbolTable *initSymbolTable() {
+    SymbolTable *t = malloc(sizeof(SymbolTable));
+    for (int i = 0; i < HashSize; i++) {
+        t->table[i] = NULL;
+    }
+    t->parent = NULL;
+    return t;
+}
 
-// // open new scope with s as parent scope
-// SymbolTable *scopeSymbolTable(SymbolTable *s) {
-//     SymbolTable *t = initSymbolTable();
-//     t->parent = s;
-//     return t;
-// }
+// open new scope with s as parent scope
+SymbolTable *scopeSymbolTable(SymbolTable *s) {
+    SymbolTable *t = initSymbolTable();
+    t->parent = s;
+    return t;
+}
 
-// int Hash(char *str) {
-//     unsigned int hash = 0;
-//     while (*str)
-//         hash = (hash << 1) + *str++;
-//     return hash % HashSize;
-// }
+int Hash(char *str) {
+    unsigned int hash = 0;
+    while (*str)
+        hash = (hash << 1) + *str++;
+    return hash % HashSize;
+}
 
-// SYMBOL *putSymbol(SymbolTable *t, EXP *id_exp, TYPE *type) {
-//     int i = Hash(id_exp->val.id_string);
-//     id_exp->type = type;
-//     for (SYMBOL *s = t->table[i]; s; s = s->next) {
-//         if (strcmp(s->name, id_exp->val.id_string) == 0) {
-//             return NULL;
-//         }
-//     }
-//     SYMBOL *s = malloc(sizeof(SYMBOL));
-//     s->name = id_exp->val.id_string;
-//     s->type = type;
-//     s->next = t->table[i];
-//     t->table[i] = s;
-//     return s;
-// }
+SYMBOL *putSymbol(SymbolTable *t, EXP *id_exp, TYPE *type) {
+    int i = Hash(id_exp->val.id);
+    id_exp->type = type;
+    for (SYMBOL *s = t->table[i]; s; s = s->next) {
+        if (strcmp(s->name, id_exp->val.id) == 0) {
+            return NULL;
+        }
+    }
+    SYMBOL *s = malloc(sizeof(SYMBOL));
+    s->name = id_exp->val.id;
+    s->type = type;
+    s->next = t->table[i];
+    t->table[i] = s;
+    return s;
+}
 
-// SYMBOL *getSymbol(SymbolTable *t, char *name) {
-//     int i = Hash(name);
-//     // Check the current scope
-//     for (SYMBOL *s = t->table[i]; s; s = s->next) {
-//         if (strcmp(s->name, name) == 0)
-//             return s;
-//     }
-//     // Check for existence of a parent scope
-//     if (t->parent == NULL)
-//         return NULL;
-//     // Check the parent scopes
-//     return getSymbol(t->parent, name);
-// }
+SYMBOL *getSymbol(SymbolTable *t, char *name) {
+    int i = Hash(name);
+    // Check the current scope
+    for (SYMBOL *s = t->table[i]; s; s = s->next) {
+        if (strcmp(s->name, name) == 0)
+            return s;
+    }
+    // Check for existence of a parent scope
+    if (t->parent == NULL)
+        return NULL;
+    // Check the parent scopes
+    return getSymbol(t->parent, name);
+}
 
 // void errorReDeclared(int lineno, char *id) {
 //     fprintf(stderr, "Error: (line %d) identifier \"%s\" already declared \n",
@@ -278,7 +278,50 @@
 //     }
 // }
 
-// void makeSymbolTable(PROGRAM *prog, int print) {
-//     SymbolTable *root = initSymbolTable();
-//     makeSymbolStatement(prog->statements, root, 0, print);
-// }
+void makeSymbolVarDecl(VARDECL *v) {
+    // if (t != NULL) {
+        
+    // }
+}
+
+void makeSymbolTypeDecl(TYPEDECL *t) {
+    if(t!=NULL){
+        
+    }
+}
+
+void makeSymbolDecl(DCL *d) {
+    if (d != NULL) {
+        switch (d->kind) {
+            case varDcl:
+                makeSymbolVarDecl(d->val.varDecl);
+            case typeDcl: 
+                makeSymbolTypeDecl(d->val.typeDecl);
+                break;
+        }  
+    }
+}
+
+void makeSymbolFuncDecl(FUNCDECL *f) {
+
+}
+
+void makeSymbolTopDecl(TOPDECL * t) {
+    if (t != NULL) {
+        switch (t->kind) {
+            case dclK:
+                makeSymbolDecl(t->val.dcl);
+                break;
+            case funcDeclK:
+                makeSymbolFuncDecl(t->val.funcDecl);
+                break;
+        }
+        makeSymbolTopDecl(t->next);
+    }
+}
+
+
+void makeSymbolTable(PROGRAM *prog, int print) {
+    SymbolTable *root = initSymbolTable();
+    // makeSymbolStatement(prog->top_decl, root, 0, print);
+}

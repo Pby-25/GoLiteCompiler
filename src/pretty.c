@@ -48,6 +48,9 @@ void prettyVarDcl(VARDECL *v, int infunc) {
 
 void prettyTypeSpec(TYPESPEC *ts, int needParen) {
     if (ts == NULL) {
+        if(needParen){
+            printf("( )\n");
+        }
         return;
     }
     if (needParen) {
@@ -539,7 +542,7 @@ void prettyFOR_CLAUSE(FOR_CLAUSE *f) {
 }
 
 void prettySTMT(STMT *stmt, bool to_indent, bool new_line) {
-    if (to_indent && stmt!=NULL) {
+    if (to_indent && stmt!=NULL && stmt->kind != emptyStmt) {
         printIndentation();
     }
     if (stmt != NULL) {
@@ -638,7 +641,7 @@ void prettySTMT(STMT *stmt, bool to_indent, bool new_line) {
             prettyDecl(stmt->val.decStmtVal, 1);
             break;
         }
-        if (new_line) {
+        if (new_line && stmt->kind != emptyStmt) {
             printf("\n");
         }
         if (stmt->next){
