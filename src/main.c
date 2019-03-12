@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
             int r = yyparse();
             if (r == 0) {
                 if (root != NULL) {
-                    // makeSymbolTable(root, 1);
+                    makeSymbolTable(root);
                 } else {
                     printf("root null\n");
                     exit(1);

@@ -58,7 +58,8 @@ typedef enum {
     k_array,
     k_type_struct,
     k_type_id,
-    k_type_type
+    k_type_type,
+    k_infer
 } TypeKind;
 
 typedef enum {
