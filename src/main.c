@@ -52,6 +52,7 @@ int main(int argc, char *argv[]) {
             int r = yyparse();
             if (r == 0) {
                 if (root != NULL) {
+                    symbolMode();
                     makeSymbolTable(root);
                 } else {
                     printf("root null\n");
@@ -65,7 +66,7 @@ int main(int argc, char *argv[]) {
             int r = yyparse();
             if (r == 0) {
                 if (root != NULL) {
-                    // typeCheckProgram(root);
+                    typeCheckProgram(root);
                     printf("OK\n");
                 } else {
                     printf("root null\n");

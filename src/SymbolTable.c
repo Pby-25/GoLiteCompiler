@@ -3,6 +3,18 @@
 #include "tree.h"
 #include <stdlib.h>
 #include <string.h>
+#include "TypeCheck.h"
+
+bool printSymbol = false;
+char *functionSignature = NULL;
+int symbol_indentation = 0;
+
+void printFunctionSignature(){
+    if (functionSignature != NULL){
+        if (printSymbol) printf("%s", functionSignature); 
+        functionSignature = NULL;   
+    }
+}
 
 SymbolTable *initSymbolTable() {
     SymbolTable *t = malloc(sizeof(SymbolTable));
@@ -43,6 +55,20 @@ SYMBOL *putSymbol(SymbolTable *t, char *id, TYPE *type, symbolKind sk) {
     return s;
 }
 
+SYMBOL *getSymbolCurrentScope(SymbolTable *t, char *name) {
+    int i = Hash(name);
+    // Check the current scope
+    for (SYMBOL *s = t->table[i]; s; s = s->next) {
+        if (strcmp(s->name, name) == 0)
+            return s;
+    }
+    // Check for existence of a parent scope
+    if (t->parent == NULL)
+        return NULL;
+    // Check the parent scopes
+    return NULL;
+}
+
 SYMBOL *getSymbol(SymbolTable *t, char *name) {
     int i = Hash(name);
     // Check the current scope
@@ -67,230 +93,6 @@ void errorNotDeclared(int lineno, char *message, char *id) {
     fprintf(stderr, "Error: (line %d) %s \"%s\" not declared\n", lineno,
             message, id);
     exit(1);
-}
-// void makeSymbolExp(EXP *e, SymbolTable *st) {
-//     if (e == NULL) {
-//         return;
-//     }
-//     SYMBOL *sb;
-//     switch (e->kind) {
-//     case k_expressionKindIntLiteral:
-//         e->type = stingToTYPE("int");
-//         break;
-//     case k_expressionKindStringLiteral:
-//         e->type = stingToTYPE("string");
-//         break;
-//     case k_expressionKindFloatLiteral:
-//         e->type = stingToTYPE("float");
-//         break;
-//     case k_expressionKindBooleanLiteral:
-//         e->type = stingToTYPE("boolean");
-//         break;
-//     case k_expressionKindPlusExp:
-//         makeSymbolExp(e->val.binary.lhs, st);
-//         makeSymbolExp(e->val.binary.rhs, st);
-//         break;
-//     case k_expressionKindMinusExp:
-//         makeSymbolExp(e->val.binary.lhs, st);
-//         makeSymbolExp(e->val.binary.rhs, st);
-//         break;
-//     case k_expressionKindTimesExp:
-//         makeSymbolExp(e->val.binary.lhs, st);
-//         makeSymbolExp(e->val.binary.rhs, st);
-//         break;
-//     case k_expressionKindDivExp:
-//         makeSymbolExp(e->val.binary.lhs, st);
-//         makeSymbolExp(e->val.binary.rhs, st);
-//         break;
-//     case k_expressionKindEqExp:
-//         makeSymbolExp(e->val.binary.lhs, st);
-//         makeSymbolExp(e->val.binary.rhs, st);
-//         break;
-//     case k_expressionKindNeqExp:
-//         makeSymbolExp(e->val.binary.lhs, st);
-//         makeSymbolExp(e->val.binary.rhs, st);
-//         break;
-//     case k_expressionKindGeqExp:
-//         makeSymbolExp(e->val.binary.lhs, st);
-//         makeSymbolExp(e->val.binary.rhs, st);
-//         break;
-//     case k_expressionKindLeqExp:
-//         makeSymbolExp(e->val.binary.lhs, st);
-//         makeSymbolExp(e->val.binary.rhs, st);
-//         break;
-//     case k_expressionKindGreaterExp:
-//         makeSymbolExp(e->val.binary.lhs, st);
-//         makeSymbolExp(e->val.binary.rhs, st);
-//         break;
-//     case k_expressionKindLessExp:
-//         makeSymbolExp(e->val.binary.lhs, st);
-//         makeSymbolExp(e->val.binary.rhs, st);
-//         break;
-//     case k_expressionKindAndExp:
-//         makeSymbolExp(e->val.binary.lhs, st);
-//         makeSymbolExp(e->val.binary.rhs, st);
-//         break;
-//     case k_expressionKindOrExp:
-//         makeSymbolExp(e->val.binary.lhs, st);
-//         makeSymbolExp(e->val.binary.rhs, st);
-//         break;
-//     case k_expressionKindBangExp:
-//         makeSymbolExp(e->exp, st);
-//         break;
-//     case k_expressionKindNegExp:
-//         makeSymbolExp(e->exp, st);
-//         break;
-//     case k_expressionKindIDExp:
-//         sb = getSymbol(st, e->val.id_string);
-//         if (sb == NULL) {
-//             errorNotDeclared(e->lineno, e->val.id_string);
-//         }
-//         e->type = sb->type;
-//         break;
-//     case k_expressionKindParen:
-//         makeSymbolExp(e->exp, st);
-//         e->type = e->exp->type;
-//         break;
-//     }
-// }
-
-// void indent(int symbol_indentation) {
-//     for (int i = 0; i < symbol_indentation; i++) {
-//         printf("\t");
-//     }
-// }
-
-// void makeSymbolStatement(STATEMENT *s, SymbolTable *st, int symbol_indentation,
-//                          int print) {
-//     if (s == NULL) {
-//         return;
-//     }
-//     SYMBOL *sb;
-//     SymbolTable *l_symbolTable;
-//     switch (s->kind) {
-//     case k_stmt_read:
-//         sb = getSymbol(st, s->val.assignment.identifier->val.id_string);
-//         if (sb == NULL) {
-//             errorNotDeclared(s->lineno, s->val.read.identifier->val.id_string);
-//         }
-//         s->val.read.identifier->type = sb->type;
-//         break;
-//     case k_stmt_print:
-//         makeSymbolExp(s->val.print.exp, st);
-//         break;
-//     case k_stmt_assign:
-//         sb = getSymbol(st, s->val.assignment.identifier->val.id_string);
-
-//         if (sb == NULL) {
-//             errorNotDeclared(s->lineno, s->val.read.identifier->val.id_string);
-//         }
-//         s->val.assignment.identifier->type = sb->type;
-//         makeSymbolExp(s->val.assignment.exp, st);
-//         break;
-//     case k_stmt_if:
-//         if (print) {
-//             indent(symbol_indentation);
-//             printf("{\n");
-//         }
-
-//         l_symbolTable = scopeSymbolTable(st);
-//         makeSymbolExp(s->val.if_stmt.condition, st);
-//         makeSymbolStatement(s->val.if_stmt.stmts, l_symbolTable,
-//                             symbol_indentation + 1, print);
-//         if (print) {
-//             indent(symbol_indentation);
-//             printf("}\n");
-//         }
-//         if (s->val.if_stmt.elseifstmts != NULL) {
-//             l_symbolTable = scopeSymbolTable(st);
-//             makeSymbolStatement(s->val.if_stmt.elseifstmts, l_symbolTable,
-//                                 symbol_indentation, print);
-//         }
-//         if (s->val.if_stmt.elsestmt != NULL) {
-//             l_symbolTable = scopeSymbolTable(st);
-//             makeSymbolStatement(s->val.if_stmt.elsestmt, l_symbolTable,
-//                                 symbol_indentation, print);
-//         }
-//         break;
-//     case k_stmt_dcl:
-//         sb = putSymbol(st, s->val.dcl.identifier, s->val.dcl.type);
-//         if (sb == NULL) {
-//             errorReDeclared(s->lineno, s->val.dcl.identifier->val.id_string);
-//         }
-
-//         s->val.dcl.identifier->type = sb->type;
-//         makeSymbolExp(s->val.dcl.exp, st);
-//         if (print) {
-//             indent(symbol_indentation);
-//             printf("%s: %s \n", s->val.dcl.identifier->val.id_string,
-//                    s->val.dcl.type->string_val);
-//         }
-//         break;
-//     case k_stmt_list:
-//         makeSymbolStatement(s->current, st, symbol_indentation, print);
-//         makeSymbolStatement(s->next, st, symbol_indentation, print);
-//         break;
-//     case k_stmt_elseif_list:
-//         makeSymbolStatement(s->val.elseif_list.current, st, symbol_indentation, print);
-//         makeSymbolStatement(s->val.elseif_list.next, st, symbol_indentation, print);
-//         break;
-//     case k_stmt_elseif:
-//         if (print) {
-//             indent(symbol_indentation);
-//             printf("{\n");
-//         }
-//         l_symbolTable = scopeSymbolTable(st);
-//         makeSymbolExp(s->val.elseif.exp, st);
-//         makeSymbolStatement(s->val.elseif.stmts, l_symbolTable, symbol_indentation + 1,
-//                             print);
-//         if (print) {
-//             indent(symbol_indentation);
-//             printf("}\n");
-//         }
-//         break;
-//     case k_stmt_else:
-//         if (print) {
-//             indent(symbol_indentation);
-//             printf("{\n");
-//         }
-//         l_symbolTable = scopeSymbolTable(st);
-//         makeSymbolStatement(s->val.else_stmt.stmts, l_symbolTable,
-//                             symbol_indentation + 1, print);
-//         if (print) {
-//             indent(symbol_indentation);
-//             printf("}\n");
-//         }
-//         break;
-//     case k_stmt_loop:
-//         if (print) {
-//             indent(symbol_indentation);
-//             printf("{\n");
-//         }
-//         l_symbolTable = scopeSymbolTable(st);
-//         makeSymbolExp(s->val.loop.condition, st);
-//         makeSymbolStatement(s->val.loop.body, l_symbolTable, symbol_indentation + 1,
-//                             print);
-//         if (print) {
-//             indent(symbol_indentation);
-//             printf("}\n");
-//         }
-//         break;
-//     }
-// }
-
-int symbol_indentation = 0;
-
-// void printIndentation() {
-//     for (int i = 0; i < symbol_indentation; i++) {
-//         printf("    ");
-//     }
-// }
-
-void symbolImports(IMPORT *i) {
-    if (i != NULL) {
-        printf("import %s\n", i->id);
-        symbolImports(i->next);
-    }
 }
 
 void symbolDecl(SymbolTable *s, DCL *d, int infunc) {
@@ -319,24 +121,46 @@ void symbolVarDcl(SymbolTable *s, VARDECL *v, int infunc) {
     }
 }
 
-bool isIdBaseType(char *id){
-    if(id == NULL){
+bool isIdBaseType(TYPE *t){
+    if(t == NULL || t->id == NULL){
         return false;
     }
-    if(strcmp(id, "int")==0||strcmp(id, "float64")==0||strcmp(id, "bool")==0||strcmp(id, "rune")==0||strcmp(id, "string")==0||strcmp(id, "true")==0||strcmp(id, "false")==0){
+    char *id = t->id;
+    if(strcmp(id, "float64")==0){
+        t->id_type.isBaseType = true;
+        t->id_type.baseTypeKind = btk_float64;
         return true;
+    }else if(strcmp(id, "bool")==0){
+        t->id_type.isBaseType = true;
+        t->id_type.baseTypeKind = btk_bool;
+        return true;
+    }else if(strcmp(id, "rune")==0){
+        t->id_type.isBaseType = true;
+        t->id_type.baseTypeKind = btk_rune;
+        return true;
+    }else if(strcmp(id, "string")==0){
+        t->id_type.isBaseType = true;
+        t->id_type.baseTypeKind = btk_string;
+        return true;
+    }else if(strcmp(id, "int")==0){
+        t->id_type.isBaseType = true;
+        t->id_type.baseTypeKind = btk_int;
+        return true;
+    }else{
+        t->id_type.isBaseType = false;
+        return false;
     }
     return false;
 }
 
 void resolveType(SymbolTable *st, TYPE *ts){
     if (ts == NULL){
-        printf("\n");
+        if (printSymbol) printf("\n");
         return;
     }
 
-    if (ts->id != NULL && isIdBaseType(ts->id)){
-        printf("%s\n", ts->id);
+    if (ts->id != NULL && isIdBaseType(ts)){
+        if (printSymbol) printf("%s\n", ts->id);
         return;
     }
 
@@ -344,129 +168,86 @@ void resolveType(SymbolTable *st, TYPE *ts){
     
     if (ts->id != NULL){
         SYMBOL *sb = getSymbol(st, ts->id);
-        if (sb != NULL){
-            printf(" -> ");
-            resolveType(st, sb->type);
-        }else{
-            printf("null\n");
+        if (sb != NULL) {
+            if (printSymbol) printf(" -> ");
+            if(sb->type != NULL){
+                resolveType(st, sb->type);
+            }
+        } else {
+            errorReDeclared(ts->lineno,"type",ts->id);
+            if (printSymbol) printf("null\n");
         }
     }
 }
 
 void symbolTypeSpec(TYPESPEC *ts, int needParen, SymbolTable *st) {
-    // printf("ssas\n");
-    // if (ts == NULL) {
-    //     if(needParen){
-    //         printf("( )\n");
-    //     }
-    //     return;
-    // }
-    // if (needParen) {
-    //     printf("(");
-    // }
-    // printf("\n");
-    // printIndentation();
+ 
     if(ts ==NULL){
         return;
     }
     
     putSymbol(st,ts->id,ts->type,sk_typeDcl);
-    printf("%s [type] = %s -> ", ts->id, ts->id);
-    // printf("%d %s\n",ts->type->kind,ts->type->slices_type.type->id);
+    if (printSymbol) printf("%s [type] = %s -> ", ts->id, ts->id);
     resolveType(st, ts->type);
     symbolTypeSpec(ts->next,0,st);
 
-    // printf("%s\n",s->type->id);
-    // if (ts->next == NULL) {
-    //     printf("\n");
-    //     symbol_indentation --;
-    //     printIndentation();
-    //     printf(")\n");
-    //     symbol_indentation ++;
-    // }
 }
 
 
 void printType(TYPE *t) {
 
     if (t != NULL) {
-        // printf("%d", t->kind);
         switch (t->kind) {
         case k_type_id:
-            printf("%s", t->id); 
+            if (printSymbol) printf("%s", t->id); 
             break;
         case k_slices:
-            printf("[]%s\n", t->slices_type.type->id); 
+            if (printSymbol) printf("[]%s\n", t->slices_type.type->id); 
             break;
         case k_array:
-            printf("[%d]%s\n", t->array_type.size, t->array_type.type->id);
-            // symbolType(t->array_type.type, st, sk);
+            if (printSymbol) printf("[%d]%s\n", t->array_type.size, t->array_type.type->id);
             break;
         case k_type_struct:
-
-            printf("struct { ");
-            // symbol_indentation ++;
+            if (printSymbol) printf("struct { ");
             symbolField_Dcl(t->struct_type.field_dcls);
-            // symbol_indentation --;
-            // printIndentation();
-            printf("}\n");
+            if (printSymbol) printf("}\n");
             break;
         case k_type_type:
-        
-            // printf("(");
             printType(t->types);
-            // printf(")");
             break;
         }
     }
 }
 
 void symbolVarSpec(SymbolTable *s, VARSPEC *vs, int infunc) {
-    // if (vs == NULL) {
-    //     return;
-    // }
-    // VARSPEC *vsPtr = vs;
-    // if (vsPtr->next){
-    //     symbol_indentation++;
-    //     while (vsPtr){
-    //         printIndentation();
-    //         symbolIDList(s, vsPtr->id_list, vsPtr->type);
-    //         EXP *c = vsPtr->exp_list;
-    //         // if(c!=NULL){
-    //         //     printf("= ");
-    //         // }
-    //         symbolEXP(c);
-    //         // if(vsPtr->next != NULL && infunc){
-    //         //     printf("\n");
-    //         // }
-    //         // if(!infunc){
-    //         //     printf("\n");
-    //         // }
-    //         vsPtr = vsPtr->next;
-    //     }
-    //     // printf("\n");
-    //     symbol_indentation--;
-    //     printIndentation();
-    //     // printf(")\n");
-    // } else {
-    //     TYPE *type = vs->type;
-    //     symbolIDList(s, vs->id_list, type);
-    //     EXP *exp_list = vs->exp_list;
-    //     if (exp_list != NULL) {
-    //         symbolEXP(exp_list);
-    //     }   
-    //     // if(vs->next != NULL && infunc){
-    //     //     printf("\n");
-    //     // }
-    //     // if(!infunc){
-    //     //     printf("\n");
-    //     // }
-    // }
+    if (vs == NULL) {
+        return;
+    }
+    VARSPEC *vsPtr = vs;
+    if (vsPtr->next){
+        symbol_indentation++;
+        while (vsPtr){
+            //printIndentation();
+            symbolIDList(s, vsPtr->id_list, vsPtr->type, false);
+            EXP *c = vsPtr->exp_list;
+            symbolEXP(s, c);
+            vsPtr = vsPtr->next;
+        }
+        symbol_indentation--;
+        //printIndentation();
+    } else {
+        TYPE *type = vs->type;
+        symbolIDList(s, vs->id_list, type, false);
+        EXP *exp_list = vs->exp_list;
+        if (exp_list != NULL) {
+            symbolEXP(s, exp_list);
+        }   
+    }
 }
 
 void printIDList(ID_LIST *idl){
     if(idl!=NULL){
-        printf("%s ", idl->id);
+        if (printSymbol) printf("%s ", idl->id);
         printIDList(idl->next);
     }
 }
@@ -476,25 +257,18 @@ void symbolField_Dcl(FIELD_DCL *f) {
     }
     // printIndentation();
     printIDList(f->id_list);
-    // printf(" ");
+    // if (printSymbol) printf(" ");
     printType(f->type);
-    printf("; ");
+    if (printSymbol) printf("; ");
     symbolField_Dcl(f->next);
 }
 
-// void symbolIDList(ID_LIST *i) {
-//     if (i != NULL) {
-//         printf("%s", i->id);
-//         if (i->next != NULL) {
-//             printf(", "); 
-//         }
-//         symbolIDList(i->next);
-//     }
-// }
-
 void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, bool params){
     if (i != NULL) {
-        if (getSymbol(s, i->id) != NULL) {
+        if(strcmp(i->id,"_")==0){
+            return;
+        }
+        if (getSymbolCurrentScope(s, i->id) != NULL) {
             fprintf(stderr, "Error: (line %d) identifier %s has been declared\n",
                 i->lineno, i->id);
             exit(1);
@@ -505,16 +279,20 @@ void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, bool params){
             t->id = "<infer>";
             t->kind = k_infer;
         }
-
+        
+        i->type = t;
         putSymbol(s, i->id, t, sk_varDcl);
-
+        
         if (params){
-            printf("%s", t->id);
+            if (printSymbol) printf("%s", t->id);
             if (i->next != NULL){
-                printf(", ");
+                if (printSymbol) printf(", ");
             }
+            // char *tmpStr = malloc(sizeof(i->id)+sizeof(t->id)+20);
+            // sprintf(tmpStr, "%s [variable] = %s\n", i->id, t->id);
+            // strcat(functionSignature, tmpStr);
         } else {
-            printf("%s [variable] = %s\n", i->id, t->id);
+            if (printSymbol) printf("%s [variable] = %s\n", i->id, t->id);
         }
         
         symbolIDList(s, i->next, t, false);
@@ -526,7 +304,7 @@ void symbolParams(SymbolTable *t, PARAMS *p) {
     if (p != NULL) {
         symbolIDList(t, p->id_list, p->type, true);
         if(p->next != NULL){
-            printf(", ");
+            if (printSymbol) printf(", ");
             symbolParams(t, p->next);
         }
     }
@@ -534,32 +312,33 @@ void symbolParams(SymbolTable *t, PARAMS *p) {
 }
 
 void symbolResult(SymbolTable *t, SymbolTable *new_st, RESULT *r, char *id) {
-    printf(" -> ");
+    if (printSymbol) printf(" -> ");
     if (r != NULL) {
         if(r->params != NULL){
             // named return, only support one type
             putSymbol(t, id, r->params->type, sk_funcDcl);
-            printf("(");  
-            symbolParams(new_st, r->params);
-            printf(")");
+            if (printSymbol) printf("(");  
+            symbolParams(new_st, r->params); // FIXME if there's time, will be in wrong scope
+            if (printSymbol) printf(")");
         } else {
-            printf("%s", r->type->id);
+            if (printSymbol) printf("%s", r->type->id);
             putSymbol(t, id, r->type, sk_funcDcl);
         }
     } else {
-        printf("void");
+        if (printSymbol) printf("void");
         putSymbol(t, id, NULL, sk_funcDcl);
     }
-    printf("\n");
+    if (printSymbol) printf("\n");
 }
 
 SymbolTable *symbolSig(SymbolTable *t, SIGNATURE *s, char *id) {
     SymbolTable *new_st;
     if (s != NULL) {
         new_st = scopeSymbolTable(t);   
-        printf("(");     
+        if (printSymbol) printf("(");
+        // functionSignature = realloc(functionSignature, sizeof(s->params));     
         symbolParams(new_st, s->params);
-        printf(")");
+        if (printSymbol) printf(")");
         symbolResult(t, new_st, s->result, id);
     }
     return new_st;
@@ -569,7 +348,7 @@ void symbolFuncDecl(SymbolTable *t, FUNCDECL *f) {
     if (f == NULL) {
         return;
     }
-    printf("%s [function] = ", f->id);
+    if (printSymbol) printf("%s [function] = ", f->id);
     if (strcmp(f->id, "main") == 0){
         symbolSpecialFuncDecl(t, f, mainK);
         return;
@@ -580,9 +359,8 @@ void symbolFuncDecl(SymbolTable *t, FUNCDECL *f) {
     }
     
     SymbolTable *new_st = symbolSig(t, f->signature, f->id);
-    symbolSTMT(new_st, f->body, true, true);
+    symbolSTMT(t, new_st, f->body, true, true);
 }
-
 
 void symbolSpecialFuncDecl(SymbolTable *t, FUNCDECL *f, speicialFuncK spK){
     if (t->parent != NULL){
@@ -593,7 +371,7 @@ void symbolSpecialFuncDecl(SymbolTable *t, FUNCDECL *f, speicialFuncK spK){
         fprintf(stderr, "Error: (line %d) special function cannot have any params or result \n", f->lineno);
         exit(1);
     }
-    printf("() -> void\n");
+    if (printSymbol) printf("() -> void\n");
     SymbolTable *new_st = scopeSymbolTable(t);
     switch (spK)
     {
@@ -601,11 +379,10 @@ void symbolSpecialFuncDecl(SymbolTable *t, FUNCDECL *f, speicialFuncK spK){
             putSymbol(t, "main", NULL, sk_funcDcl);
             break;
         case initK:
-            putSymbol(t, NULL, NULL, sk_funcDcl);
+            putSymbol(t, "init", NULL, sk_funcDcl);
             break;
     }
-    symbolSTMT(new_st, f->body, true, true);
-
+    symbolSTMT(t, new_st, f->body, true, true);
 }
 
 void symbolTopDecl(SymbolTable *s, TOPDECL *t) {
@@ -625,12 +402,14 @@ void symbolTopDecl(SymbolTable *s, TOPDECL *t) {
 
 
 void symbolEXP(SymbolTable *s, EXP *exp) {
+    // return;
     if (exp == NULL)
         return;
     switch (exp->kind) {
     case orExpr:
     case andExpr:
     case equalsExpr:
+        
     case notequalsExpr:
     case lessExpr:
     case greaterExpr:
@@ -658,8 +437,13 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
         symbolEXP(s, exp->val.unary.exp);
         break;
     case funcExpr:
-        symbolEXP(s, exp->val.func.name);
-        symbolEXP(s, exp->val.func.args);
+        printf("func");
+        SYMBOL *sb = getSymbol(s,exp->val.func.name->val.id);
+        if(sb != NULL){
+            exp->type = sb->type;
+        } else {
+            errorNotDeclared(exp->lineno,"func", exp->val.func.name->val.id);
+        }
         break;
     case castExpr:
         symbolEXP(s, exp->val.cast.type);
@@ -682,18 +466,41 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
     case selectorExpr:
         symbolEXP(s, exp->val.selector.exp);
         break;
-    case idExpr:
-        if (getSymbol(s, exp->val.id) == NULL) {
-            fprintf(stderr, "Error: (line %d) identifier %s is not defined\n", exp->lineno, exp->val.id);
-            exit(1);
+    case idExpr:;
+        if (strcmp(exp->val.id,"_")!=0){
+            SYMBOL *sbb = getSymbol(s, exp->val.id);
+            if (sbb == NULL) {
+                fprintf(stderr, "Error: (line %d) identifier %s is not defined\n", exp->lineno, exp->val.id);
+                exit(1);
+            }else{
+                // printf("id exp");
+                if(exp->type == NULL){
+                    exp->type = malloc(sizeof(TYPE));
+                    // printf("aaaa%d", sbb->type->id_type.isBaseType);
+                    exp->type = sbb->type;
+                    // resolveType(s,sbb->type);
+                }
+                
+            }
         }
         break;
     case intExpr:
+        exp->type = strToType("int");
+        break;
     case floatExpr:
+        exp->type = strToType("float64");
+        break;
     case runeExpr:
+        exp->type = strToType("rune");
+        break;
     case stringItpExpr:
+        exp->type = strToType("string");
+        break;
     case stringRawExpr:
+        exp->type = strToType("string");
+        break;
     case boolExpr:
+        exp->type = strToType("bool");
         break;
     default:
         break;
@@ -706,16 +513,17 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
 void symbolCASE_CLAUSE(SymbolTable *s, CASE_CLAUSE *c) {
     if (c != NULL) {
      //   printIndentation();
+        SymbolTable *new_new = scopeSymbolTable(s);
         switch (c->kind) {
-        case caseK:
-            symbolEXP(s, c->caseExp);
+        case caseK:;
+            symbolEXP(new_new, c->caseExp);
             symbol_indentation++;
-            symbolSTMT(s, c->caseStmt, true, true);
+            symbolSTMT(new_new, NULL, c->caseStmt, true, true);
             symbol_indentation--;
             break;
-        case defaultK:
+        case defaultK:;
             symbol_indentation++;
-            symbolSTMT(s, c->caseStmt, true, true);
+            symbolSTMT(new_new, NULL, c->caseStmt, true, true);
             symbol_indentation--;
             break;
         }
@@ -725,18 +533,20 @@ void symbolCASE_CLAUSE(SymbolTable *s, CASE_CLAUSE *c) {
 
 void symbolFOR_CLAUSE(SymbolTable *s, FOR_CLAUSE *f) {
     if (f != NULL) {
-        symbolSTMT(s, f->first, false, false);
-        printf(";");
+        symbolSTMT(s, NULL, f->first, false, false);
+        //printf(";");
         symbolEXP(s, f->condtion);
-        printf(";");
-        symbolSTMT(s, f->post, false, false);
+        //printf(";");
+        symbolSTMT(s, NULL, f->post, false, false);
     }
 }
 
-void symbolSTMT(SymbolTable *s, STMT *stmt, bool to_indent, bool new_line) {
+void symbolSTMT(SymbolTable *s, SymbolTable *new_st, STMT *stmt, bool to_indent, bool new_line) {
     // if (to_indent && stmt!=NULL && stmt->kind != emptyStmt) {
     //     printIndentation();
     // }
+    // return;
+
     if (stmt != NULL) {
         switch (stmt->kind) {
         case continueStmt:
@@ -744,31 +554,35 @@ void symbolSTMT(SymbolTable *s, STMT *stmt, bool to_indent, bool new_line) {
         case breakStmt:
             break;
         case blockStmt:
-            printf("{");
-            printf("\n");
+            if (new_st == NULL){
+                new_st = scopeSymbolTable(s);
+            }
+            if (printSymbol) printf("{");
+            if (printSymbol) printf("\n");
             symbol_indentation++;
-            symbolSTMT(scopeSymbolTable(s), stmt->val.block, true, true);
+            // printFunctionSignature();
+            symbolSTMT(new_st, NULL, stmt->val.block, true, true);
             symbol_indentation--;
             //printIndentation();
-            printf("}");
+            if (printSymbol) printf("}");
             break;
         case ifStmt:
             if (stmt->val.ifStmtVal.ifSimpleStmt != NULL) {
-                symbolSTMT(s, stmt->val.ifStmtVal.ifSimpleStmt, false, false);
-                printf(";");
+                symbolSTMT(s, NULL, stmt->val.ifStmtVal.ifSimpleStmt, false, false);
+                //printf(";");
             }
             symbolEXP(s, stmt->val.ifStmtVal.ifCond);
             bool newLine = false;
             if(stmt->val.ifStmtVal.elseStmt == NULL){
                 newLine = true;
             }
-            symbolSTMT(scopeSymbolTable(s), stmt->val.ifStmtVal.ifBody, false, newLine);
-            symbolSTMT(s, stmt->val.ifStmtVal.elseStmt, false, newLine);
+            symbolSTMT(s, NULL, stmt->val.ifStmtVal.ifBody, false, newLine);
+            symbolSTMT(s, NULL, stmt->val.ifStmtVal.elseStmt, false, newLine);
             break;
         case elseStmt:
-            printf("else ");
-            symbolSTMT(scopeSymbolTable(s), stmt->val.elseStmtVal.elseBody, false, newLine);
-            symbolSTMT(s, stmt->val.elseStmtVal.ifStmt, false, newLine);
+            //printf("else ");
+            symbolSTMT(s, NULL, stmt->val.elseStmtVal.elseBody, false, newLine);
+            symbolSTMT(s, NULL, stmt->val.elseStmtVal.ifStmt, false, newLine);
             break;
         case printStmt:
             symbolEXP(s, stmt->val.printExpList);
@@ -779,13 +593,15 @@ void symbolSTMT(SymbolTable *s, STMT *stmt, bool to_indent, bool new_line) {
         case returnStmt:
             symbolEXP(s, stmt->val.returnExp);
             break;
-        case switchStmt:
-            printf("switch ");
+        case switchStmt:;
+            SymbolTable *new = scopeSymbolTable(s);
+
             if (stmt->val.switchStmtVal.switchSimpleStmt != NULL) {
-                symbolSTMT(s, stmt->val.switchStmtVal.switchSimpleStmt, false, false);
+                symbolSTMT(new, NULL, stmt->val.switchStmtVal.switchSimpleStmt, false, false);
             }
-            symbolEXP(s, stmt->val.switchStmtVal.switchExp);
-            symbolCASE_CLAUSE(s, stmt->val.switchStmtVal.switchCases);
+            symbolEXP(new, stmt->val.switchStmtVal.switchExp);
+            SymbolTable *new_new = scopeSymbolTable(new);
+            symbolCASE_CLAUSE(new_new, stmt->val.switchStmtVal.switchCases);
             break;
         case emptyStmt:
             break;
@@ -806,32 +622,34 @@ void symbolSTMT(SymbolTable *s, STMT *stmt, bool to_indent, bool new_line) {
             symbolIDList(s, stmt->val.shortVarDecStmtVal.ids, NULL, false);
             symbolEXP(s, stmt->val.shortVarDecStmtVal.exps);
             break;
-        case forStmt:
-            symbolEXP(s, stmt->val.forStmtVal.forCond);
-            symbolFOR_CLAUSE(s, stmt->val.forStmtVal.forClause);
-            symbolSTMT(scopeSymbolTable(s), stmt->val.forStmtVal.forBody, false, true);
+        case forStmt:;
+            SymbolTable *fnew = scopeSymbolTable(s);
+            symbolEXP(fnew, stmt->val.forStmtVal.forCond);
+            symbolFOR_CLAUSE(fnew, stmt->val.forStmtVal.forClause);
+            SymbolTable *fnew_new = scopeSymbolTable(fnew);
+            symbolSTMT(fnew_new, NULL, stmt->val.forStmtVal.forBody, false, true);
             break;
         case dclStmt:
             symbolDecl(s, stmt->val.decStmtVal, 1);
             break;
         }
         if (new_line && stmt->kind != emptyStmt) {
-            printf("\n");
+            // if (printSymbol) printf("");
         }
         if (stmt->next){
-            symbolSTMT(s, stmt->next, to_indent, new_line);    
+            symbolSTMT(s, NULL, stmt->next, to_indent, new_line);    
         }
     }
 }
 
 void symbolBooleanConstant(SymbolTable *s, char *boolVal){
-    printf("%s [constant] = %s\n", boolVal, boolVal);
+    if (printSymbol) printf("%s [constant] = %s\n", boolVal, boolVal);
 }
 
 void symbolBaseType(SymbolTable *s, char *typeName) {
     TYPE *type = malloc(sizeof(TYPE));
     type->id = typeName; 
-    printf("%s [type] = %s\n", type->id, type->id);
+    if (printSymbol) printf("%s [type] = %s\n", type->id, type->id);
     putSymbol(s, type->id, type, sk_typeDcl);
 }
 
@@ -848,7 +666,13 @@ void symbolAllBaseTypes(SymbolTable *s) {
 void makeSymbolTable(PROGRAM *root) {
     if (root != NULL) {
         SymbolTable *s = initSymbolTable();
+        if (printSymbol) printf("{\n");
         symbolAllBaseTypes(s);
         symbolTopDecl(s, root->top_decl);
+        if (printSymbol) printf("}\n");
     }
+}
+
+void symbolMode(){
+    printSymbol = true;
 }

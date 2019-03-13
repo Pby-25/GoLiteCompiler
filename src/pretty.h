@@ -24,6 +24,7 @@ void prettyTopDecl(TOPDECL* t);
 void prettyPROGRAM(PROGRAM *root);
 void prettyEXP(EXP *exp);
 void prettyCASE_CLAUSE(CASE_CLAUSE *c);
+void typeIdListExpList(ID_LIST *idl, EXP *el);
 
-void printIndentation();
+// void printIndentation();
 #endif

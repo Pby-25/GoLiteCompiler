@@ -19,6 +19,14 @@ typedef enum {
 } DclKind;
 
 typedef enum {
+    btk_int,
+    btk_float64,
+    btk_rune,
+    btk_bool,
+    btk_string,
+} BaseTypeKind;
+
+typedef enum {
     normal, 
     plus, 
     minus,
@@ -149,6 +157,10 @@ struct TYPE {
     struct {
         FIELD_DCL *field_dcls;
     } struct_type;
+    struct{
+        bool isBaseType;
+        BaseTypeKind baseTypeKind;
+    }id_type;
     TYPE *types;
 };
 TYPE *makeTypeId(char *id, int lineno);
@@ -162,6 +174,7 @@ TYPE *makeTypeT(TYPE *t1, int lineno);
 struct ID_LIST {
     int lineno;
     char *id;
+    TYPE *type;
     ID_LIST *next;
 };
 
@@ -276,6 +289,7 @@ struct STMT {
             EXP *lhs;
             EXP *rhs;
             AssignKind assignKind;
+            ExpKind returnKind;
         } assignStmtVal;
         struct {
             ID_LIST *ids;

@@ -27,13 +27,15 @@ typedef struct SymbolTable {
     struct SymbolTable *parent;
 } SymbolTable;
 
+void symbolMode();
+void printFunctionSignature();
 void makeSymbolTable(PROGRAM *root);
 SYMBOL *getSymbol(SymbolTable *t, char *name);
 SYMBOL *putSymbol(SymbolTable *t, char *id, TYPE *type, symbolKind sk);
 SymbolTable *scopeSymbolTable(SymbolTable *s);
 SymbolTable *initSymbolTable();
 void symbolTypeDcl(SymbolTable *s, TYPEDECL *t, SymbolTable *st);
-void symbolSTMT(SymbolTable *s, STMT *stmt, bool to_indent, bool new_line);
+void symbolSTMT(SymbolTable *s, SymbolTable *new_st, STMT *stmt, bool to_indent, bool new_line);
 void symbolImports(IMPORT *i);
 void symbolDecl(SymbolTable *s, DCL *d, int infunc);
 void symbolTopDecl(SymbolTable *s, TOPDECL *t);
@@ -54,5 +56,5 @@ void symbolCASE_CLAUSE(SymbolTable *s, CASE_CLAUSE *c);
 void symbolSpecialFuncDecl(SymbolTable *t, FUNCDECL *f, speicialFuncK spK);
 // void printIndentation();
 void resolveType(SymbolTable *st, TYPE *ts);
-bool isIdBaseType(char *id);
+bool isIdBaseType(TYPE *t);
 #endif
