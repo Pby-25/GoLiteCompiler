@@ -2,6 +2,7 @@
 #include "SymbolTable.h"
 #include "stdio.h"
 #include "tree.h"
+#include "weed.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -18,6 +19,25 @@ TYPE *strToType(char *s){
     t->kind = k_type_id;
     isIdBaseType(t);
     return t;
+}
+
+TYPE *findSelectorIdType(char *name, TYPE *structType){
+    if (structType->kind != k_type_struct){
+        errorType("struct", structType->id, structType->lineno);
+    }
+    FIELD_DCL *f_dcl = structType->struct_type.field_dcls;
+
+    while (f_dcl){
+        ID_LIST *idl = f_dcl->id_list;
+        while (idl){
+            if (strcmp(name, idl->id)==0){
+                return f_dcl->type;
+            }
+            idl = idl->next;
+        }
+        f_dcl = f_dcl->next;
+    }
+    return NULL;
 }
 
 void typeCheckProgram(PROGRAM *prog) {
@@ -62,7 +82,7 @@ bool isComparable(TYPE *t){
 
 bool checkSameType(TYPE *t1, TYPE *t2) {
     if (t1 == NULL || t2 == NULL) {
-        printf("\ncheck same type null\n");
+        fprintf(stderr, "\ncheck same type null\n");
         exit(1);
         return false;
     }
@@ -85,11 +105,13 @@ bool checkSameType(TYPE *t1, TYPE *t2) {
             return strcmp(t1->id, t2->id)==0;
             break;
         case k_type_id:
-            // if(t2->kind == k_type_id){
-                return t1->id_type.baseTypeKind == t2->id_type.baseTypeKind;
-            // }else{
-            //     return false;
-            // }
+            // printf("k_type_id %d %d",t1->id_type.baseTypeKind,t2->id_type.baseTypeKind);
+            isIdBaseType(t1);
+            isIdBaseType(t2);
+            // printf("k_type_id %d %d",t1->id_type.baseTypeKind,t2->id_type.baseTypeKind);
+            // return t1->id_type.baseTypeKind == t2->id_type.baseTypeKind;
+            printf("names: %s, %s",t1->id, t2->id);
+            return strcmp(t1->id, t2->id)==0;
             break;
         case k_type_type:
             if(t2->kind == k_type_type){
@@ -99,8 +121,8 @@ bool checkSameType(TYPE *t1, TYPE *t2) {
             }
             break;
         case k_infer:
-            t1 = t2;
-            return true;
+            // t1 = t2;
+            return false;
             break;
     }
     
@@ -144,8 +166,7 @@ void typeIdListExpList(ID_LIST *idl, EXP *el){
     EXP *ec = el;
     while(ic != NULL && ec != NULL){
         if (!checkSameType(ic->type, ec->type)) {
-            // printf("111 %d %d",ic->type->kind,ec->type->kind);
-            errorType(ic->type->id,ic->type->id, ic->lineno);
+            errorType(ic->type->id,ec->type->id, ic->lineno);
         }
         ic = ic->next;
         ec = ec->next;
@@ -212,6 +233,8 @@ void typeType(TYPE *t) {
             typeType(t->types);
             
             break;
+        case k_infer:
+            break;
         }
     }
 }
@@ -236,26 +259,31 @@ void typeFuncDecl(FUNCDECL *f) {
             if (f->signature->result == NULL) {
                 typeSTMT(body, NULL);
             } else {
+                bool terminate  = weedTerminateStmt(body);
+                if (!terminate) {
+                    fprintf(stderr, "Error: (line %d) this function does not terminate\n", f->lineno);
+                    exit(1);
+                }
                 typeSTMT(body, f->signature->result->type);
             }
         }
-        body = body->val.block;
-        // function return type is not void
-        // check if there is a return statement
-        if (f->signature->result != NULL) {
-            int hasReturn = 0;
-            while (body != NULL) {
-                if (body->kind = returnStmt) {
-                    hasReturn = 1;
-                    break;
-                }
-                body = body->next;
-            }
-            if (!hasReturn) {
-                fprintf(stderr, "Error: (line %d) function should return something\n", f->lineno);
-                exit(1);
-            } 
-        }
+        // body = body->val.block;
+        // // function return type is not void
+        // // check if there is a return statement
+        // if (f->signature->result != NULL) {
+        //     int hasReturn = 0;
+        //     while (body != NULL) {
+        //         if (body->kind = returnStmt) {
+        //             hasReturn = 1;
+        //             break;
+        //         }
+        //         body = body->next;
+        //     }
+        //     if (!hasReturn) {
+        //         fprintf(stderr, "Error: (line %d) function should return something\n", f->lineno);
+        //         exit(1);
+        //     } 
+        // } 
     }
 }
 
@@ -340,9 +368,7 @@ void typeEXP(EXP *exp) {
         }
         break;
     case minusExpr:
-        // break;
     case timesExpr:
-        // break;
     case divExpr:
         typeEXP(exp->val.binary.lhs);
         typeEXP(exp->val.binary.rhs);
@@ -357,17 +383,11 @@ void typeEXP(EXP *exp) {
         }
         break;
     case bitwiseOrExpr:
-        // break;
     case bitwiseXorExpr:
-        // break;
     case bitwiseAndExpr:
-        // break;
     case bitClearExpr:
-        // break;
     case modExpr:
-        // break;
     case leftShiftExpr:
-        // break;
     case rightShiftExpr:
         typeEXP(exp->val.binary.lhs);
         typeEXP(exp->val.binary.rhs);
@@ -382,7 +402,6 @@ void typeEXP(EXP *exp) {
         }
         break;
     case uMinusExpr:
-        // break;
     case uPlusExpr:
         typeEXP(exp->val.unary.exp);
         if (!isNumeric(exp->val.unary.exp->type)){
@@ -395,12 +414,11 @@ void typeEXP(EXP *exp) {
         typeEXP(exp->val.unary.exp);
         if (!isBool(exp->val.unary.exp->type)){
             errorType("bool",exp->val.unary.exp->type->id,exp->lineno);
-        } else{
+        } else {
             exp->type = exp->val.unary.exp->type;
         }
         break;
     case uCaretExpr:
-        // break;
     case uBitwiseAndExpr:
         typeEXP(exp->val.unary.exp);
         if (!isInteger(exp->val.unary.exp->type)){
@@ -410,11 +428,13 @@ void typeEXP(EXP *exp) {
         }
         break;
     case funcExpr:
-    // todo
         typeEXP(exp->val.func.name);
-        
         typeEXP(exp->val.func.args);
-        
+        if (strcmp(exp->val.func.name->val.id, "init")==0){
+            fprintf(stderr, "Error: (line %d): Function \"init\" shall never be called\n", exp->lineno);
+            exit(1);
+        }
+        // function type assigned in symbol
         break;
 
     case castExpr:
@@ -436,26 +456,55 @@ void typeEXP(EXP *exp) {
     case appendExpr:
         typeEXP(exp->val.append.head);
         typeEXP(exp->val.append.tail);
-        
+        if (exp->val.append.head->type->kind != k_array && exp->val.append.head->type->kind != k_slices){
+            errorType("array or slice", exp->val.append.head->type->id, exp->lineno);
+        }
+        TYPE *expectedType = exp->val.append.head->val.array.exp->type;
+        if (!checkSameType(expectedType, exp->val.append.tail->type)){
+            errorType(expectedType->id, exp->val.append.tail->type->id, exp->lineno);
+        }
+        exp->type = exp->val.append.head->type;
+        exp->kind = exp->val.append.head->kind;
         break;
     case lenExpr:
-        
         typeEXP(exp->val.expr);
-        
+        if (exp->val.expr->type->kind != k_array && exp->val.expr->type->kind != k_slices 
+            && !checkSameType(exp->type, strToType("string"))){
+            errorType("array or slice or string", exp->val.expr->type->id, exp->lineno);
+        }
+        exp->type = strToType("int");
         break;
     case capExpr:
-        
         typeEXP(exp->val.expr);
-        
+        if (exp->val.expr->type->kind != k_array && exp->val.expr->type->kind != k_slices){
+            errorType("array or slice", exp->val.expr->type->id, exp->lineno);
+        }
+        exp->type = strToType("int");
         break;
     case arrayExpr:
+    case sliceExpr:
         typeEXP(exp->val.array.exp);
         typeEXP(exp->val.array.index);
-        
+        if (exp->val.array.exp->type->kind != k_array && exp->val.array.exp->type->kind != k_slices){
+            errorType("array or slice", exp->val.array.exp->type->id, exp->lineno);
+        }
+        // Allow index to be null, maybe create new kind later
+        if (!isInteger(exp->val.array.index->type)){
+            errorType("integer", exp->val.array.index->type->id, exp->lineno);
+        }
+        exp->type = exp->val.array.exp->type;  
         break;
     case selectorExpr:
         typeEXP(exp->val.selector.exp);
-        
+        if (exp->val.selector.exp->type->kind != k_type_struct){
+            errorType("struct", exp->val.array.exp->type->id, exp->lineno);
+        }
+        TYPE *correspondingType = findSelectorIdType(exp->val.selector.name, exp->val.selector.exp->type);
+        if (correspondingType == NULL){
+            errorType(exp->val.selector.name, "Does Not Exist", exp->lineno);
+        } else {
+            exp->type = correspondingType;
+        }
         break;
     // case idExpr:
     //     break;
@@ -536,7 +585,8 @@ void typeFOR_CLAUSE(FOR_CLAUSE *f, TYPE *returnType) {
     if (f != NULL) {
         typeSTMT(f->first, returnType);
         typeEXP(f->condtion);
-        if (!checkSameType(f->condtion->type, strToType("bool"))) {
+        // printf("f cond type %s", f->condtion->type->id);
+        if (f->condtion != NULL && !checkSameType(f->condtion->type, strToType("bool"))) {
             fprintf(stderr, "Error: (line %d) for condition must be a boolean\n", f->lineno);
             exit(1);
         }
@@ -641,7 +691,7 @@ void typeSTMT(STMT *stmt, TYPE *returnType) {
             if (forCond != NULL) {
                 typeEXP(forCond);
                 if (!checkSameType(forCond->type, strToType("bool"))) {
-                    fprintf(stderr, "Error: (line %d) for condition must be a boolean\n", stmt->lineno);
+                    fprintf(stderr, "Error: (line %d) for condition must be a boolean but got %s\n", stmt->lineno, forCond->type->id);
                     exit(1);
                 }
             }

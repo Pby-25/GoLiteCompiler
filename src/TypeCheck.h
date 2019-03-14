@@ -31,6 +31,6 @@ void typeEXP(EXP *exp);
 void typeCASE_CLAUSE(CASE_CLAUSE *c, TYPE *returnType);
 void typeFOR_CLAUSE(FOR_CLAUSE *f, TYPE *returnType);
 TYPE *strToType(char *s);
-
+TYPE *findSelectorIdType(char *name, TYPE *structType);
 
 #endif

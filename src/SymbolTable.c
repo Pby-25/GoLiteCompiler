@@ -11,7 +11,8 @@ int symbol_indentation = 0;
 
 void printFunctionSignature(){
     if (functionSignature != NULL){
-        if (printSymbol) printf("%s", functionSignature); 
+        if (printSymbol) printf("%s", functionSignature);
+        // free(functionSignature);
         functionSignature = NULL;   
     }
 }
@@ -125,6 +126,9 @@ bool isIdBaseType(TYPE *t){
     if(t == NULL || t->id == NULL){
         return false;
     }
+    if(t->id_type.isBaseType){
+        return true;
+    }
     char *id = t->id;
     if(strcmp(id, "float64")==0){
         t->id_type.isBaseType = true;
@@ -147,21 +151,27 @@ bool isIdBaseType(TYPE *t){
         t->id_type.baseTypeKind = btk_int;
         return true;
     }else{
+        //TODO: maybe type alias
         t->id_type.isBaseType = false;
+        t->id_type.baseTypeKind = 404;
         return false;
     }
     return false;
 }
 
-void resolveType(SymbolTable *st, TYPE *ts){
+TYPE *resolveType(SymbolTable *st, TYPE *ts){
     if (ts == NULL){
         if (printSymbol) printf("\n");
-        return;
+        return ts;
     }
 
     if (ts->id != NULL && isIdBaseType(ts)){
         if (printSymbol) printf("%s\n", ts->id);
-        return;
+        return ts;
+    }else{
+        if(ts->kind != k_type_id){
+            return ts;
+        }
     }
 
     printType(ts);
@@ -171,13 +181,14 @@ void resolveType(SymbolTable *st, TYPE *ts){
         if (sb != NULL) {
             if (printSymbol) printf(" -> ");
             if(sb->type != NULL){
-                resolveType(st, sb->type);
+                return resolveType(st, sb->type);
             }
         } else {
             errorReDeclared(ts->lineno,"type",ts->id);
             if (printSymbol) printf("null\n");
         }
     }
+    return ts;
 }
 
 void symbolTypeSpec(TYPESPEC *ts, int needParen, SymbolTable *st) {
@@ -188,7 +199,8 @@ void symbolTypeSpec(TYPESPEC *ts, int needParen, SymbolTable *st) {
     
     putSymbol(st,ts->id,ts->type,sk_typeDcl);
     if (printSymbol) printf("%s [type] = %s -> ", ts->id, ts->id);
-    resolveType(st, ts->type);
+    TYPE *resolved = resolveType(st, ts->type);
+    ts->type->id_type = resolved->id_type;
     symbolTypeSpec(ts->next,0,st);
 
 }
@@ -228,20 +240,28 @@ void symbolVarSpec(SymbolTable *s, VARSPEC *vs, int infunc) {
         symbol_indentation++;
         while (vsPtr){
             //printIndentation();
-            symbolIDList(s, vsPtr->id_list, vsPtr->type, false);
             EXP *c = vsPtr->exp_list;
             symbolEXP(s, c);
+            if(vsPtr->type == NULL){
+                 vsPtr->type = vsPtr->exp_list->type;
+            }
+            symbolIDList(s, vsPtr->id_list, vsPtr->type, NULL, false);
+            // resolveType(s,vsPtr->type);
             vsPtr = vsPtr->next;
         }
         symbol_indentation--;
         //printIndentation();
     } else {
-        TYPE *type = vs->type;
-        symbolIDList(s, vs->id_list, type, false);
         EXP *exp_list = vs->exp_list;
         if (exp_list != NULL) {
             symbolEXP(s, exp_list);
-        }   
+        }  
+        TYPE *type = vs->type;
+        if(type == NULL){
+            type = vsPtr->exp_list->type;
+        }
+        symbolIDList(s, vs->id_list, type, NULL, false);
+        // resolveType(s,vsPtr->type);
     }
 }
 
@@ -263,12 +283,12 @@ void symbolField_Dcl(FIELD_DCL *f) {
     symbolField_Dcl(f->next);
 }
 
-void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, bool params){
+void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType, bool allowAssignment){
     if (i != NULL) {
         if(strcmp(i->id,"_")==0){
             return;
         }
-        if (getSymbolCurrentScope(s, i->id) != NULL) {
+        if (getSymbolCurrentScope(s, i->id) != NULL && !allowAssignment) {
             fprintf(stderr, "Error: (line %d) identifier %s has been declared\n",
                 i->lineno, i->id);
             exit(1);
@@ -279,11 +299,14 @@ void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, bool params){
             t->id = "<infer>";
             t->kind = k_infer;
         }
-        
+        if(t->id == NULL){
+            t->id = i->id;
+        }
         i->type = t;
         putSymbol(s, i->id, t, sk_varDcl);
         
-        if (params){
+        if (funcType != NULL){
+            
             if (printSymbol) printf("%s", t->id);
             if (i->next != NULL){
                 if (printSymbol) printf(", ");
@@ -292,54 +315,64 @@ void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, bool params){
             // sprintf(tmpStr, "%s [variable] = %s\n", i->id, t->id);
             // strcat(functionSignature, tmpStr);
         } else {
-            if (printSymbol) printf("%s [variable] = %s\n", i->id, t->id);
+
+            if (printSymbol) printf("%s [variable] = ", i->id);
+            if (printSymbol) printType(t);
+            if (printSymbol) printf("\n");
+            TYPE *resolved = resolveType(s,t);
+            // if(resolved=NULL){
+            //     fprintf(stderr, "resolved");
+            // }
+            // if(t==NULL){
+            //     fprintf(stderr, "t");
+            // }
+            t->id_type = resolved->id_type;
         }
         
-        symbolIDList(s, i->next, t, false);
+        symbolIDList(s, i->next, t, funcType, allowAssignment);
     }
 }
 
-void symbolParams(SymbolTable *t, PARAMS *p) {
+void symbolParams(SymbolTable *t, PARAMS *p, TYPE *funcType) {
     
     if (p != NULL) {
-        symbolIDList(t, p->id_list, p->type, true);
+        symbolIDList(t, p->id_list, p->type, funcType, false);
         if(p->next != NULL){
             if (printSymbol) printf(", ");
-            symbolParams(t, p->next);
+            symbolParams(t, p->next, funcType);
         }
     }
     
 }
 
-void symbolResult(SymbolTable *t, SymbolTable *new_st, RESULT *r, char *id) {
+void symbolResult(SymbolTable *t, SymbolTable *new_st, RESULT *r, TYPE *funcType) {
     if (printSymbol) printf(" -> ");
     if (r != NULL) {
         if(r->params != NULL){
-            // named return, only support one type
-            putSymbol(t, id, r->params->type, sk_funcDcl);
+            // named return, only support one type, not needed in golite
+            // putSymbol(t, id, r->params->type, sk_funcDcl);
             if (printSymbol) printf("(");  
-            symbolParams(new_st, r->params); // FIXME if there's time, will be in wrong scope
+            // symbolParams(new_st, r->params, NULL); // FIXME if there's time, will be in wrong scope
             if (printSymbol) printf(")");
         } else {
             if (printSymbol) printf("%s", r->type->id);
-            putSymbol(t, id, r->type, sk_funcDcl);
+            funcType->result = r->type;
         }
     } else {
         if (printSymbol) printf("void");
-        putSymbol(t, id, NULL, sk_funcDcl);
     }
     if (printSymbol) printf("\n");
 }
 
-SymbolTable *symbolSig(SymbolTable *t, SIGNATURE *s, char *id) {
+SymbolTable *symbolSig(SymbolTable *t, SIGNATURE *s, TYPE *funcType) {
     SymbolTable *new_st;
     if (s != NULL) {
         new_st = scopeSymbolTable(t);   
         if (printSymbol) printf("(");
         // functionSignature = realloc(functionSignature, sizeof(s->params));     
-        symbolParams(new_st, s->params);
+        symbolParams(new_st, s->params, funcType);
         if (printSymbol) printf(")");
-        symbolResult(t, new_st, s->result, id);
+        symbolResult(t, new_st, s->result, funcType);  
     }
     return new_st;
 }
@@ -357,8 +390,12 @@ void symbolFuncDecl(SymbolTable *t, FUNCDECL *f) {
         symbolSpecialFuncDecl(t, f, initK);
         return;
     }
-    
-    SymbolTable *new_st = symbolSig(t, f->signature, f->id);
+    TYPE *funcType = malloc(sizeof(TYPE));
+    funcType->lineno = f->lineno;
+    funcType->id = f->id;
+    funcType->kind = k_funcsig;
+
+    SymbolTable *new_st = symbolSig(t, f->signature, funcType);
     symbolSTMT(t, new_st, f->body, true, true);
 }
 
@@ -409,7 +446,6 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
     case orExpr:
     case andExpr:
     case equalsExpr:
-        
     case notequalsExpr:
     case lessExpr:
     case greaterExpr:
@@ -436,16 +472,17 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
     case uBitwiseAndExpr:
         symbolEXP(s, exp->val.unary.exp);
         break;
-    case funcExpr:
-        printf("func");
+    case funcExpr:;
         SYMBOL *sb = getSymbol(s,exp->val.func.name->val.id);
         if(sb != NULL){
             exp->type = sb->type;
         } else {
             errorNotDeclared(exp->lineno,"func", exp->val.func.name->val.id);
         }
+        symbolEXP(s, exp->val.func.args);
         break;
     case castExpr:
+        // TODO: for now cast is represented as funcExpr
         symbolEXP(s, exp->val.cast.type);
         symbolEXP(s, exp->val.cast.exp);
         break;
@@ -460,6 +497,7 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
         symbolEXP(s, exp->val.expr);
         break;
     case arrayExpr:
+    case sliceExpr:
         symbolEXP(s, exp->val.array.exp);
         symbolEXP(s, exp->val.array.index);
         break;
@@ -473,13 +511,15 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
                 fprintf(stderr, "Error: (line %d) identifier %s is not defined\n", exp->lineno, exp->val.id);
                 exit(1);
             }else{
-                // printf("id exp");
-                if(exp->type == NULL){
-                    exp->type = malloc(sizeof(TYPE));
+                // printf("id exp %s\n", exp->type->id_type.isBaseType);
+                isIdBaseType(sbb->type);
+                // printf("id exp %d\n", sbb->type->id_type.isBaseType);
+                // if(exp->type == NULL){
+                    // exp->type = malloc(sizeof(TYPE));
                     // printf("aaaa%d", sbb->type->id_type.isBaseType);
-                    exp->type = sbb->type;
+                exp->type = sbb->type;
                     // resolveType(s,sbb->type);
-                }
+                // }
                 
             }
         }
@@ -564,7 +604,7 @@ void symbolSTMT(SymbolTable *s, SymbolTable *new_st, STMT *stmt, bool to_indent,
             symbolSTMT(new_st, NULL, stmt->val.block, true, true);
             symbol_indentation--;
             //printIndentation();
-            if (printSymbol) printf("}");
+            if (printSymbol) printf("}\n");
             break;
         case ifStmt:
             if (stmt->val.ifStmtVal.ifSimpleStmt != NULL) {
@@ -619,8 +659,9 @@ void symbolSTMT(SymbolTable *s, SymbolTable *new_st, STMT *stmt, bool to_indent,
             symbolEXP(s, stmt->val.decExp);
             break;
         case shortVarDecStmt:
-            symbolIDList(s, stmt->val.shortVarDecStmtVal.ids, NULL, false);
-            symbolEXP(s, stmt->val.shortVarDecStmtVal.exps);
+            symbolShortVarDec(s,stmt);
+            // symbolIDList(s, stmt->val.shortVarDecStmtVal.ids, NULL, NULL);
+            // symbolEXP(s, stmt->val.shortVarDecStmtVal.exps);
             break;
         case forStmt:;
             SymbolTable *fnew = scopeSymbolTable(s);
@@ -640,6 +681,31 @@ void symbolSTMT(SymbolTable *s, SymbolTable *new_st, STMT *stmt, bool to_indent,
             symbolSTMT(s, NULL, stmt->next, to_indent, new_line);    
         }
     }
+}
+
+void symbolShortVarDec(SymbolTable *st, STMT *s){
+    if(s==NULL){
+        return;
+    }
+
+    int num_ids = 0;
+    ID_LIST *idc = s->val.shortVarDecStmtVal.ids;
+    while(idc!=NULL){
+        num_ids += 1;
+        idc = idc->next;
+    }
+
+    bool allowAssignment = false;
+    if(num_ids > 1){
+        // assignment allowed
+        allowAssignment= true;
+    }else{
+        // assignment not allowed
+        allowAssignment= false;
+    }
+    symbolEXP(st, s->val.shortVarDecStmtVal.exps);
+    symbolIDList(st, s->val.shortVarDecStmtVal.ids, s->val.shortVarDecStmtVal.exps->type, NULL,allowAssignment);
+    
 }
 
 void symbolBooleanConstant(SymbolTable *s, char *boolVal){

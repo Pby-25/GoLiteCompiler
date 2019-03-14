@@ -67,7 +67,8 @@ typedef enum {
     k_type_struct,
     k_type_id,
     k_type_type,
-    k_infer
+    k_infer,
+    k_funcsig
 } TypeKind;
 
 typedef enum {
@@ -106,7 +107,7 @@ typedef enum {
     lenExpr,
     capExpr,
     arrayExpr,
-    // sliceExpr,
+    sliceExpr,
     selectorExpr,
     funcExpr,
     castExpr,
@@ -131,6 +132,7 @@ typedef struct TOPDECL TOPDECL;
 typedef struct PACKAGE PACKAGE;
 typedef struct IMPORT IMPORT;
 typedef struct PROGRAM PROGRAM;
+typedef struct PARAM_TYPE PARAM_TYPE;
 
 struct FIELD_DCL {
     ID_LIST *id_list;
@@ -141,7 +143,10 @@ struct FIELD_DCL {
 FIELD_DCL *makeFieldDcl(ID_LIST *id_list, TYPE *type, int lineno);
 FIELD_DCL *makeFieldDclList(FIELD_DCL *f, FIELD_DCL *f1, int lineno);
 // j
-
+struct PARAM_TYPE {
+    TYPE *type;
+    PARAM_TYPE *next;
+};
 
 struct TYPE {
     int lineno;
@@ -160,8 +165,10 @@ struct TYPE {
     struct{
         bool isBaseType;
         BaseTypeKind baseTypeKind;
-    }id_type;
+    } id_type;
     TYPE *types;
+    PARAM_TYPE *params;
+    TYPE *result;
 };
 TYPE *makeTypeId(char *id, int lineno);
 TYPE *makeTypeSlices(TYPE *type, int lineno);

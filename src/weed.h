@@ -24,5 +24,8 @@ void weedDECL(DCL *dcl);
 void weedTOPDECL(TOPDECL *top_decl);
 void weedPROGRAM(PROGRAM *p);
 void checkIdBlank(char *name, char *id, int lineno);
+bool weedTerminateSwitchStmt(CASE_CLAUSE *c);
+bool weedTerminateStmt(STMT *stmt);
+
 
 #endif

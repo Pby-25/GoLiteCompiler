@@ -278,9 +278,9 @@ for_exp: {$$=NULL;}
     | exp {$$=$1;}
 ;
 
-post_stmt: {}
-    | inc_dec_stmt
-    | assign_stmt
+post_stmt: {$$=NULL;}           
+    | inc_dec_stmt  {$$=$1;}
+    | assign_stmt   {$$=$1;}
 ;
 
 break_stmt: tBREAK { $$ = makeBreakStmt(yylineno); }

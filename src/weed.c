@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 void checkIdBlank(char *name, char *id, int lineno) {
     if (strcmp(id, "_") == 0) {
@@ -403,5 +404,86 @@ void weedSTMT(STMT *stmt, int inLoop, int inSwitch) {
             break;
         }
         weedSTMT(stmt->next, inLoop, inSwitch);
+    }
+}
+
+// s is expected to be a for statement 
+bool checkInfiniteLoop(STMT *s) {
+    if (s == NULL) return false;
+    FOR_CLAUSE *f = s->val.forStmtVal.forClause;
+    if (f == NULL && s->val.forStmtVal.forCond == NULL) return true;
+    if (f != NULL && f->first->kind == emptyStmt && f->condtion == NULL && f->post == NULL) return true; 
+    return false;
+}
+bool weedTerminateStmt(STMT *stmt);
+
+bool weedTerminateSwitchStmt(CASE_CLAUSE *c) {
+    if (c == NULL) return false;
+    bool terminate = weedTerminateStmt(c->caseStmt);
+    if (c->next == NULL) {
+        return terminate;
+    }
+    else {
+        return terminate && weedTerminateSwitchStmt(c->next); 
+    }
+}
+
+bool containDefaultCase(CASE_CLAUSE *c) {
+    bool contain = false;
+    CASE_CLAUSE *temp = c;
+    while (temp != NULL) {
+        if (temp->kind == defaultK) {
+            contain = false;
+            break;
+        }
+        temp = temp->next;
+    }
+    return contain;
+}
+
+bool weedTerminateStmt(STMT *stmt){
+    bool terminate = false;
+    if (stmt == NULL) 
+        return terminate;
+    switch (stmt->kind) {
+        case blockStmt: 
+            terminate = weedTerminateStmt(stmt->val.block);
+            break;
+        case ifStmt:;
+            bool ifterminate = weedTerminateStmt(stmt->val.ifStmtVal.ifBody);
+            bool elseterminate =  weedTerminateStmt(stmt->val.ifStmtVal.elseStmt);
+            terminate = ifterminate && elseterminate; 
+            break;
+        case elseStmt:
+            if (stmt->val.elseStmtVal.ifStmt != NULL) {
+                terminate =  weedTerminateStmt(stmt->val.elseStmtVal.ifStmt);
+            } else {
+                terminate = weedTerminateStmt(stmt->val.elseStmtVal.elseBody);
+            }
+            break;
+        case switchStmt:
+            terminate = weedTerminateSwitchStmt(stmt->val.switchStmtVal.switchCases);
+            if (terminate) {
+                terminate = terminate && containDefaultCase(stmt->val.switchStmtVal.switchCases);
+            }
+            break;
+        case forStmt:
+            if (checkInfiniteLoop(stmt)) {
+                terminate = weedTerminateStmt(stmt->val.forStmtVal.forBody);
+            } else {
+                terminate = false;
+            }
+            break;
+        case returnStmt:
+            terminate = true;
+            break;
+        default:
+            terminate = false; 
+            break;
+    }
+    if (stmt->next == NULL) {
+        return terminate;
+    } else {
+        return weedTerminateStmt(stmt->next);
     }
 }

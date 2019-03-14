@@ -2042,264 +2042,276 @@ yyuserAction (yyRuleNum yyn, size_t yyrhslen, yyGLRStackItem* yyvsp,
 
   case 108:
 #line 281 "mini.y" /* glr.c:816  */
-    {}
+    {((*yyvalp).STMT)=NULL;}
 #line 2047 "mini.tab.c" /* glr.c:816  */
+    break;
+
+  case 109:
+#line 282 "mini.y" /* glr.c:816  */
+    {((*yyvalp).STMT)=(((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.STMT);}
+#line 2053 "mini.tab.c" /* glr.c:816  */
+    break;
+
+  case 110:
+#line 283 "mini.y" /* glr.c:816  */
+    {((*yyvalp).STMT)=(((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.STMT);}
+#line 2059 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 111:
 #line 286 "mini.y" /* glr.c:816  */
     { ((*yyvalp).STMT) = makeBreakStmt(yylineno); }
-#line 2053 "mini.tab.c" /* glr.c:816  */
+#line 2065 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 112:
 #line 289 "mini.y" /* glr.c:816  */
     { ((*yyvalp).STMT) = makeContinueStmt(yylineno); }
-#line 2059 "mini.tab.c" /* glr.c:816  */
+#line 2071 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 113:
 #line 292 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = (((yyGLRStackItem const *)yyvsp)[YYFILL (-1)].yystate.yysemantics.yysval.EXP); }
-#line 2065 "mini.tab.c" /* glr.c:816  */
+#line 2077 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 114:
 #line 293 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP); }
-#line 2071 "mini.tab.c" /* glr.c:816  */
+#line 2083 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 115:
 #line 294 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeIdentifierExp((((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.id), yylineno); }
-#line 2077 "mini.tab.c" /* glr.c:816  */
+#line 2089 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 116:
 #line 295 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeAppendExp((((yyGLRStackItem const *)yyvsp)[YYFILL (-3)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (-1)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2083 "mini.tab.c" /* glr.c:816  */
+#line 2095 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 117:
 #line 296 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeLenExp ((((yyGLRStackItem const *)yyvsp)[YYFILL (-1)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2089 "mini.tab.c" /* glr.c:816  */
+#line 2101 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 118:
 #line 297 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeCapExp ((((yyGLRStackItem const *)yyvsp)[YYFILL (-1)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2095 "mini.tab.c" /* glr.c:816  */
+#line 2107 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 119:
 #line 298 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeArrayIndexExp((((yyGLRStackItem const *)yyvsp)[YYFILL (-3)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (-1)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2101 "mini.tab.c" /* glr.c:816  */
+#line 2113 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 120:
 #line 299 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeSelectorExp((((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.id), yylineno); }
-#line 2107 "mini.tab.c" /* glr.c:816  */
+#line 2119 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 121:
 #line 300 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeFuncExp((((yyGLRStackItem const *)yyvsp)[YYFILL (-3)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (-1)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2113 "mini.tab.c" /* glr.c:816  */
+#line 2125 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 122:
 #line 301 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeFuncExp((((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), NULL, yylineno); }
-#line 2119 "mini.tab.c" /* glr.c:816  */
+#line 2131 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 123:
 #line 304 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeIntExp((((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.intval), yylineno); }
-#line 2125 "mini.tab.c" /* glr.c:816  */
+#line 2137 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 124:
 #line 305 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeStringItpExp((((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.stringval), yylineno); }
-#line 2131 "mini.tab.c" /* glr.c:816  */
+#line 2143 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 125:
 #line 306 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeStringRawExp((((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.stringval), yylineno); }
-#line 2137 "mini.tab.c" /* glr.c:816  */
+#line 2149 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 126:
 #line 307 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeFloat64Exp((((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.floatval), yylineno); }
-#line 2143 "mini.tab.c" /* glr.c:816  */
+#line 2155 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 127:
 #line 308 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeRuneExp((((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.runeval), yylineno); }
-#line 2149 "mini.tab.c" /* glr.c:816  */
+#line 2161 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 128:
 #line 311 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(orExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2155 "mini.tab.c" /* glr.c:816  */
+#line 2167 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 129:
 #line 312 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(andExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2161 "mini.tab.c" /* glr.c:816  */
+#line 2173 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 130:
 #line 314 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(equalsExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2167 "mini.tab.c" /* glr.c:816  */
+#line 2179 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 131:
 #line 315 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(notequalsExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2173 "mini.tab.c" /* glr.c:816  */
+#line 2185 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 132:
 #line 316 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(lessExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2179 "mini.tab.c" /* glr.c:816  */
+#line 2191 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 133:
 #line 317 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(lessEqualsExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2185 "mini.tab.c" /* glr.c:816  */
+#line 2197 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 134:
 #line 318 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(greaterExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2191 "mini.tab.c" /* glr.c:816  */
+#line 2203 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 135:
 #line 319 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(greaterEqualsExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2197 "mini.tab.c" /* glr.c:816  */
+#line 2209 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 136:
 #line 321 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(plusExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2203 "mini.tab.c" /* glr.c:816  */
+#line 2215 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 137:
 #line 322 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(minusExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2209 "mini.tab.c" /* glr.c:816  */
+#line 2221 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 138:
 #line 323 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(bitwiseOrExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2215 "mini.tab.c" /* glr.c:816  */
+#line 2227 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 139:
 #line 324 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(bitwiseXorExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2221 "mini.tab.c" /* glr.c:816  */
+#line 2233 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 140:
 #line 326 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(timesExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2227 "mini.tab.c" /* glr.c:816  */
+#line 2239 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 141:
 #line 327 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(divExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2233 "mini.tab.c" /* glr.c:816  */
+#line 2245 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 142:
 #line 328 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(modExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2239 "mini.tab.c" /* glr.c:816  */
+#line 2251 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 143:
 #line 329 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(leftShiftExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2245 "mini.tab.c" /* glr.c:816  */
+#line 2257 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 144:
 #line 330 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(rightShiftExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2251 "mini.tab.c" /* glr.c:816  */
+#line 2263 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 145:
 #line 331 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(bitwiseAndExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2257 "mini.tab.c" /* glr.c:816  */
+#line 2269 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 146:
 #line 332 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeBinaryExp(bitClearExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (-2)].yystate.yysemantics.yysval.EXP), (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2263 "mini.tab.c" /* glr.c:816  */
+#line 2275 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 147:
 #line 333 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP); }
-#line 2269 "mini.tab.c" /* glr.c:816  */
+#line 2281 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 148:
 #line 337 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP); }
-#line 2275 "mini.tab.c" /* glr.c:816  */
+#line 2287 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 149:
 #line 338 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeUnaryExp(uPlusExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2281 "mini.tab.c" /* glr.c:816  */
+#line 2293 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 150:
 #line 339 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeUnaryExp(uMinusExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2287 "mini.tab.c" /* glr.c:816  */
+#line 2299 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 151:
 #line 340 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeUnaryExp(uBangExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2293 "mini.tab.c" /* glr.c:816  */
+#line 2305 "mini.tab.c" /* glr.c:816  */
     break;
 
   case 152:
 #line 341 "mini.y" /* glr.c:816  */
     { ((*yyvalp).EXP) = makeUnaryExp(uCaretExpr, (((yyGLRStackItem const *)yyvsp)[YYFILL (0)].yystate.yysemantics.yysval.EXP), yylineno); }
-#line 2299 "mini.tab.c" /* glr.c:816  */
+#line 2311 "mini.tab.c" /* glr.c:816  */
     break;
 
 
-#line 2303 "mini.tab.c" /* glr.c:816  */
+#line 2315 "mini.tab.c" /* glr.c:816  */
       default: break;
     }
 
