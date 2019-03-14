@@ -133,38 +133,50 @@ void symbolVarDcl(SymbolTable *s, VARDECL *v, int infunc) {
         symbolVarSpec(s, v->var_specs, infunc);
     }
 }
+BaseTypeKind isIdBaseType(char *id){
+    if(id == NULL){
+        return -1;
+    }
+    if(strcmp(id, "float64")==0){
+        return btk_float64;
+    }else if(strcmp(id, "bool")==0){
+        return btk_bool;
+    }else if(strcmp(id, "rune")==0){
+        return btk_rune;
+    }else if(strcmp(id, "string")==0){
+        return btk_string;
+    }else if(strcmp(id, "int")==0){
+        return btk_int;
+    }else{
+        return -1;
+    }
+}
 
-bool isIdBaseType(TYPE *t){
+bool isTypeBaseType(TYPE *t){
     if(t == NULL || t->id == NULL){
         return false;
     }
-    char *id = t->id;
-    if(strcmp(id, "float64")==0){
-        t->id_type.isBaseType = true;
-        t->id_type.baseTypeKind = btk_float64;
-        return true;
-    }else if(strcmp(id, "bool")==0){
-        t->id_type.isBaseType = true;
-        t->id_type.baseTypeKind = btk_bool;
-        return true;
-    }else if(strcmp(id, "rune")==0){
-        t->id_type.isBaseType = true;
-        t->id_type.baseTypeKind = btk_rune;
-        return true;
-    }else if(strcmp(id, "string")==0){
-        t->id_type.isBaseType = true;
-        t->id_type.baseTypeKind = btk_string;
-        return true;
-    }else if(strcmp(id, "int")==0){
-        t->id_type.isBaseType = true;
-        t->id_type.baseTypeKind = btk_int;
-        return true;
-    }else{
-        //TODO: maybe type alias
-        t->id_type.isBaseType = false;
-        t->id_type.baseTypeKind = 404;
-        return false;
-    }
+    // BaseTypeKind btk = isIdBaseType(t->id);
+    // if(btk!=-1){
+    //     t->id_type.baseTypeKind = btk;
+    //     t->id_type.isBaseType = true;
+    //     return true;
+    // }else{
+        TYPE *tc = t;
+        while(tc!=NULL){
+            // printf("isTypeBaseType %s\n",tc->id);
+            BaseTypeKind btk = isIdBaseType(tc->id);
+            if(btk!=-1){
+                // printf("iaaass\n");
+                t->id_type.baseTypeKind = btk;
+                t->id_type.isBaseType = true;
+                return true;
+            }
+            tc=tc->underLineType;
+        }
+    // }
+    // t->id_type.baseTypeKind = -1;
+    // t->id_type.isBaseType = false;
     return false;
 }
 
@@ -173,7 +185,7 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts){
         if (printSymbol) printf("\n");
         return ts;
     }
-    if (isIdBaseType(ts)){
+    if (isTypeBaseType(ts)){
         if (printSymbol) printf(" -> %s\n", ts->id);
         return ts;
     } else {
@@ -185,7 +197,7 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts){
         return resolveType(st, ts->underLineType);
     }
 
-    // if (ts->id != NULL && isIdBaseType(ts)){
+    // if (ts->id != NULL && isTypeBaseType(ts)){
     //     if (printSymbol) printf("%s\n", ts->id);
     //     return ts;
     // }else{
@@ -614,7 +626,7 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
                     fprintf(stderr, "Error: (line %d) expression identifier %s is not an expression\n", exp->lineno, exp->val.id);
                     exit(1);
                 }
-                isIdBaseType(sbb->type);
+                isTypeBaseType(sbb->type);
                 exp->type = sbb->type;
                 
             }

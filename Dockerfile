@@ -8,6 +8,7 @@ COPY . ./
 
 RUN ./build.sh
 # CMD bash
-CMD ./test.sh ; ./prettytest.sh
+CMD ./test.sh 
+# ; ./prettytest.sh
 # CMD ./prettytest.sh
-# CMD ./run.sh pretty programs/1-scan+parse/valid/8-5-decstmts.go
+# CMD ./run.sh typecheck programs/2-typecheck/valid/4-3_unary_expr.go

@@ -17,7 +17,7 @@ TYPE *strToType(char *s){
     TYPE *t = malloc(sizeof(TYPE));
     t->id = s;
     t->kind = k_type_id;
-    isIdBaseType(t);
+    isTypeBaseType(t);
     return t;
 }
 
@@ -87,7 +87,7 @@ bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
         exit(1);
         return false;
     }
-    printf("checkSameType %s, %s\n", t1->id,t2->id);
+    // printf("checkSameType %s, %s\n", t1->id,t2->id);
     switch (t1->kind) {
         case k_slices:
             if(t2->kind == k_slices){
@@ -108,22 +108,24 @@ bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
             break;
         case k_type_id:
             // printf("k_type_id %d %d",t1->id_type.baseTypeKind,t2->id_type.baseTypeKind);
-            // isIdBaseType(t1);
-            // isIdBaseType(t2);
+            // isTypeBaseType(t1);
+            // isTypeBaseType(t2);
             // printf("k_type_id %d %d",t1->id_type.baseTypeKind,t2->id_type.baseTypeKind);
             // return t1->id_type.baseTypeKind == t2->id_type.baseTypeKind;
             // printf("names: %s, %s",t1->id, t2->id);
             if(checkBaseType){
+                // printf("here\n");
                 TYPE *t1c = t1;
                 TYPE *t2c = t2;
-                while(t1c->underLineType!=NULL){
-                    t1c = t1c->underLineType;
-                }
-                while(t2c->underLineType!=NULL){
-                    t2c = t2c->underLineType;
-                }
-
-                return strcmp(t1c->id, t2c->id)==0;
+                // while(t1c->underLineType!=NULL){
+                //     t1c = t1c->underLineType;
+                // }
+                // while(t2c->underLineType!=NULL){
+                //     t2c = t2c->underLineType;
+                // }
+                // printf("checkBaseType %d, %d\n",t1->id_type.baseTypeKind,t2->id_type.baseTypeKind);
+                // return strcmp(t1c->id, t2c->id)==0;
+                return t1->id_type.baseTypeKind == t2->id_type.baseTypeKind;
             }
             return strcmp(t1->id, t2->id)==0;
             break;
@@ -470,11 +472,11 @@ void typeEXP(EXP *exp) {
         break;
 
     case castExpr:
-        printf("type exp cast\n");
-        printf("%s,\n", exp->val.cast.type->id);
+        // printf("type exp cast\n");
+        // printf("%s,\n", exp->val.cast.type->id);
         // typeEXP(exp->val.cast.type);
         typeEXP(exp->val.cast.exp);
-        if (!isIdBaseType(exp->val.cast.type)){
+        if (!isTypeBaseType(exp->val.cast.type)){
             errorType("base",exp->val.cast.type->id,exp->lineno);
         }
         if (!checkSameType(exp->val.cast.type, exp->val.cast.exp->type, true)){
@@ -568,8 +570,8 @@ bool checkExpListSameType(EXP *list, TYPE *type) {
     bool same = true;
     EXP *temp = list;
     while (temp != NULL) {
-        printf("%s\n", type->id);
-        printf("%s\n", temp->type->id);
+        // printf("%s\n", type->id);
+        // printf("%s\n", temp->type->id);
         if (!checkSameType(temp->type, type, false)) {
             same = false;
             break;
@@ -695,7 +697,7 @@ bool checkExpListBaseType(EXP *exp_list) {
     EXP *temp = exp_list;
     bool base = true;
     while (temp != NULL) {
-        if (!isIdBaseType(temp->type)) {
+        if (!isTypeBaseType(temp->type)) {
             base = false;
             break;
         }
