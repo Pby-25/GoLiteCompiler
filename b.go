@@ -16,5 +16,11 @@ type (
 	}
 )
 func main(){
-	var g c;
+	var g int;
+	var qax c;
+	var qz d;
+	var qa e;
+	var qqqq f;
+	var qqq p;
+	var qq pp;
 }

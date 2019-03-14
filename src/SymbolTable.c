@@ -180,7 +180,7 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts){
         // if(ts->kind != k_type_id){
         //     return ts;
         // }
-        printf(" -> ");
+        if (printSymbol) printf(" -> ");
         printType(ts);
         return resolveType(st, ts->underLineType);
     }
@@ -232,15 +232,24 @@ void symbolTypeSpec(TYPESPEC *ts, int needParen, SymbolTable *st) {
     // new_type->id = ts->id;
     // new_type->kind = k_type_id;
     // new_type->lineno = ts->lineno;
-    printSymbolTable(st);
-    printf("aaa:%s", ts->type->id);
+    // printSymbolTable(st);
+    // printf("aaa:%s", ts->type->id);
     SYMBOL *sb = putSymbol(st,ts->id,ts->type,sk_typeDcl);
-    // SYMBOL *sbb = getSymbol(st, ts->type->id);
-    // sb->type->underLineType = sbb->type;
+    if(sb==NULL){
+        errorReDeclared(ts->lineno,"type", ts->id);
+    }
+    SYMBOL *sbb = getSymbol(st, ts->type->id);
+    if(sbb!=NULL){
+        sb->type->underLineType = sbb->type;
+    }
+    
 
     if (printSymbol) printf("%s [type] = %s", ts->id, ts->id);
     TYPE *resolved = resolveType(st, ts->type);
-    // ts->type->id_type = resolved->id_type;
+    if(resolved!=NULL){
+        
+        ts->type->id_type = resolved->id_type;
+    }
     // printf("symbolTypeSpec tsid:%s tstypeid: %s\n", ts->id, ts->type->id);
     symbolTypeSpec(ts->next,0,st);
 
@@ -314,7 +323,6 @@ void symbolVarSpec(SymbolTable *s, VARSPEC *vs, int infunc) {
                  vsPtr->type = vsPtr->exp_list->type;
             }
             symbolIDList(s, vsPtr->id_list, vsPtr->type, NULL, false);
-            // resolveType(s,vsPtr->type);
             vsPtr = vsPtr->next;
         }
         symbol_indentation--;
@@ -329,7 +337,6 @@ void symbolVarSpec(SymbolTable *s, VARSPEC *vs, int infunc) {
             type = vsPtr->exp_list->type;
         }
         symbolIDList(s, vs->id_list, type, NULL, false);
-        // resolveType(s,vsPtr->type);
     }
 }
 
@@ -399,14 +406,6 @@ void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType, bool allo
             if (printSymbol) printf("%s [variable] = ", i->id);
             if (printSymbol) printType(t);
             if (printSymbol) printf("\n");
-            TYPE *resolved = resolveType(s,t);
-            // if(resolved=NULL){
-            //     fprintf(stderr, "resolved");
-            // }
-            // if(t==NULL){
-            //     fprintf(stderr, "t");
-            // }
-            t->id_type = resolved->id_type;
         }
         
         symbolIDList(s, i->next, t, funcType, allowAssignment);
@@ -569,7 +568,7 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
         SYMBOL *sb = getSymbol(s,exp->val.func.name->val.id);
         if(sb != NULL){
             if(sb->kind == sk_typeDcl){
-                printSymbolTable(s);
+                // printSymbolTable(s);
                 exp->kind = castExpr;
                 exp->val.cast.type = sb->type;
                 exp->val.cast.exp = exp->val.func.args;
@@ -615,15 +614,8 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
                     fprintf(stderr, "Error: (line %d) expression identifier %s is not an expression\n", exp->lineno, exp->val.id);
                     exit(1);
                 }
-                // printf("id exp %s\n", exp->type->id_type.isBaseType);
                 isIdBaseType(sbb->type);
-                // printf("id exp %d\n", sbb->type->id_type.isBaseType);
-                // if(exp->type == NULL){
-                    // exp->type = malloc(sizeof(TYPE));
-                    // printf("aaaa%d", sbb->type->id_type.isBaseType);
                 exp->type = sbb->type;
-                    // resolveType(s,sbb->type);
-                // }
                 
             }
         }

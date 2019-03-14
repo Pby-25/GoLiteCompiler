@@ -287,7 +287,7 @@ TYPE *makeTypeArray(int size, TYPE *type, int lineno) {
 
 TYPE *makeTypeStruct(FIELD_DCL *f, int lineno) {
     TYPE *t = malloc(sizeof(TYPE));
-    t->id = str_cat("[]", type->id);
+    t->id = str_cat("struct","");
     t->kind = k_type_struct;
     t->struct_type.field_dcls = f;
     return t;

@@ -87,6 +87,7 @@ bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
         exit(1);
         return false;
     }
+    printf("checkSameType %s, %s\n", t1->id,t2->id);
     switch (t1->kind) {
         case k_slices:
             if(t2->kind == k_slices){
@@ -113,7 +114,16 @@ bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
             // return t1->id_type.baseTypeKind == t2->id_type.baseTypeKind;
             // printf("names: %s, %s",t1->id, t2->id);
             if(checkBaseType){
-                return t1->id_type.baseTypeKind == t2->id_type.baseTypeKind;
+                TYPE *t1c = t1;
+                TYPE *t2c = t2;
+                while(t1c->underLineType!=NULL){
+                    t1c = t1c->underLineType;
+                }
+                while(t2c->underLineType!=NULL){
+                    t2c = t2c->underLineType;
+                }
+
+                return strcmp(t1c->id, t2c->id)==0;
             }
             return strcmp(t1->id, t2->id)==0;
             break;
