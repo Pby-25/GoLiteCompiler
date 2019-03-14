@@ -7,7 +7,7 @@ void printIndentation();
 // void typeCheckProgram(PROGRAM *porg);
 // void typeExp(EXP *e);
 // void typeStatement(STATEMENT *s);
-bool checkSameType(TYPE *t1, TYPE *t2);
+bool checkSameType(TYPE *t1, TYPE *t2, bool checkSameType);
 
 void typeCheckProgram(PROGRAM *root);
 
@@ -28,7 +28,7 @@ void typeSig(SIGNATURE *s);
 void typeFuncDecl(FUNCDECL *f);
 void typeTopDecl(TOPDECL* t);
 void typeEXP(EXP *exp);
-void typeCASE_CLAUSE(CASE_CLAUSE *c, TYPE *returnType);
+void typeCASE_CLAUSE(CASE_CLAUSE *c, TYPE *returnType, TYPE *switchExpType);
 void typeFOR_CLAUSE(FOR_CLAUSE *f, TYPE *returnType);
 TYPE *strToType(char *s);
 TYPE *findSelectorIdType(char *name, TYPE *structType);

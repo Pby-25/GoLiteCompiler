@@ -1,7 +1,10 @@
 #include "tree.h"
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+
 
 STMT *makeStmtList(STMT *list, STMT *v, int lineno) {
     if (list == NULL) {
@@ -256,8 +259,16 @@ TYPE *makeTypeId(char *id, int lineno) {
     return t;
 }
 
+char *str_cat(char *str1, char *str2){
+    char *str3 = (char *)malloc(1 + strlen(str1) + strlen(str2));
+    strcpy(str3, str1);
+    strcat(str3, str2);
+    return str3;
+}
+
 TYPE *makeTypeSlices(TYPE *type, int lineno) {
     TYPE *t = malloc(sizeof(TYPE));
+    t->id = str_cat("[]", type->id);
     t->kind = k_slices;
     t->slices_type.type = type;
     return t;
@@ -265,6 +276,9 @@ TYPE *makeTypeSlices(TYPE *type, int lineno) {
 
 TYPE *makeTypeArray(int size, TYPE *type, int lineno) {
     TYPE *t = malloc(sizeof(TYPE));
+    char* size_str;
+    asprintf (&size_str, "%i", size);
+    t->id = str_cat(str_cat(str_cat("[",size_str),"]"),type->id);
     t->kind = k_array;
     t->array_type.type = type;
     t->array_type.size = size;
@@ -273,6 +287,7 @@ TYPE *makeTypeArray(int size, TYPE *type, int lineno) {
 
 TYPE *makeTypeStruct(FIELD_DCL *f, int lineno) {
     TYPE *t = malloc(sizeof(TYPE));
+    t->id = str_cat("[]", type->id);
     t->kind = k_type_struct;
     t->struct_type.field_dcls = f;
     return t;

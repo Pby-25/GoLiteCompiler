@@ -399,7 +399,7 @@ void prettyEXP(EXP *exp) {
         break;
 
     case castExpr:
-        prettyEXP(exp->val.cast.type);
+        prettyType(exp->val.cast.type);
         printf("(");
         prettyEXP(exp->val.cast.exp);
         printf(")");

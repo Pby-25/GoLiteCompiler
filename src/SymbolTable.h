@@ -58,4 +58,5 @@ void symbolSpecialFuncDecl(SymbolTable *t, FUNCDECL *f, speicialFuncK spK);
 void symbolShortVarDec(SymbolTable *st, STMT *s);
 TYPE *resolveType(SymbolTable *st, TYPE *ts);
 bool isIdBaseType(TYPE *t);
+void printSymbolTable(SymbolTable *t);
 #endif

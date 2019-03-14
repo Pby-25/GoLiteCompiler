@@ -236,7 +236,7 @@ void weedEXP(EXP *exp, int blank_allow) {
         break;
 
     case castExpr:
-        weedEXP(exp->val.cast.type, 0);
+        weedType(exp->val.cast.type);
         weedEXP(exp->val.cast.exp, 0);
         break;
 

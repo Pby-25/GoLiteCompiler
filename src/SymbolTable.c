@@ -84,6 +84,17 @@ SYMBOL *getSymbol(SymbolTable *t, char *name) {
     return getSymbol(t->parent, name);
 }
 
+
+void printSymbolTable(SymbolTable *t){
+    printf("\n print SymbolTable \n");
+    for(int i=0;i<HashSize;i++){
+        for (SYMBOL *s = t->table[i]; s; s = s->next) {
+            printf("symbol: name: %s, kind: %d, type id: %s\n", s->name, s->kind, s->type->id);
+        }
+    }
+}
+
+
 void errorReDeclared(int lineno, char *message, char *id) {
     fprintf(stderr, "Error: (line %d) %s \"%s\" already declared \n",
             lineno, message, id);
@@ -108,6 +119,7 @@ void symbolDecl(SymbolTable *s, DCL *d, int infunc) {
         }
     }
 }
+
 void symbolTypeDcl(SymbolTable *s, TYPEDECL *t, SymbolTable *st) {
     if (t != NULL) {
         symbol_indentation ++;
@@ -125,9 +137,6 @@ void symbolVarDcl(SymbolTable *s, VARDECL *v, int infunc) {
 bool isIdBaseType(TYPE *t){
     if(t == NULL || t->id == NULL){
         return false;
-    }
-    if(t->id_type.isBaseType){
-        return true;
     }
     char *id = t->id;
     if(strcmp(id, "float64")==0){
@@ -164,50 +173,81 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts){
         if (printSymbol) printf("\n");
         return ts;
     }
-
-    if (ts->id != NULL && isIdBaseType(ts)){
-        if (printSymbol) printf("%s\n", ts->id);
+    if (isIdBaseType(ts)){
+        if (printSymbol) printf(" -> %s\n", ts->id);
         return ts;
-    }else{
-        if(ts->kind != k_type_id){
-            return ts;
-        }
+    } else {
+        // if(ts->kind != k_type_id){
+        //     return ts;
+        // }
+        printf(" -> ");
+        printType(ts);
+        return resolveType(st, ts->underLineType);
     }
 
-    printType(ts);
+    // if (ts->id != NULL && isIdBaseType(ts)){
+    //     if (printSymbol) printf("%s\n", ts->id);
+    //     return ts;
+    // }else{
+    //     if(ts->kind != k_type_id){
+    //         return ts;
+    //     }
+    // }
+
+    // printType(ts);
     
-    if (ts->id != NULL){
-        SYMBOL *sb = getSymbol(st, ts->id);
-        if (sb != NULL) {
-            if (printSymbol) printf(" -> ");
-            if(sb->type != NULL){
-                return resolveType(st, sb->type);
-            }
-        } else {
-            errorReDeclared(ts->lineno,"type",ts->id);
-            if (printSymbol) printf("null\n");
+    // if (ts->id != NULL){
+    //     // SYMBOL *sb = getSymbol(st, ts->id);
+    //     if (sb != NULL) {
+    //         if (printSymbol) printf(" -> ");
+    //         if(sb->type != NULL){
+    //             // printf("resolveType typeid:%s, symbol typeid: %s", ts->id, sb->type->id);
+    //             return resolveType(st, sb->type);
+    //         }
+    //     } else {
+    //         errorReDeclared(ts->lineno,"type",ts->id);
+    //         if (printSymbol) printf("null\n");
+    //     }
+    // }
+    // return ts;
+}
+
+void checkTypeNameValid(TYPESPEC *ts) {
+    TYPESPEC *temp = ts;
+    while (temp != NULL) {
+        if ( strcmp(temp->id, "main") == 0 || strcmp(temp->id, "init") == 0) {
+            fprintf(stderr, "Error: (line %d) main/init can only be used to name a function\n", temp->lineno);
+            exit(1);
         }
+        temp = temp->next;
     }
-    return ts;
 }
 
 void symbolTypeSpec(TYPESPEC *ts, int needParen, SymbolTable *st) {
- 
     if(ts ==NULL){
         return;
     }
-    
-    putSymbol(st,ts->id,ts->type,sk_typeDcl);
-    if (printSymbol) printf("%s [type] = %s -> ", ts->id, ts->id);
+    checkTypeNameValid(ts);
+    // TYPE *new_type = malloc(sizeof(TYPE));
+    // new_type->id = ts->id;
+    // new_type->kind = k_type_id;
+    // new_type->lineno = ts->lineno;
+    printSymbolTable(st);
+    printf("aaa:%s", ts->type->id);
+    SYMBOL *sb = putSymbol(st,ts->id,ts->type,sk_typeDcl);
+    // SYMBOL *sbb = getSymbol(st, ts->type->id);
+    // sb->type->underLineType = sbb->type;
+
+    if (printSymbol) printf("%s [type] = %s", ts->id, ts->id);
     TYPE *resolved = resolveType(st, ts->type);
-    ts->type->id_type = resolved->id_type;
+    // ts->type->id_type = resolved->id_type;
+    // printf("symbolTypeSpec tsid:%s tstypeid: %s\n", ts->id, ts->type->id);
     symbolTypeSpec(ts->next,0,st);
 
 }
 
 
 void printType(TYPE *t) {
-
     if (t != NULL) {
         switch (t->kind) {
         case k_type_id:
@@ -231,9 +271,37 @@ void printType(TYPE *t) {
     }
 }
 
+bool checkIdListValid(ID_LIST *id) {
+    bool valid = true;
+    ID_LIST *temp = id;
+    while (temp != NULL) {
+        if ( strcmp(temp->id, "main") == 0 || strcmp(temp->id, "init") == 0) {
+            valid = false;
+            break;
+        }
+        temp = temp->next;
+    }
+    return valid;
+}
+
+void checkVarNameValid(VARSPEC *vs) {
+    VARSPEC *temp = vs;
+    while (temp != NULL) {
+        bool idValid = checkIdListValid(temp->id_list);
+        if (!idValid) {
+            fprintf(stderr, "Error: (line %d) main/init can only be used to name a function\n", temp->lineno);
+            exit(1);
+        }
+        temp = temp->next;
+    }
+}
+
 void symbolVarSpec(SymbolTable *s, VARSPEC *vs, int infunc) {
     if (vs == NULL) {
         return;
+    }
+    if (!infunc) {
+        checkVarNameValid(vs);
     }
     VARSPEC *vsPtr = vs;
     if (vsPtr->next){
@@ -301,11 +369,23 @@ void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType, bool allo
         }
         if(t->id == NULL){
             t->id = i->id;
+        } else if (getSymbol(s, t->id) == NULL){
+            errorNotDeclared(i->lineno, "type", t->id);
         }
         i->type = t;
         putSymbol(s, i->id, t, sk_varDcl);
         
         if (funcType != NULL){
+            PARAM_TYPE *p = malloc(sizeof(PARAM_TYPE));
+            p->type = t;
+            p->next = NULL;
+            if (funcType->params == NULL){
+                funcType->params = p;
+            } else {
+                PARAM_TYPE *next_one = funcType->params;
+                while (next_one) next_one = next_one->next;
+                next_one->next = p;
+            }
             
             if (printSymbol) printf("%s", t->id);
             if (i->next != NULL){
@@ -372,7 +452,8 @@ SymbolTable *symbolSig(SymbolTable *t, SIGNATURE *s, TYPE *funcType) {
         // functionSignature = realloc(functionSignature, sizeof(s->params));     
         symbolParams(new_st, s->params, funcType);
         if (printSymbol) printf(")");
-        symbolResult(t, new_st, s->result, funcType);  
+        symbolResult(t, new_st, s->result, funcType);
+        
     }
     return new_st;
 }
@@ -390,12 +471,19 @@ void symbolFuncDecl(SymbolTable *t, FUNCDECL *f) {
         symbolSpecialFuncDecl(t, f, initK);
         return;
     }
+    if (getSymbolCurrentScope(t, f->id) != NULL){
+        fprintf(stderr, "Error: (line %d) identifier %s has been declared\n",
+                f->lineno, f->id);
+        exit(1);
+    }
     TYPE *funcType = malloc(sizeof(TYPE));
     funcType->lineno = f->lineno;
     funcType->id = f->id;
     funcType->kind = k_funcsig;
-
+    funcType->params = NULL;
+    funcType->result = NULL;
     SymbolTable *new_st = symbolSig(t, f->signature, funcType);
+    putSymbol(t, f->id, funcType, sk_funcDcl);
     symbolSTMT(t, new_st, f->body, true, true);
 }
 
@@ -413,6 +501,11 @@ void symbolSpecialFuncDecl(SymbolTable *t, FUNCDECL *f, speicialFuncK spK){
     switch (spK)
     {
         case mainK:
+            if (getSymbolCurrentScope(t, "main") != NULL){
+                fprintf(stderr, "Error: (line %d) identifier %s has been declared\n",
+                        f->lineno, "main");
+                exit(1);
+            }
             putSymbol(t, "main", NULL, sk_funcDcl);
             break;
         case initK:
@@ -475,7 +568,14 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
     case funcExpr:;
         SYMBOL *sb = getSymbol(s,exp->val.func.name->val.id);
         if(sb != NULL){
-            exp->type = sb->type;
+            if(sb->kind == sk_typeDcl){
+                printSymbolTable(s);
+                exp->kind = castExpr;
+                exp->val.cast.type = sb->type;
+                exp->val.cast.exp = exp->val.func.args;
+            }else{
+                exp->type = sb->type;
+            }
         } else {
             errorNotDeclared(exp->lineno,"func", exp->val.func.name->val.id);
         }
@@ -483,7 +583,7 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
         break;
     case castExpr:
         // TODO: for now cast is represented as funcExpr
-        symbolEXP(s, exp->val.cast.type);
+        // symbolEXP(s, exp->val.cast.type);
         symbolEXP(s, exp->val.cast.exp);
         break;
     case appendExpr:
@@ -511,6 +611,10 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
                 fprintf(stderr, "Error: (line %d) identifier %s is not defined\n", exp->lineno, exp->val.id);
                 exit(1);
             }else{
+                if (sbb->kind == sk_typeDcl){
+                    fprintf(stderr, "Error: (line %d) expression identifier %s is not an expression\n", exp->lineno, exp->val.id);
+                    exit(1);
+                }
                 // printf("id exp %s\n", exp->type->id_type.isBaseType);
                 isIdBaseType(sbb->type);
                 // printf("id exp %d\n", sbb->type->id_type.isBaseType);
@@ -704,7 +808,7 @@ void symbolShortVarDec(SymbolTable *st, STMT *s){
         allowAssignment= false;
     }
     symbolEXP(st, s->val.shortVarDecStmtVal.exps);
-    symbolIDList(st, s->val.shortVarDecStmtVal.ids, s->val.shortVarDecStmtVal.exps->type, NULL,allowAssignment);
+    symbolIDList(st, s->val.shortVarDecStmtVal.ids, s->val.shortVarDecStmtVal.exps->type, NULL, allowAssignment);
     
 }
 

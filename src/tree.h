@@ -166,6 +166,8 @@ struct TYPE {
         bool isBaseType;
         BaseTypeKind baseTypeKind;
     } id_type;
+    TYPE *underLineType;
+
     TYPE *types;
     PARAM_TYPE *params;
     TYPE *result;
@@ -211,7 +213,7 @@ struct EXP {
             EXP *args;
         } func;
         struct {
-            EXP *type;
+            TYPE *type;
             EXP *exp;
         } cast;
         struct {

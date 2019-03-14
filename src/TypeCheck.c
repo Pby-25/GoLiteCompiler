@@ -45,20 +45,21 @@ void typeCheckProgram(PROGRAM *prog) {
     typeTopDecl(prog->top_decl);
 }
 
+
 bool isBool(TYPE *t){
-    return checkSameType(t, strToType("bool"));
+    return checkSameType(t, strToType("bool"), true);
 } 
 
 bool isInteger(TYPE *t){
-    return checkSameType(t, strToType("int")) || checkSameType(t, strToType("rune"));
+    return checkSameType(t, strToType("int"), true) || checkSameType(t, strToType("rune"), true);
 }
 
 bool isNumeric(TYPE *t){
-    return isInteger(t) || checkSameType(t, strToType("float64"));
+    return isInteger(t) || checkSameType(t, strToType("float64"), true);
 }
 
 bool isOrdered(TYPE *t){
-    return isNumeric(t) || checkSameType(t, strToType("string"));
+    return isNumeric(t) || checkSameType(t, strToType("string"), true);
 }
 
 bool isComparable(TYPE *t){
@@ -80,7 +81,7 @@ bool isComparable(TYPE *t){
 
 
 
-bool checkSameType(TYPE *t1, TYPE *t2) {
+bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
     if (t1 == NULL || t2 == NULL) {
         fprintf(stderr, "\ncheck same type null\n");
         exit(1);
@@ -89,14 +90,14 @@ bool checkSameType(TYPE *t1, TYPE *t2) {
     switch (t1->kind) {
         case k_slices:
             if(t2->kind == k_slices){
-                return checkSameType(t1->slices_type.type, t2->slices_type.type);
+                return checkSameType(t1->slices_type.type, t2->slices_type.type,checkBaseType);
             }else{
                 return false;
             }
             break;
         case k_array:
             if(t2->kind == k_array){
-                return checkSameType(t1->array_type.type, t2->array_type.type);
+                return checkSameType(t1->array_type.type, t2->array_type.type, checkBaseType) && t1->array_type.size == t2->array_type.size;
             } else {
                 return false;
             }
@@ -106,16 +107,19 @@ bool checkSameType(TYPE *t1, TYPE *t2) {
             break;
         case k_type_id:
             // printf("k_type_id %d %d",t1->id_type.baseTypeKind,t2->id_type.baseTypeKind);
-            isIdBaseType(t1);
-            isIdBaseType(t2);
+            // isIdBaseType(t1);
+            // isIdBaseType(t2);
             // printf("k_type_id %d %d",t1->id_type.baseTypeKind,t2->id_type.baseTypeKind);
             // return t1->id_type.baseTypeKind == t2->id_type.baseTypeKind;
-            printf("names: %s, %s",t1->id, t2->id);
+            // printf("names: %s, %s",t1->id, t2->id);
+            if(checkBaseType){
+                return t1->id_type.baseTypeKind == t2->id_type.baseTypeKind;
+            }
             return strcmp(t1->id, t2->id)==0;
             break;
         case k_type_type:
             if(t2->kind == k_type_type){
-                return checkSameType(t1->types, t2->types);
+                return checkSameType(t1->types, t2->types, checkBaseType);
             }else{
                 return false;
             }
@@ -165,7 +169,7 @@ void typeIdListExpList(ID_LIST *idl, EXP *el){
     ID_LIST *ic = idl;
     EXP *ec = el;
     while(ic != NULL && ec != NULL){
-        if (!checkSameType(ic->type, ec->type)) {
+        if (!checkSameType(ic->type, ec->type, false)) {
             errorType(ic->type->id,ec->type->id, ic->lineno);
         }
         ic = ic->next;
@@ -328,7 +332,7 @@ void typeEXP(EXP *exp) {
     case notequalsExpr:
         typeEXP(exp->val.binary.lhs);
         typeEXP(exp->val.binary.rhs);
-        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type)){
+        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type, true)){
             errorType(exp->val.binary.lhs->type->id,exp->val.binary.rhs->type->id,exp->lineno);
         } else if (!isComparable(exp->val.binary.lhs->type)){
             errorType("comparable",exp->val.binary.lhs->type->id,exp->lineno);
@@ -344,7 +348,7 @@ void typeEXP(EXP *exp) {
     case greaterEqualsExpr:
         typeEXP(exp->val.binary.lhs);
         typeEXP(exp->val.binary.rhs);
-        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type)){
+        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type, false)){
             errorType(exp->val.binary.lhs->type->id,exp->val.binary.rhs->type->id,exp->lineno);
         } else if (!isOrdered(exp->val.binary.lhs->type)){
             errorType("ordered",exp->val.binary.lhs->type->id,exp->lineno);
@@ -357,7 +361,7 @@ void typeEXP(EXP *exp) {
     case plusExpr:
         typeEXP(exp->val.binary.lhs);
         typeEXP(exp->val.binary.rhs);
-        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type)){
+        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type, false)){
             errorType(exp->val.binary.lhs->type->id,exp->val.binary.rhs->type->id,exp->lineno);
         } else if (!isOrdered(exp->val.binary.lhs->type)){
             errorType("ordered",exp->val.binary.lhs->type->id,exp->lineno);
@@ -372,7 +376,7 @@ void typeEXP(EXP *exp) {
     case divExpr:
         typeEXP(exp->val.binary.lhs);
         typeEXP(exp->val.binary.rhs);
-        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type)){
+        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type, false)){
             errorType(exp->val.binary.lhs->type->id,exp->val.binary.rhs->type->id,exp->lineno);
         } else if (!isNumeric(exp->val.binary.lhs->type)){
             errorType("numeric",exp->val.binary.lhs->type->id,exp->lineno);
@@ -391,7 +395,7 @@ void typeEXP(EXP *exp) {
     case rightShiftExpr:
         typeEXP(exp->val.binary.lhs);
         typeEXP(exp->val.binary.rhs);
-        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type)){
+        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type, false)){
             errorType(exp->val.binary.lhs->type->id,exp->val.binary.rhs->type->id,exp->lineno);
         } else if (!isInteger(exp->val.binary.lhs->type)){
             errorType("integer",exp->val.binary.lhs->type->id,exp->lineno);
@@ -434,23 +438,43 @@ void typeEXP(EXP *exp) {
             fprintf(stderr, "Error: (line %d): Function \"init\" shall never be called\n", exp->lineno);
             exit(1);
         }
-        // function type assigned in symbol
+        EXP *arg = exp->val.func.args;
+        PARAM_TYPE *p = exp->type->params;
+        while(p){
+            if (arg == NULL){
+                fprintf(stderr, "Error: (line %d): Function call [%s] has unmatched number of paramters from its declaration\n", exp->lineno, exp->val.func.name->val.id);
+                exit(1);
+            }
+            if (!checkSameType(p->type, arg->type, true)){
+                errorType(p->type->id, arg->type->id, exp->lineno);
+            }
+            p = p->next;
+            arg = arg->next;
+        }
+        if (arg != NULL){
+            fprintf(stderr, "Error: (line %d): Function call [%s] has unmatched number of paramters from its declaration\n", exp->lineno, exp->val.func.name->val.id);
+            exit(1);
+        }
+        // Done checking parameters, update type to exp return type
+        exp->type = exp->type->result;
         break;
 
     case castExpr:
-        typeEXP(exp->val.cast.type);
+        printf("type exp cast\n");
+        printf("%s,\n", exp->val.cast.type->id);
+        // typeEXP(exp->val.cast.type);
         typeEXP(exp->val.cast.exp);
-        if (!isIdBaseType(exp->val.cast.type->type)){
-            errorType("base",exp->val.cast.type->type->id,exp->lineno);
+        if (!isIdBaseType(exp->val.cast.type)){
+            errorType("base",exp->val.cast.type->id,exp->lineno);
         }
-        if (!checkSameType(exp->val.cast.type->type, exp->val.cast.exp->type)){
-            if (!isNumeric(exp->val.cast.type->type) || !isNumeric(exp->val.cast.exp->type)){
-                if (!checkSameType(exp->val.cast.type->type, strToType("string")) || !isInteger(exp->val.cast.exp->type)){
+        if (!checkSameType(exp->val.cast.type, exp->val.cast.exp->type, true)){
+            if (!isNumeric(exp->val.cast.type) || !isNumeric(exp->val.cast.exp->type)){
+                if (!checkSameType(exp->val.cast.type, strToType("string"), true) || !isInteger(exp->val.cast.exp->type)){
                     errorType("valid cast type","invalid cast type",exp->lineno);
                 }
             }
         }
-        exp->type = exp->val.cast.type->type;
+        exp->type = exp->val.cast.type;
         break;
 
     case appendExpr:
@@ -460,7 +484,7 @@ void typeEXP(EXP *exp) {
             errorType("array or slice", exp->val.append.head->type->id, exp->lineno);
         }
         TYPE *expectedType = exp->val.append.head->val.array.exp->type;
-        if (!checkSameType(expectedType, exp->val.append.tail->type)){
+        if (!checkSameType(expectedType, exp->val.append.tail->type, false)){
             errorType(expectedType->id, exp->val.append.tail->type->id, exp->lineno);
         }
         exp->type = exp->val.append.head->type;
@@ -469,7 +493,7 @@ void typeEXP(EXP *exp) {
     case lenExpr:
         typeEXP(exp->val.expr);
         if (exp->val.expr->type->kind != k_array && exp->val.expr->type->kind != k_slices 
-            && !checkSameType(exp->type, strToType("string"))){
+            && !checkSameType(exp->type, strToType("string"), false)){
             errorType("array or slice or string", exp->val.expr->type->id, exp->lineno);
         }
         exp->type = strToType("int");
@@ -530,23 +554,55 @@ void typeEXP(EXP *exp) {
     }
 }
 
-void typeCASE_CLAUSE(CASE_CLAUSE *c, TYPE *returnType) {
+bool checkExpListSameType(EXP *list, TYPE *type) {
+    bool same = true;
+    EXP *temp = list;
+    while (temp != NULL) {
+        printf("%s\n", type->id);
+        printf("%s\n", temp->type->id);
+        if (!checkSameType(temp->type, type, false)) {
+            same = false;
+            break;
+        }
+        temp = temp->next;
+    }
+    return false;
+}
+
+void typeCASE_CLAUSE(CASE_CLAUSE *c, TYPE *returnType, TYPE *switchExpType) {
     if (c != NULL) {
-        printIndentation();
         switch (c->kind) {
         case caseK:
             typeEXP(c->caseExp);
-            type_indentation++;
+            bool expListTypeCorrect = true;
+            if (switchExpType != NULL) {
+                expListTypeCorrect = checkExpListSameType(c->caseExp, switchExpType);
+            } else {
+                expListTypeCorrect = checkExpListSameType(c->caseExp, strToType("bool"));
+            }
+            if (!expListTypeCorrect) {
+                fprintf(stderr, "Error: (line %d) expression type does not match switch expression type\n", c->lineno);
+                exit(1);
+            }
             typeSTMT(c->caseStmt, returnType);
-            type_indentation--;
             break;
         case defaultK:
-            type_indentation++;
             typeSTMT(c->caseStmt, returnType);
-            type_indentation--;
             break;
         }
-        typeCASE_CLAUSE(c->next, returnType);
+        typeCASE_CLAUSE(c->next, returnType, switchExpType);
+    }
+}
+
+bool isAddressable(EXP *e){
+    switch (e->kind){
+        case idExpr:
+        case sliceExpr:
+        case arrayExpr:
+        case selectorExpr:
+            return true;
+        default:
+            return false;
     }
 }
 
@@ -556,27 +612,58 @@ void typeAssignStmt(STMT *stmt) {
         EXP *rhs = stmt->val.assignStmtVal.rhs;
         typeEXP(lhs);
         typeEXP(rhs);
-        switch (stmt->val.assignStmtVal.assignKind) {
-        case normal:
-            if (!checkSameType(lhs->type, rhs->type)) {
+        if (!checkSameType(lhs->type, rhs->type, false)) {
                 // printf("alhs: %d, rhs: %d\n", lhs->type->kind,rhs->type->kind);
                 fprintf(stderr, "Error: (line %d) invalid assignment\n", lhs->lineno);
                 exit(1);
-            }
-            break;
-        case plus:
-        case minus:
-        case mult:
-        case divide:
-        case or:
-        case xor:
-        case mod:
-        case leftShift:
-        case rightShift:
-        case and:
-        case bitclear:
-        // TODO: what to do for these cases? 
-            break;
+        }
+        if (!isAddressable(lhs)){
+            errorType("Addressable", lhs->type->id, lhs->lineno);
+        }
+        switch (stmt->val.assignStmtVal.assignKind) {
+            case normal:
+                while (lhs != NULL && rhs != NULL){
+                    if (!checkSameType(lhs->type, rhs->type, false)) {
+                        // printf("alhs: %d, rhs: %d\n", lhs->type->kind,rhs->type->kind);
+                        fprintf(stderr, "Error: (line %d) invalid assignment\n", lhs->lineno);
+                        exit(1);
+                    }
+                    if (!isAddressable(lhs)){
+                        errorType("Addressable", lhs->type->id, lhs->lineno);
+                    }
+                    lhs = lhs->next;
+                    rhs = rhs->next;
+                }
+                break;
+            case plus:
+                if (!isOrdered(lhs->type)){
+                    errorType("ordered",lhs->type->id,lhs->lineno);
+                } else if (!isOrdered(rhs->type)){
+                    errorType("ordered",rhs->type->id,rhs->lineno);
+                }
+                break;
+            case minus:
+            case mult:
+            case divide:
+                if (!isNumeric(lhs->type)){
+                    errorType("numeric",lhs->type->id,lhs->lineno);
+                } else if (!isNumeric(rhs->type)){
+                    errorType("numeric",rhs->type->id,rhs->lineno);
+                }
+                break;
+            case or:
+            case xor:
+            case mod:
+            case leftShift:
+            case rightShift:
+            case and:
+            case bitclear:
+                if (!isInteger(lhs->type)){
+                    errorType("integer",lhs->type->id,lhs->lineno);
+                } else if (!isInteger(rhs->type)){
+                    errorType("integer",rhs->type->id,rhs->lineno);
+                }
+                break;
         }
     }
 }
@@ -586,12 +673,25 @@ void typeFOR_CLAUSE(FOR_CLAUSE *f, TYPE *returnType) {
         typeSTMT(f->first, returnType);
         typeEXP(f->condtion);
         // printf("f cond type %s", f->condtion->type->id);
-        if (f->condtion != NULL && !checkSameType(f->condtion->type, strToType("bool"))) {
+        if (f->condtion != NULL && !checkSameType(f->condtion->type, strToType("bool"), true)) {
             fprintf(stderr, "Error: (line %d) for condition must be a boolean\n", f->lineno);
             exit(1);
         }
         typeSTMT(f->post, returnType);
     }
+}
+
+bool checkExpListBaseType(EXP *exp_list) {
+    EXP *temp = exp_list;
+    bool base = true;
+    while (temp != NULL) {
+        if (!isIdBaseType(temp->type)) {
+            base = false;
+            break;
+        }
+        temp = temp->next;
+    }
+    return base;
 }
 
 void typeSTMT(STMT *stmt, TYPE *returnType) {
@@ -608,7 +708,7 @@ void typeSTMT(STMT *stmt, TYPE *returnType) {
                 typeSTMT(stmt->val.ifStmtVal.ifSimpleStmt, returnType);
             }
             typeEXP(stmt->val.ifStmtVal.ifCond);
-            if (!checkSameType(stmt->val.ifStmtVal.ifCond->type, strToType("bool"))) {
+            if (!checkSameType(stmt->val.ifStmtVal.ifCond->type, strToType("bool"), true)) {
                 fprintf(stderr, "Error: (line %d) if condition must be a boolean\n", stmt->lineno);
                 exit(1);
             }
@@ -621,9 +721,17 @@ void typeSTMT(STMT *stmt, TYPE *returnType) {
             break;
         case printStmt:
             typeEXP(stmt->val.printExpList);
+            if (!checkExpListBaseType(stmt->val.printExpList)){
+                fprintf(stderr, "Error: (line %d) expression in print statement must be of base type\n", stmt->lineno);
+                exit(1);
+            }
             break;
         case printlnStmt:
             typeEXP(stmt->val.printlnExpList);
+            if (!checkExpListBaseType(stmt->val.printExpList)){
+                fprintf(stderr, "Error: (line %d) expression in println statement must be of base type\n", stmt->lineno);
+                exit(1);
+            }
             break;
         case returnStmt:;
             EXP *returnExp = stmt->val.returnExp;
@@ -637,7 +745,7 @@ void typeSTMT(STMT *stmt, TYPE *returnType) {
             }
             else {
                 typeEXP(returnExp);
-                if (!checkSameType(returnExp->type, returnType)) {
+                if (!checkSameType(returnExp->type, returnType, false)) {
                     fprintf(stderr, "Error: (line %d) wrong return type\n", stmt->lineno);
                     exit(1); 
                 }
@@ -653,11 +761,21 @@ void typeSTMT(STMT *stmt, TYPE *returnType) {
             }
             EXP *switchExp = stmt->val.switchStmtVal.switchExp;
             typeEXP(switchExp);
-            if (switchExp != NULL && !isComparable(switchExp->type)) {
-                fprintf(stderr, "Error: (line %d) switch expression must be a comparable\n", stmt->lineno);
-                exit(1);
+            if (switchExp != NULL) {
+                if (switchExp->type != NULL) {
+                    if (!isComparable(switchExp->type)) {
+                        fprintf(stderr, "Error: (line %d) switch expression must be a comparable\n", stmt->lineno);
+                        exit(1);
+                    } else {
+                        typeCASE_CLAUSE(stmt->val.switchStmtVal.switchCases, returnType, switchExp->type);
+                    }
+                } else {
+                    fprintf(stderr, "Error: (line %d) void cannot be used as switch expression\n", stmt->lineno);
+                    exit(1);  
+                }
+            } else {
+                typeCASE_CLAUSE(stmt->val.switchStmtVal.switchCases, returnType, NULL);
             }
-            typeCASE_CLAUSE(stmt->val.switchStmtVal.switchCases, returnType);
             break;
         case emptyStmt:
             break;
@@ -669,14 +787,14 @@ void typeSTMT(STMT *stmt, TYPE *returnType) {
             break;
         case incStmt:
             typeEXP(stmt->val.incExp);
-            if (!checkSameType(stmt->val.incExp->type, strToType("int")) && !checkSameType(stmt->val.incExp->type, strToType("float64")) && !checkSameType(stmt->val.incExp->type, strToType("rune"))) {
+            if (!checkSameType(stmt->val.incExp->type, strToType("int"), true) && !checkSameType(stmt->val.incExp->type, strToType("float64"), true) && !checkSameType(stmt->val.incExp->type, strToType("rune"), true)) {
                 fprintf(stderr, "Error: (line %d) invalid increment statement\n", stmt->lineno);
                 exit(1);
             }
             break;
         case decStmt:
             typeEXP(stmt->val.decExp);
-            if (!checkSameType(stmt->val.decExp->type, strToType("int")) && !checkSameType(stmt->val.decExp->type, strToType("float64")) && !checkSameType(stmt->val.decExp->type, strToType("rune"))) {
+            if (!checkSameType(stmt->val.decExp->type, strToType("int"), true) && !checkSameType(stmt->val.decExp->type, strToType("float64"), true) && !checkSameType(stmt->val.decExp->type, strToType("rune"), true)) {
                 fprintf(stderr, "Error: (line %d) invalid decrement statement\n", stmt->lineno);
                 exit(1);
             }
@@ -690,7 +808,7 @@ void typeSTMT(STMT *stmt, TYPE *returnType) {
             EXP *forCond = stmt->val.forStmtVal.forCond;
             if (forCond != NULL) {
                 typeEXP(forCond);
-                if (!checkSameType(forCond->type, strToType("bool"))) {
+                if (!checkSameType(forCond->type, strToType("bool"), true)) {
                     fprintf(stderr, "Error: (line %d) for condition must be a boolean but got %s\n", stmt->lineno, forCond->type->id);
                     exit(1);
                 }
