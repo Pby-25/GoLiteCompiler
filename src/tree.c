@@ -271,6 +271,7 @@ TYPE *makeTypeSlices(TYPE *type, int lineno) {
     t->id = str_cat("[]", type->id);
     t->kind = k_slices;
     t->slices_type.type = type;
+    t->underLineType = type;
     return t;
 }
 
@@ -282,6 +283,7 @@ TYPE *makeTypeArray(int size, TYPE *type, int lineno) {
     t->kind = k_array;
     t->array_type.type = type;
     t->array_type.size = size;
+    t->underLineType = type;
     return t;
 }
 

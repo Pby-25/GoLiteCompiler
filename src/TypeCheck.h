@@ -32,5 +32,6 @@ void typeCASE_CLAUSE(CASE_CLAUSE *c, TYPE *returnType, TYPE *switchExpType);
 void typeFOR_CLAUSE(FOR_CLAUSE *f, TYPE *returnType);
 TYPE *strToType(char *s);
 TYPE *findSelectorIdType(char *name, TYPE *structType);
-
+bool isArrayOrSlice(TYPE *t);
+bool isStruct(TYPE *t);
 #endif

@@ -22,10 +22,11 @@ TYPE *strToType(char *s){
 }
 
 TYPE *findSelectorIdType(char *name, TYPE *structType){
-    if (structType->kind != k_type_struct){
-        errorType("struct", structType->id, structType->lineno);
+    TYPE *t = structType;
+    while (t->kind != k_type_struct){
+        t = t->underLineType;
     }
-    FIELD_DCL *f_dcl = structType->struct_type.field_dcls;
+    FIELD_DCL *f_dcl = t->struct_type.field_dcls;
 
     while (f_dcl){
         ID_LIST *idl = f_dcl->id_list;
@@ -79,7 +80,22 @@ bool isComparable(TYPE *t){
     }
 }
 
-
+bool checkSameStruct(FIELD_DCL *field1, FIELD_DCL *field2){
+    while (field1 && field2){
+        if (!checkSameType(field1->type, field2->type, false)) return false;
+        ID_LIST *idlist1 = field1->id_list;
+        ID_LIST *idlist2 = field2->id_list;
+        while (idlist1 && idlist2){
+            if (strcmp(idlist1->id, idlist2->id) != 0) return false;
+            idlist1 = idlist1->next;
+            idlist2 = idlist2->next;
+        }
+        if (!idlist1) field1 = field1->next;
+        if (!idlist2) field2 = field2->next;
+    }
+    if (!field1 || !field2) return false;
+    return true;
+}
 
 bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
     if (t1 == NULL || t2 == NULL) {
@@ -104,7 +120,13 @@ bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
             }
             break;
         case k_type_struct:
-            return strcmp(t1->id, t2->id)==0;
+            if (t2->kind != k_type_struct) return false;
+            if (strcmp(t1->id, "struct")==0 || strcmp(t2->id, "struct")){
+                return checkSameStruct(t1->struct_type.field_dcls, t2->struct_type.field_dcls);
+            } else {
+                return strcmp(t1->id, t2->id)==0;
+            }
+            
             break;
         case k_type_id:
             // printf("k_type_id %d %d",t1->id_type.baseTypeKind,t2->id_type.baseTypeKind);
@@ -193,8 +215,8 @@ void typeVarSpec(VARSPEC *vs) {
     if (vs == NULL) {
         return;
     }
-
     if (vs->type != NULL) {
+        typeEXP(vs->exp_list);
         typeIdListExpList(vs->id_list,vs->exp_list);
     }
     typeVarSpec(vs->next);
@@ -323,6 +345,36 @@ void typePROGRAM(PROGRAM *root) {
     }
 }
 
+bool isArrayOrSlice(TYPE *t) {
+    if(t==NULL){
+        printf("isArrayOrSlice is null\n");
+        return false;
+    }
+    // printf("isArrayOrSlice %s, kind%d\n", t->id, t->kind);
+    if (t->kind == k_array || t->kind == k_slices) {
+        // printf("return\n");
+        return true;
+    }else{
+        // printf("again\n");
+        // printf("is null\n")
+        // printf("isArrayOrSlice %s, kind%d\n", t->id, t->kind);
+        return isArrayOrSlice(t->underLineType);
+    }
+    return false;
+}
+
+bool isStruct(TYPE *t) {
+    if(t==NULL){
+        return false;
+    }
+    if (t->kind == k_type_struct) {
+        return true;
+    }else{
+        return isStruct(t->underLineType);
+    }
+    return false;
+}
+
 void typeEXP(EXP *exp) {
     // return;
     if (exp == NULL)
@@ -332,19 +384,26 @@ void typeEXP(EXP *exp) {
     case andExpr:  
         typeEXP(exp->val.binary.lhs);
         typeEXP(exp->val.binary.rhs);
-        if (!isBool(exp->val.binary.lhs->type)){
+        // if (exp->val.binary.lhs->type){
+        //     printf(" (line %d)::%s\n", exp->val.binary.lhs->type->id_type.baseTypeKind, exp->val.binary.lhs->type->id);
+        // } else {
+        //     printf("(line %d)::nah\n", exp->lineno);
+        // }
+        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type, false)){
+            errorType(exp->val.binary.lhs->type->id,exp->val.binary.rhs->type->id,exp->lineno);
+        } else if (!isBool(exp->val.binary.lhs->type)){
             errorType("bool",exp->val.binary.lhs->type->id,exp->lineno);
         } else if (!isBool(exp->val.binary.rhs->type)){
             errorType("bool",exp->val.binary.rhs->type->id,exp->lineno);
         } else {
-            exp->type = strToType("bool");
+            exp->type = exp->val.binary.lhs->type;
         }
         break;
     case equalsExpr:
     case notequalsExpr:
         typeEXP(exp->val.binary.lhs);
         typeEXP(exp->val.binary.rhs);
-        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type, true)){
+        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type, false)){
             errorType(exp->val.binary.lhs->type->id,exp->val.binary.rhs->type->id,exp->lineno);
         } else if (!isComparable(exp->val.binary.lhs->type)){
             errorType("comparable",exp->val.binary.lhs->type->id,exp->lineno);
@@ -457,7 +516,7 @@ void typeEXP(EXP *exp) {
                 fprintf(stderr, "Error: (line %d): Function call [%s] has unmatched number of paramters from its declaration\n", exp->lineno, exp->val.func.name->val.id);
                 exit(1);
             }
-            if (!checkSameType(p->type, arg->type, true)){
+            if (!checkSameType(p->type, arg->type, false)){
                 errorType(p->type->id, arg->type->id, exp->lineno);
             }
             p = p->next;
@@ -475,11 +534,14 @@ void typeEXP(EXP *exp) {
         // printf("type exp cast\n");
         // printf("%s,\n", exp->val.cast.type->id);
         // typeEXP(exp->val.cast.type);
+        // printf("beg cast type %s final:\n", exp->val.cast.type->id);
         typeEXP(exp->val.cast.exp);
+        
         if (!isTypeBaseType(exp->val.cast.type)){
             errorType("base",exp->val.cast.type->id,exp->lineno);
-        }
+        } 
         if (!checkSameType(exp->val.cast.type, exp->val.cast.exp->type, true)){
+            printf("line %d::%s::%s::%s\n",exp->lineno, exp->val.cast.type->id, exp->val.cast.exp->type->id,exp->val.cast.exp->type->underLineType->id);
             if (!isNumeric(exp->val.cast.type) || !isNumeric(exp->val.cast.exp->type)){
                 if (!checkSameType(exp->val.cast.type, strToType("string"), true) || !isInteger(exp->val.cast.exp->type)){
                     errorType("valid cast type","invalid cast type",exp->lineno);
@@ -487,12 +549,13 @@ void typeEXP(EXP *exp) {
             }
         }
         exp->type = exp->val.cast.type;
+        // printf("fianl cast type %s final:%s\n", exp->val.cast.type->id, exp->type->id);
         break;
 
     case appendExpr:
         typeEXP(exp->val.append.head);
         typeEXP(exp->val.append.tail);
-        if (exp->val.append.head->type->kind != k_array && exp->val.append.head->type->kind != k_slices){
+        if (!isArrayOrSlice(exp->val.append.head->type)){
             errorType("array or slice", exp->val.append.head->type->id, exp->lineno);
         }
         TYPE *expectedType = exp->val.append.head->val.array.exp->type;
@@ -504,35 +567,43 @@ void typeEXP(EXP *exp) {
         break;
     case lenExpr:
         typeEXP(exp->val.expr);
-        if (exp->val.expr->type->kind != k_array && exp->val.expr->type->kind != k_slices 
-            && !checkSameType(exp->type, strToType("string"), false)){
+        if (!isArrayOrSlice(exp->val.expr->type) && !checkSameType(exp->type, strToType("string"), false)){
             errorType("array or slice or string", exp->val.expr->type->id, exp->lineno);
         }
         exp->type = strToType("int");
         break;
     case capExpr:
         typeEXP(exp->val.expr);
-        if (exp->val.expr->type->kind != k_array && exp->val.expr->type->kind != k_slices){
+        if (!isArrayOrSlice(exp->val.expr->type)){
             errorType("array or slice", exp->val.expr->type->id, exp->lineno);
         }
         exp->type = strToType("int");
         break;
     case arrayExpr:
-    case sliceExpr:
+    case sliceExpr:;
         typeEXP(exp->val.array.exp);
         typeEXP(exp->val.array.index);
-        if (exp->val.array.exp->type->kind != k_array && exp->val.array.exp->type->kind != k_slices){
+        printf("sliceExpr %s, %d\n", exp->val.array.exp->type->id, exp->val.array.exp->type->kind);
+        
+        if (!isArrayOrSlice(exp->val.array.exp->type)){
             errorType("array or slice", exp->val.array.exp->type->id, exp->lineno);
         }
         // Allow index to be null, maybe create new kind later
         if (!isInteger(exp->val.array.index->type)){
             errorType("integer", exp->val.array.index->type->id, exp->lineno);
         }
-        exp->type = exp->val.array.exp->type;  
+
+        TYPE *head = exp->val.array.exp->type;
+        if(head != NULL && head->underLineType!=NULL){
+            TYPE *under = head->underLineType;
+            exp->type = under;
+            exp->val.array.exp->type = under;
+            // exp->type = exp->val.array.exp->type;
+        }
         break;
     case selectorExpr:
         typeEXP(exp->val.selector.exp);
-        if (exp->val.selector.exp->type->kind != k_type_struct){
+        if (!isStruct(exp->val.array.exp->type)){
             errorType("struct", exp->val.array.exp->type->id, exp->lineno);
         }
         TYPE *correspondingType = findSelectorIdType(exp->val.selector.name, exp->val.selector.exp->type);
@@ -570,15 +641,15 @@ bool checkExpListSameType(EXP *list, TYPE *type) {
     bool same = true;
     EXP *temp = list;
     while (temp != NULL) {
-        // printf("%s\n", type->id);
-        // printf("%s\n", temp->type->id);
+        //  printf("%s\n", type->id);
+        //  printf("%s\n", temp->type->id);
         if (!checkSameType(temp->type, type, false)) {
             same = false;
             break;
         }
         temp = temp->next;
     }
-    return false;
+    return same;
 }
 
 void typeCASE_CLAUSE(CASE_CLAUSE *c, TYPE *returnType, TYPE *switchExpType) {
@@ -618,14 +689,43 @@ bool isAddressable(EXP *e){
     }
 }
 
+// TODO: to be tested 
+bool isLValue(EXP *exp){
+    switch(exp->kind) {
+        case idExpr:
+            return true;
+        case arrayExpr:
+        case sliceExpr: 
+            return isLValue(exp->val.array.exp);
+        case selectorExpr: 
+            return isLValue(exp->val.selector.exp);
+        default:
+            return false;
+    }
+}
+
+void checkExpListLValue(EXP *exp) {
+    EXP *temp = exp;
+    while (temp != NULL) {
+        if (!isLValue(temp)) {
+            fprintf(stderr, "Error: (line %d) not an lvalue\n", temp->lineno);
+            exit(1);
+        }
+        temp = temp->next;
+    }
+}
+
 void typeAssignStmt(STMT *stmt) {
     if (stmt != NULL) {
         EXP *lhs = stmt->val.assignStmtVal.lhs;
         EXP *rhs = stmt->val.assignStmtVal.rhs;
         typeEXP(lhs);
         typeEXP(rhs);
-        if (!checkSameType(lhs->type, rhs->type, false)) {
+        // checkExpListLValue(lhs);
+        if (!checkSameType(lhs->type, rhs->type, true)) {
                 // printf("alhs: %d, rhs: %d\n", lhs->type->kind,rhs->type->kind);
+                printf("alhs: %s %d, rhs: %s %d, under: %s\n", lhs->type->id, lhs->type->kind,rhs->type->id, rhs->type->kind,rhs->type->underLineType->id);
+
                 fprintf(stderr, "Error: (line %d) invalid assignment\n", lhs->lineno);
                 exit(1);
         }
@@ -635,8 +735,9 @@ void typeAssignStmt(STMT *stmt) {
         switch (stmt->val.assignStmtVal.assignKind) {
             case normal:
                 while (lhs != NULL && rhs != NULL){
-                    if (!checkSameType(lhs->type, rhs->type, false)) {
+                    if (!checkSameType(lhs->type, rhs->type, true)) {
                         // printf("alhs: %d, rhs: %d\n", lhs->type->kind,rhs->type->kind);
+                        // printf("alhs: %s %d, rhs: %s %d\n", lhs->type->id, lhs->type->kind,rhs->type->id, rhs->type->kind);
                         fprintf(stderr, "Error: (line %d) invalid assignment\n", lhs->lineno);
                         exit(1);
                     }
@@ -776,7 +877,7 @@ void typeSTMT(STMT *stmt, TYPE *returnType) {
             if (switchExp != NULL) {
                 if (switchExp->type != NULL) {
                     if (!isComparable(switchExp->type)) {
-                        fprintf(stderr, "Error: (line %d) switch expression must be a comparable\n", stmt->lineno);
+                        fprintf(stderr, "Error: (line %d) switch expression must be a comparable expression\n", stmt->lineno);
                         exit(1);
                     } else {
                         typeCASE_CLAUSE(stmt->val.switchStmtVal.switchCases, returnType, switchExp->type);

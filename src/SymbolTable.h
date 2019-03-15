@@ -60,4 +60,6 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts);
 bool isTypeBaseType(TYPE *t);
 BaseTypeKind isIdBaseType(char *id);
 void printSymbolTable(SymbolTable *t);
+bool isTypeDeclared(SymbolTable *st, TYPE *t);
+void symbolFieldDcl(SymbolTable *st, FIELD_DCL *fdcl, char *id, int lineno);
 #endif
