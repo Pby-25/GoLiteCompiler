@@ -173,27 +173,16 @@ bool isTypeBaseType(TYPE *t) {
     if (t == NULL || t->id == NULL) {
         return false;
     }
-    // BaseTypeKind btk = isIdBaseType(t->id);
-    // if(btk!=-1){
-    //     t->id_type.baseTypeKind = btk;
-    //     t->id_type.isBaseType = true;
-    //     return true;
-    // }else{
     TYPE *tc = t;
     while (tc != NULL) {
-        // printf("isTypeBaseType %s\n",tc->id);
         BaseTypeKind btk = isIdBaseType(tc->id);
         if (btk != -1) {
-            // printf("iaaass\n");
             t->id_type.baseTypeKind = btk;
             t->id_type.isBaseType = true;
             return true;
         }
         tc = tc->underLineType;
     }
-    // }
-    // t->id_type.baseTypeKind = -1;
-    // t->id_type.isBaseType = false;
     return false;
 }
 
@@ -208,9 +197,6 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts) {
             printf(" -> %s\n", ts->id);
         return ts;
     } else {
-        // if(ts->kind != k_type_id){
-        //     return ts;
-        // }
         SYMBOL *sb = getSymbol(st, ts->id);
         if (sb != NULL && sb->kind == sk_typeDcl) {
             if (printSymbol)
@@ -219,20 +205,12 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts) {
             return resolveType(st, ts->underLineType);
 
         } else {
-            printSymbolTable(st);
-            // printf("errorNotDeclared, %s", ts->underLineType->id);
-
             if(ts->kind == k_array || ts->kind == k_slices){
-                // TYPE *ttt = isTypeDeclared(st, ts->underLineType);
                 if(isTypeDeclared(st, ts->underLineType)){
-                    // printf("return ts, %s", ts->underLineType->id);
                     return ts;
                 }
-                // return resolveType(st, ts->underLineType);
             }
             errorNotDeclared(ts->lineno, "type", ts->id);
-            // if (printSymbol)
-            //     printf("null\n");
         }
     }
 
@@ -263,6 +241,8 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts) {
     // return ts;
 }
 
+
+
 void checkTypeNameValid(TYPESPEC *ts) {
     TYPESPEC *temp = ts;
     while (temp != NULL) {
@@ -277,6 +257,35 @@ void checkTypeNameValid(TYPESPEC *ts) {
     }
 }
 
+TYPE *createType(TYPESPEC *ts, SymbolTable *st){
+    TYPE *new_type = malloc(sizeof(TYPE));
+    new_type->lineno = ts->lineno;
+    new_type->id = ts->id;
+    new_type->kind = ts->type->kind;
+
+    SYMBOL *sbb = getSymbol(st, ts->type->id);
+    if (sbb != NULL && sbb->kind == sk_typeDcl) {
+        // printf("line %d::%s::%s::%s/before\n", ts->lineno, ts->id, ts->type->id,sbb->type->id);
+        new_type->underLineType = sbb->type;
+        // printf("line %d::%s::%s::%s/after\n", ts->lineno, ts->id, ts->type->id,sbb->type->id);
+    } else if (strcmp(ts->type->id, "struct")==0){
+        new_type->underLineType = ts->type;
+        symbolFieldDcl(st, ts->type->struct_type.field_dcls, ts->id, ts->lineno);
+    } else {
+        // if()
+        // printf("type kind%s", ts->type);
+        if (!isTypeDeclared(st, ts->type) ) {
+            // printSymbolTable(st);
+            // printf("type kind%d", t->kind);
+                errorNotDeclared(ts->lineno,"type",ts->type->id);
+            }
+        
+    }
+    
+    // new_type->
+    return new_type;
+}
+
 void symbolTypeSpec(TYPESPEC *ts, int needParen, SymbolTable *st) {
     // return;
     if (ts == NULL) {
@@ -284,6 +293,7 @@ void symbolTypeSpec(TYPESPEC *ts, int needParen, SymbolTable *st) {
     }
 
     checkTypeNameValid(ts);
+
     if (strcmp(ts->id, "_")!=0){
         SYMBOL *sb = putSymbol(st, ts->id, ts->type, sk_typeDcl);
         if (sb == NULL) {
@@ -291,6 +301,7 @@ void symbolTypeSpec(TYPESPEC *ts, int needParen, SymbolTable *st) {
         }
     }
 
+    
     SYMBOL *sbb = getSymbol(st, ts->type->id);
     if (sbb != NULL && sbb->kind == sk_typeDcl) {
         // printf("line %d::%s::%s::%s/before\n", ts->lineno, ts->id, ts->type->id,sbb->type->id);
@@ -308,6 +319,8 @@ void symbolTypeSpec(TYPESPEC *ts, int needParen, SymbolTable *st) {
             }
         
     }
+
+
 
     // printf(" (line %d)::%s\n", ts->lineno, ts->type->underLineType->id);
 
@@ -459,11 +472,7 @@ bool isTypeDeclared(SymbolTable *st, TYPE *t) {
             if(t->underLineType != NULL && isIdBaseType(t->underLineType->id) != -1){
                 return true;
             } else {
-                // printf("isTypeDeclared %s\n", t->id);
                 // printSymbolTable(st);
-                // TYPE *resolved = resolveType(st, t->underLineType);
-                // printf("isTypeDeclared %s\n", resolved);
-                // return resolved!=NULL && resolved->id_type.isBaseType;
                 return isTypeDeclared(st, t->underLineType);
             }
             break;
@@ -769,33 +778,17 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
     case sliceExpr:;
         symbolEXP(s, exp->val.array.exp);
         symbolEXP(s, exp->val.array.index);
-        // printf("symbol sliceExpr %s\n", exp->val.array.exp->val.id);
-        // // exp->type = exp->
-        // // SYMBOL *ssbb = getSymbol(s, exp->val.id);
-        // exp->type = exp->val.array.exp->type;
-        // printf("symbol sliceExp%s\n",exp->type->id);
-        // 
         if(!checkSameType(exp->val.array.index->type, strToType("int"), true)){
             errorNotDeclared(exp->lineno, "index is not a int type", "");
         }
         TYPE *r = resolveType(s, exp->val.array.exp->type);
-        // printf("symbol sliceExpr %s\n", r->id);
-        // if(r==NULL || !isArrayOrSlice(r)){
-        //     errorNotDeclared(exp->lineno, "indexing exp must be type array or slice", "");
-        // }else{
-        //     printf("symbol sliceExpr: final type %s, kind: %d",r->underLineType->id, r->underLineType->kind );
-        //     if(r->underLineType==k_type_id){
-        //         // indirect index
-
-        //     }
-        //     exp->type = r->underLineType;
-        // }
         exp->val.array.exp->type = r;
         TYPE *head = r;
         while(head != NULL){
             if(head->kind==k_slices || head->kind == k_array){
-                // printf("yea %s\n", head->underLineType->id);
+                // printf("yea %s, under: %s, \n", head->id,head->underLineType->id);
                 exp->val.array.exp->type = head;
+                exp->type = head;
                 break;
             }
             head = head->underLineType;

@@ -677,28 +677,15 @@ void typeCASE_CLAUSE(CASE_CLAUSE *c, TYPE *returnType, TYPE *switchExpType) {
     }
 }
 
-bool isAddressable(EXP *e){
-    switch (e->kind){
-        case idExpr:
-        case sliceExpr:
-        case arrayExpr:
-        case selectorExpr:
-            return true;
-        default:
-            return false;
-    }
-}
-
-// TODO: to be tested 
-bool isLValue(EXP *exp){
-    switch(exp->kind) {
-        case idExpr:
+bool isAddressable(EXP *exp){
+    switch (exp->kind){
+       case idExpr:
             return true;
         case arrayExpr:
         case sliceExpr: 
-            return isLValue(exp->val.array.exp);
+            return isAddressable(exp->val.array.exp);
         case selectorExpr: 
-            return isLValue(exp->val.selector.exp);
+            return isAddressable(exp->val.selector.exp);
         default:
             return false;
     }
@@ -707,7 +694,7 @@ bool isLValue(EXP *exp){
 void checkExpListLValue(EXP *exp) {
     EXP *temp = exp;
     while (temp != NULL) {
-        if (!isLValue(temp)) {
+        if (!isAddressable(temp)) {
             fprintf(stderr, "Error: (line %d) not an lvalue\n", temp->lineno);
             exit(1);
         }
@@ -721,7 +708,7 @@ void typeAssignStmt(STMT *stmt) {
         EXP *rhs = stmt->val.assignStmtVal.rhs;
         typeEXP(lhs);
         typeEXP(rhs);
-        // checkExpListLValue(lhs);
+        checkExpListLValue(lhs);
         if (!checkSameType(lhs->type, rhs->type, true)) {
                 // printf("alhs: %d, rhs: %d\n", lhs->type->kind,rhs->type->kind);
                 printf("alhs: %s %d, rhs: %s %d, under: %s\n", lhs->type->id, lhs->type->kind,rhs->type->id, rhs->type->kind,rhs->type->underLineType->id);
@@ -729,21 +716,27 @@ void typeAssignStmt(STMT *stmt) {
                 fprintf(stderr, "Error: (line %d) invalid assignment\n", lhs->lineno);
                 exit(1);
         }
-        if (!isAddressable(lhs)){
-            errorType("Addressable", lhs->type->id, lhs->lineno);
-        }
+        // if (!isAddressable(lhs)){
+        //     errorType("Addressable", lhs->type->id, lhs->lineno);
+        // }
         switch (stmt->val.assignStmtVal.assignKind) {
             case normal:
                 while (lhs != NULL && rhs != NULL){
-                    if (!checkSameType(lhs->type, rhs->type, true)) {
+                    bool sameType = false;
+                    if (strcmp(lhs->type->id, rhs->type->id) == 0) {
+                        sameType = checkSameType(lhs->type, rhs->type, true);
+                    } else {
+                        sameType = checkSameType(lhs->type, rhs->type, false);
+                    }
+                    if (!sameType) {
                         // printf("alhs: %d, rhs: %d\n", lhs->type->kind,rhs->type->kind);
                         // printf("alhs: %s %d, rhs: %s %d\n", lhs->type->id, lhs->type->kind,rhs->type->id, rhs->type->kind);
                         fprintf(stderr, "Error: (line %d) invalid assignment\n", lhs->lineno);
                         exit(1);
                     }
-                    if (!isAddressable(lhs)){
-                        errorType("Addressable", lhs->type->id, lhs->lineno);
-                    }
+                    // if (!isAddressable(lhs)){
+                    //     errorType("Addressable", lhs->type->id, lhs->lineno);
+                    // }
                     lhs = lhs->next;
                     rhs = rhs->next;
                 }
@@ -856,13 +849,13 @@ void typeSTMT(STMT *stmt, TYPE *returnType) {
                 fprintf(stderr, "Error: (line %d) this function should return something\n", stmt->lineno);
                 exit(1);
             }
-            else {
-                typeEXP(returnExp);
-                if (!checkSameType(returnExp->type, returnType, false)) {
-                    fprintf(stderr, "Error: (line %d) wrong return type\n", stmt->lineno);
-                    exit(1); 
-                }
-            } 
+            else if (returnType != NULL && returnExp != NULL) {
+                    typeEXP(returnExp);
+                    if (!checkSameType(returnExp->type, returnType, false)) {
+                        fprintf(stderr, "Error: (line %d) wrong return type\n", stmt->lineno);
+                        exit(1); 
+                    }
+            }
             if (stmt->next != NULL) {
                 fprintf(stderr, "Error: (line %d) dead code\n", stmt->lineno + 1);
                 exit(1); 
