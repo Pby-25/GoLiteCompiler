@@ -26,7 +26,11 @@ EXP *makeExpList(EXP *list, EXP *v, int lineno) {
     while (cur->next != NULL) {
         cur = cur->next;
     }
-    cur->next = v;
+    if (v != NULL) {
+        cur->next = v;
+    } else {
+        cur->next = NULL;
+    }
     return list;
 }
 

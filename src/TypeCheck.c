@@ -167,6 +167,7 @@ bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
                 
             }
             return strcmp(t1->id, t2->id)==0;
+            // return t1==t2;
             break;
         case k_type_type:
             if(t2->kind == k_type_type){
@@ -232,10 +233,8 @@ void typeVarSpec(VARSPEC *vs) {
     if (vs == NULL) {
         return;
     }
-    if (vs->type != NULL) {
-        typeEXP(vs->exp_list);
-        typeIdListExpList(vs->id_list,vs->exp_list);
-    }
+    typeEXP(vs->exp_list);
+    typeIdListExpList(vs->id_list,vs->exp_list);
     typeVarSpec(vs->next);
 }
 
@@ -374,8 +373,8 @@ bool isArrayOrSlice(TYPE *t) {
         // printf("again\n");
         // printf("is null\n")
         // printf("isArrayOrSlice %s, kind%d\n", t->id, t->kind);
-        printf("here\n");
-        printf("%d\n", t->underLineType->kind);
+        // printf("here\n");
+        // printf("%d\n", t->underLineType->kind);
         return isArrayOrSlice(t->underLineType);
     }
     return false;
@@ -384,16 +383,14 @@ bool isArrayOrSlice(TYPE *t) {
 bool isValidSliceType(TYPE *type) {
     if (type == NULL) return false;
     bool valid = true;
-    // char *id = type->id;
-    // if (id != NULL) {
-    //     do {
-    //         printf("%");
-    //         if (*id == '[' && *(id + 1) != ']') {
-    //             valid = false;
-    //             break;
-    //         }   
-    //     } while (id++);
-    // }
+    char *id = type->id;
+    int i;
+    for (i = 0; i < strlen(id); i++) {
+        if (id[i] == '[' && id[i + 1] != ']') {
+            valid = false;
+            break;
+        } 
+    }
     return valid;
 }
 
@@ -407,6 +404,21 @@ bool isStruct(TYPE *t) {
         return isStruct(t->underLineType);
     }
     return false;
+}
+
+void checkExpLength(EXP *exp) {
+    // printf("here\n");
+    EXP *temp = exp;
+    int num = 0;
+    while (temp != NULL) {
+       // printf("%d\n", temp->kind);
+        num++;
+        temp = temp->next;
+    }
+    if (num != 1) {
+        fprintf(stderr, "Error: type cast expects only 1 expression\n");
+        exit(1);
+    }
 }
 
 void typeEXP(EXP *exp) {
@@ -464,7 +476,6 @@ void typeEXP(EXP *exp) {
         }
         break;
     case plusExpr:
-        //printf("here\n");
         typeEXP(exp->val.binary.lhs);
         typeEXP(exp->val.binary.rhs);
         if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type, false)){
@@ -578,9 +589,9 @@ void typeEXP(EXP *exp) {
         // printf("%s,\n", exp->val.cast.type->id);
         // typeEXP(exp->val.cast.type);
         // printf("beg cast type %s final:\n", exp->val.cast.type->id);
+        checkExpLength(exp->val.cast.exp);
         typeEXP(exp->val.cast.exp);
-        // TODO: Add slick /array check
-        if (!isTypeBaseType(exp->val.cast.type, true)){
+        if (!isTypeBaseType(exp->val.cast.type, true) || isArrayOrSlice(exp->val.cast.type)){
             errorType("expected base type",exp->val.cast.type->id,exp->lineno);
         } 
         if (!checkSameType(exp->val.cast.type, exp->val.cast.exp->type, true)){
@@ -601,11 +612,11 @@ void typeEXP(EXP *exp) {
         if (!isArrayOrSlice(exp->val.append.head->type)){
             errorType("array or slice", exp->val.append.head->type->id, exp->lineno);
         }
-        // if (!isValidSliceType(exp->val.append.head->type)) {
-        //     errorType("slice", exp->val.append.head->type->id, exp->lineno);
-        // }
+        if (!isValidSliceType(exp->val.append.head->type)) {
+            errorType("slice", exp->val.append.head->type->id, exp->lineno);
+        }
         TYPE *expectedType = exp->val.append.head->type->underLineType;
-        if (!checkSameType(expectedType, exp->val.append.tail->type, true)){
+        if (!checkSameType(expectedType, exp->val.append.tail->type, false)){
              errorType(expectedType->id, exp->val.append.tail->type->id, exp->lineno);
         }
         exp->type = exp->val.append.head->type;
@@ -778,12 +789,30 @@ void typeAssignStmt(STMT *stmt) {
             case normal:
                 while (lhs != NULL && rhs != NULL){
                     bool sameType = false;
+// bool sameType = lhs->type == rhs->type;
+                
+                if (lhs->type->kind == k_type_id && rhs->type->kind == k_type_id && lhs->type != rhs->type){
+                    // printf("he");
+                }
+                
+                //            else if (!checkSameType(lhs->type, rhs->type, false)) {
+                // printf("lhs typeid: %s, rhs id: %s", lhs->type->id, rhs->type->id);
+                // fprintf(stderr, "Error: (line %d) 1invalid assignment\n", lhs->lineno);
+                // exit(1);
+                //         }
+
+
                     if (strcmp(lhs->type->id, rhs->type->id) == 0) {
-                        // printf("");
+                        // printf("line %d::lhs type:%d::rhs type:%d\n", lhs->lineno, lhs->type->kind, rhs->type->kind);
                         sameType = checkSameType(rhs->type, lhs->type, true);
-                    } else {
-                        sameType = checkSameType(lhs->type, rhs->type, false);
-                    }
+                    } 
+
+
+                    // else {
+                    //     sameType = checkSameType(lhs->type, rhs->type, false);
+                    // }
+
+                    
                     if (!sameType) {
                         // printf("alhs: %d, rhs: %d\n", lhs->type->kind,rhs->type->kind);
                         // printf("alhs: %s %d, rhs: %s %d\n", lhs->type->id, lhs->type->kind,rhs->type->id, rhs->type->kind);
@@ -847,9 +876,7 @@ bool checkExpListBaseType(EXP *exp_list) {
     EXP *temp = exp_list;
     bool base = true;
     while (temp != NULL) {
-         //isArrayOrSlice(temp->type) ||
-        //printf("%s\n", temp->type->id);
-        if (!isTypeBaseType(temp->type, true)) {
+        if (isArrayOrSlice(temp->type) || !isTypeBaseType(temp->type, true)) {
             base = false;
             break;
         }
