@@ -45,7 +45,7 @@ void symbolVarSpec(SymbolTable *s, VARSPEC *vs, int infunc);
 // void symbolType(SymbolTable *st, TYPE *t, symbolKind sk);
 void printType(TYPE *t);
 void symbolField_Dcl(FIELD_DCL *f);
-void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType, bool allowAssignment);
+void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType, bool allowAssignment, bool field_dcl);
 void symbolParams(SymbolTable *t, PARAMS *p, TYPE *funcType);
 void symbolResult(SymbolTable *t, SymbolTable *new_st, RESULT *r, TYPE *funcType);
 SymbolTable *symbolSig(SymbolTable *t, SIGNATURE *s, TYPE *funcType);
@@ -60,6 +60,6 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts);
 bool isTypeBaseType(TYPE *t);
 BaseTypeKind isIdBaseType(char *id);
 void printSymbolTable(SymbolTable *t);
-bool isTypeDeclared(SymbolTable *st, TYPE *t);
+bool isTypeDeclared(SymbolTable *st, TYPE *t, bool field_dcl);
 void symbolFieldDcl(SymbolTable *st, FIELD_DCL *fdcl, char *id, int lineno);
 #endif

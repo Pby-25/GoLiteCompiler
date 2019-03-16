@@ -439,6 +439,7 @@ void typeEXP(EXP *exp) {
         }
         break;
     case plusExpr:
+        //printf("here\n");
         typeEXP(exp->val.binary.lhs);
         typeEXP(exp->val.binary.rhs);
         if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type, false)){
@@ -918,6 +919,10 @@ void typeSTMT(STMT *stmt, TYPE *returnType) {
             break;
         case incStmt:
             typeEXP(stmt->val.incExp);
+            if (!isAddressable(stmt->val.incExp)){
+                fprintf(stderr, "Error: (line %d) increment expression must be lvalue\n", stmt->lineno);
+                exit(1);
+            }
             if (!checkSameType(stmt->val.incExp->type, strToType("int"), true) && !checkSameType(stmt->val.incExp->type, strToType("float64"), true) && !checkSameType(stmt->val.incExp->type, strToType("rune"), true)) {
                 fprintf(stderr, "Error: (line %d) invalid increment statement\n", stmt->lineno);
                 exit(1);
@@ -925,6 +930,10 @@ void typeSTMT(STMT *stmt, TYPE *returnType) {
             break;
         case decStmt:
             typeEXP(stmt->val.decExp);
+            if (!isAddressable(stmt->val.decExp)){
+                fprintf(stderr, "Error: (line %d) decrement expression must be lvalue\n", stmt->lineno);
+                exit(1);
+            }
             if (!checkSameType(stmt->val.decExp->type, strToType("int"), true) && !checkSameType(stmt->val.decExp->type, strToType("float64"), true) && !checkSameType(stmt->val.decExp->type, strToType("rune"), true)) {
                 fprintf(stderr, "Error: (line %d) invalid decrement statement\n", stmt->lineno);
                 exit(1);

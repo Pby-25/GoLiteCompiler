@@ -4,6 +4,7 @@
 #include "tree.h"
 #include <stdlib.h>
 #include <string.h>
+#include "weed.h"
 
 bool printSymbol = false;
 char *functionSignature = NULL;
@@ -204,10 +205,11 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts) {
             if (printSymbol)
                 printf(" -> ");
             printType(ts);
+            ts->underLineType = sb->type->underLineType;
             return resolveType(st, ts->underLineType);
         } else {
             if(ts->kind == k_array || ts->kind == k_slices){
-                if(isTypeDeclared(st, ts->underLineType)){
+                if(isTypeDeclared(st, ts->underLineType, false)){
                     return ts;
                 }
             }
@@ -242,8 +244,9 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts) {
     // return ts;
 }
 
-TYPE *createType(TYPESPEC *ts, SymbolTable *st){
-    TYPE *new_type = malloc(sizeof(TYPE));
+void createType(TYPESPEC *ts, SymbolTable *st, TYPE *new_type){
+// TYPE *createType(TYPESPEC *ts, SymbolTable *st){
+    // TYPE *new_type = malloc(sizeof(TYPE));
     new_type->lineno = ts->lineno;
     new_type->id = ts->id;
     new_type->kind = ts->type->kind;
@@ -259,12 +262,12 @@ TYPE *createType(TYPESPEC *ts, SymbolTable *st){
             new_type->underLineType = sbb->type;
             // printf("line %d::%s::%s::::%s/after\n", ts->lineno, new_type->id, new_type->underLineType->id, ts->type->id);
         } else {
-            if (!isTypeDeclared(st, ts->type) ) {
+            if (!isTypeDeclared(st, ts->type, false) ) {
                     errorNotDeclared(ts->lineno,"type",ts->type->id);
                 }    
         }   
     }
-    return new_type;
+    // return new_type;
 }
 
 void checkTypeNameValid(TYPESPEC *ts) {
@@ -281,7 +284,19 @@ void checkTypeNameValid(TYPESPEC *ts) {
     }
 }
 
-bool isTypeDeclared(SymbolTable *st, TYPE *t);
+
+bool isValidRecursive(char *name_id, char *type_id){
+    // printf("%s::%s", name_id, type_id);
+    if (strstr(type_id, "[]") != NULL){
+        char *ptr = type_id;
+        while (*ptr != *name_id && *ptr !='\0') ptr++;
+        if (strcmp(name_id, ptr)==0){
+            return true;
+        }
+    }
+    return false;
+}
+
 
 void symbolTypeSpec(TYPESPEC *ts, int needParen, SymbolTable *st) {
     // return;
@@ -291,19 +306,28 @@ void symbolTypeSpec(TYPESPEC *ts, int needParen, SymbolTable *st) {
 
     checkTypeNameValid(ts);
 
-    if ( (strcmp(ts->type->id, ts->id) == 0 || !isTypeDeclared(st, ts->type)) && !isStruct(ts->type) )  {
-        fprintf(stderr, "Error: (line %d) invalid recursive type declaration\n",
+    if ( (strcmp(ts->type->id, ts->id) == 0 || !isTypeDeclared(st, ts->type, false)) && !isStruct(ts->type))  {
+
+        if (!isValidRecursive(ts->id, ts->type->id)){
+
+            fprintf(stderr, "Error: (line %d) invalid recursive type declaration\n",
                     ts->lineno);
             exit(1);
+        }
+
     }
 
-    TYPE *t = createType(ts, st);
+    TYPE *t = malloc(sizeof(TYPE));
+    // TYPE *t = createType(ts, st);
+  
     if (strcmp(ts->id, "_")!=0){
-        SYMBOL *sb = putSymbol(st, t->id, t, sk_typeDcl);
+        SYMBOL *sb = putSymbol(st, ts->id, t, sk_typeDcl);
         if (sb == NULL) {
             errorReDeclared(ts->lineno, "type", ts->id);
         }
     }
+
+    createType(ts, st, t);
 
     // if (strcmp(ts->id, "_")!=0){
     //     SYMBOL *sb = putSymbol(st, ts->id, ts->type, sk_typeDcl);
@@ -323,7 +347,7 @@ void symbolTypeSpec(TYPESPEC *ts, int needParen, SymbolTable *st) {
     // } else {
     //     // if()
     //     // printf("type kind%s", ts->type);
-    //     if (!isTypeDeclared(st, ts->type) ) {
+    //     if (!isTypeDeclared(st, ts->type) , false) {
     //         if (ts->type->id == NULL || strncmp(ts->type->id, "[", 1)==0){
 
     //         } else {
@@ -426,7 +450,7 @@ void symbolVarSpec(SymbolTable *s, VARSPEC *vs, int infunc) {
                 vsPtr->type = vsPtr->exp_list->type;
             }
             // resolveType(s,vsPtr->type);
-            symbolIDList(s, vsPtr->id_list, vsPtr->type, NULL, false);
+            symbolIDList(s, vsPtr->id_list, vsPtr->type, NULL, false, false);
             vsPtr = vsPtr->next;
         }
         symbol_indentation--;
@@ -440,7 +464,7 @@ void symbolVarSpec(SymbolTable *s, VARSPEC *vs, int infunc) {
         if (type == NULL) {
             type = vsPtr->exp_list->type;
         }
-        symbolIDList(s, vs->id_list, type, NULL, false);
+        symbolIDList(s, vs->id_list, type, NULL, false, false);
     }
 }
 
@@ -474,12 +498,12 @@ void symbolFieldDcl(SymbolTable *st, FIELD_DCL *fdcl, char *id, int lineno){
         if(strcmp(f->type->id, id)==0){
             errorReDeclared(lineno, id, id);
         }
-        symbolIDList(inner_table, f->id_list, f->type, NULL, false);
+        symbolIDList(inner_table, f->id_list, f->type, NULL, false, true);
         f = f->next;
     }    
 }
 
-bool isTypeDeclared(SymbolTable *st, TYPE *t) {
+bool isTypeDeclared(SymbolTable *st, TYPE *t, bool field_dcl) {
     if (t != NULL) {
         switch (t->kind) {
         case k_slices:
@@ -489,15 +513,21 @@ bool isTypeDeclared(SymbolTable *st, TYPE *t) {
                 return true;
             } else {
                 // printSymbolTable(st);
-                return isTypeDeclared(st, t->underLineType);
+                return isTypeDeclared(st, t->underLineType, field_dcl);
             }
             break;
         case k_type_struct:
-        case k_type_id:
             return getSymbol(st, t->id) != NULL && getSymbol(st, t->id)->kind == sk_typeDcl;
             break;
+        case k_type_id:;
+            bool verdict = getSymbol(st, t->id) != NULL && getSymbol(st, t->id)->kind == sk_typeDcl;
+            if (field_dcl && !verdict){
+                    verdict = getSymbol(st->parent, t->id) != NULL && getSymbol(st->parent, t->id)->kind == sk_typeDcl;
+            }
+            return verdict;
+            break;
         case k_type_type:
-            return isTypeDeclared(st, t->types);
+            return isTypeDeclared(st, t->types, field_dcl);
             break;
         case k_infer:
             break;
@@ -509,7 +539,7 @@ bool isTypeDeclared(SymbolTable *st, TYPE *t) {
 }
 
 void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
-                  bool allowAssignment) {
+                  bool allowAssignment, bool field_dcl) {
     if (i != NULL) {
         if (getSymbolCurrentScope(s, i->id) != NULL && !allowAssignment) {
             fprintf(stderr,
@@ -524,6 +554,11 @@ void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
             t->kind = k_infer;
         }
         SYMBOL *sbb = getSymbol(s, t->id);
+        if (field_dcl && sbb!=NULL && sbb->kind != sk_typeDcl){
+            // Search one stack higher incase it is in a struct
+                sbb = getSymbol(s->parent, t->id);
+                // printf("line %d::%d::%s\n", i->lineno, sbb->kind,sbb->type->id);
+            }
         if (t->underLineType == NULL && sbb != NULL && sbb->kind == sk_typeDcl) {
             // printf("line %d::%s::%s/before\n", i->lineno, t->id,sbb->type->id);
             // if (strcmp())
@@ -544,7 +579,8 @@ void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
         } else if (strcmp(t->id, "struct")==0){
             symbolFieldDcl(s, t->struct_type.field_dcls, "", i->lineno);
         } else {
-            if (!isTypeDeclared(s, t)) {
+            if (!isTypeDeclared(s, t, field_dcl)) {
+                // printf("here\n");
                 // printSymbolTable(s);
                 // printf("type kind%d", t->kind);
                 errorNotDeclared(i->lineno, "type", t->id);
@@ -586,14 +622,14 @@ void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
                 printf("\n");
         }
 
-        symbolIDList(s, i->next, t, funcType, allowAssignment);
+        symbolIDList(s, i->next, t, funcType, allowAssignment, field_dcl);
     }
 }
 
 void symbolParams(SymbolTable *t, PARAMS *p, TYPE *funcType) {
 
     if (p != NULL) {
-        symbolIDList(t, p->id_list, p->type, funcType, false);
+        symbolIDList(t, p->id_list, p->type, funcType, false, false);
         if (p->next != NULL) {
             if (printSymbol)
                 printf(", ");
@@ -968,6 +1004,7 @@ void symbolSTMT(SymbolTable *s, SymbolTable *new_st, STMT *stmt, bool to_indent,
             break;
         case expStmt:
             symbolEXP(s, stmt->val.expStmtVal);
+            weedSTMT(stmt, 0, 0);
             break;
         case assignStmt:
             symbolEXP(s, stmt->val.assignStmtVal.lhs);
@@ -981,7 +1018,7 @@ void symbolSTMT(SymbolTable *s, SymbolTable *new_st, STMT *stmt, bool to_indent,
             break;
         case shortVarDecStmt:
             symbolShortVarDec(s, stmt);
-            // symbolIDList(s, stmt->val.shortVarDecStmtVal.ids, NULL, NULL);
+            // symbolIDList(s, stmt->val.shortVarDecStmtVal.ids, NULL, NULL, false);
             // symbolEXP(s, stmt->val.shortVarDecStmtVal.exps);
             break;
         case forStmt:;
@@ -996,6 +1033,7 @@ void symbolSTMT(SymbolTable *s, SymbolTable *new_st, STMT *stmt, bool to_indent,
             symbolDecl(s, stmt->val.decStmtVal, 1);
             break;
         }
+        
         if (new_line && stmt->kind != emptyStmt) {
             // if (printSymbol) printf("");
         }
@@ -1017,6 +1055,21 @@ void symbolShortVarDec(SymbolTable *st, STMT *s) {
         idc = idc->next;
     }
 
+    int num_defined_ids = 0;
+    ID_LIST *ids = s->val.shortVarDecStmtVal.ids;
+    while (ids != NULL) {
+        if (strcmp(ids->id, "_") == 0 || getSymbolCurrentScope(st, ids->id) != NULL) {
+            num_defined_ids += 1;
+        }
+        ids = ids->next;
+    }
+
+    if (num_ids == num_defined_ids) {
+        fprintf(stderr, "Error: (line %d) all variables in short var declaration have been defined before", s->lineno);
+        exit(1);
+    }
+
+
     bool allowAssignment = false;
     if (num_ids > 1) {
         // assignment allowed
@@ -1028,18 +1081,20 @@ void symbolShortVarDec(SymbolTable *st, STMT *s) {
     symbolEXP(st, s->val.shortVarDecStmtVal.exps);
     ID_LIST *next_id;
     ID_LIST *curr_id = s->val.shortVarDecStmtVal.ids;
-    EXP *curr_exp = s->val.shortVarDecStmtVal.exps; 
+    EXP *curr_exp = s->val.shortVarDecStmtVal.exps;
     do {
         next_id = curr_id->next;
-        // curr_id->next = NULL;
         symbolEXP(st, curr_exp);
         TYPE *t = curr_exp->type;
-        symbolIDList(st, curr_id,
-                 curr_exp->type, t, allowAssignment);        // Seg fault when using cast expr 
+        SYMBOL *sb = getSymbol(st, curr_id->id);
+        if (sb != NULL) {
+            // already declared
+            t = sb->type;
+        }
+        symbolIDList(st, curr_id, t, NULL, allowAssignment, false);
         curr_id = next_id;
         curr_exp = curr_exp->next;
     } while (next_id);
-    
 }
 
 void symbolBooleanConstant(SymbolTable *s, char *boolVal) {
