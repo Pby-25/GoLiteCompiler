@@ -1031,7 +1031,7 @@ void symbolShortVarDec(SymbolTable *st, STMT *s) {
     EXP *curr_exp = s->val.shortVarDecStmtVal.exps; 
     do {
         next_id = curr_id->next;
-        curr_id->next = NULL;
+        // curr_id->next = NULL;
         symbolEXP(st, curr_exp);
         TYPE *t = curr_exp->type;
         symbolIDList(st, curr_id,

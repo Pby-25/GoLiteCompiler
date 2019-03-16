@@ -813,21 +813,14 @@ void checkDuplicateIdInList(ID_LIST *i) {
     ID_LIST *temp = i;
     ID_LIST *curr = i;
     while (temp != NULL) {
-       // printf("%s\n", temp->id);
-        // curr = temp->next;
-        // //printf("here\n");
-        // if (curr == NULL) {
-
-        // }
-        // while (curr != NULL) {
-        //     printf("temp: %s\n", temp->id);
-        //     printf("curr: %s\n", curr->id);
-        //     if (strcmp(temp->id, curr->id) == 0) {
-        //         fprintf(stderr, "Error: (line %d) duplicate variable in one short declaration\n", i->lineno);
-        //         exit(1);
-        //     }
-        //     curr = curr->next;
-        // }
+        curr = temp->next;
+        while (curr != NULL) {
+            if (strcmp(temp->id, curr->id) == 0) {
+                fprintf(stderr, "Error: (line %d) duplicate variable in one short declaration\n", i->lineno);
+                exit(1);
+            }
+            curr = curr->next;
+        }
         temp = temp->next;
     }
 }
