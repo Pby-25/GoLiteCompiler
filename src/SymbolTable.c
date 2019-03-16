@@ -207,9 +207,9 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts) {
             printType(ts);
             ts->underLineType = sb->type->underLineType;
             return resolveType(st, ts->underLineType);
-        } else 
+        } else {
             if(ts->kind == k_array || ts->kind == k_slices){
-                if(isTypeDeclared(st, ts->underLineType)){
+                if(isTypeDeclared(st, ts->underLineType, false)){
                     SYMBOL *sb = getSymbol(st, ts->underLineType->id);
                     ts->underLineType = sb->type;
                     if (printSymbol)
@@ -221,32 +221,6 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts) {
             errorNotDeclared(ts->lineno, "type", ts->id);
         }
     }
-
-    // if (ts->id != NULL && isTypeBaseType(ts)){
-    //     if (printSymbol) printf("%s\n", ts->id);
-    //     return ts;
-    // }else{
-    //     if(ts->kind != k_type_id){
-    //         return ts;
-    //     }
-    // }
-
-    // printType(ts);
-
-    // if (ts->id != NULL){
-    //     // SYMBOL *sb = getSymbol(st, ts->id);
-    //     if (sb != NULL) {
-    //         if (printSymbol) printf(" -> ");
-    //         if(sb->type != NULL){
-    //             // printf("resolveType typeid:%s, symbol typeid: %s", ts->id,
-    //             sb->type->id); return resolveType(st, sb->type);
-    //         }
-    //     } else {
-    //         errorReDeclared(ts->lineno,"type",ts->id);
-    //         if (printSymbol) printf("null\n");
-    //     }
-    // }
-    // return ts;
 }
 
 void createType(TYPESPEC *ts, SymbolTable *st, TYPE *new_type){
