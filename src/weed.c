@@ -415,6 +415,22 @@ bool checkInfiniteLoop(STMT *s) {
     if (f != NULL && f->first->kind == emptyStmt && f->condtion == NULL && f->post == NULL) return true; 
     return false;
 }
+
+bool containBreak(STMT *s) {
+    bool contain = false;
+    if (s == NULL) return contain;
+    STMT *forBody = s->val.forStmtVal.forBody->val.block;
+    STMT *temp = forBody;
+    while (temp != NULL) {
+        if (temp->kind == breakStmt) {
+            contain = true;
+            break;
+        }
+        temp = temp->next;
+    }
+    return contain;
+}
+
 bool weedTerminateStmt(STMT *stmt);
 
 bool weedTerminateSwitchStmt(CASE_CLAUSE *c) {
@@ -433,7 +449,7 @@ bool containDefaultCase(CASE_CLAUSE *c) {
     CASE_CLAUSE *temp = c;
     while (temp != NULL) {
         if (temp->kind == defaultK) {
-            contain = false;
+            contain = true;
             break;
         }
         temp = temp->next;
@@ -468,8 +484,8 @@ bool weedTerminateStmt(STMT *stmt){
             }
             break;
         case forStmt:
-            if (checkInfiniteLoop(stmt)) {
-                terminate = weedTerminateStmt(stmt->val.forStmtVal.forBody);
+            if (checkInfiniteLoop(stmt) && !containBreak(stmt)) {
+                terminate = true;
             } else {
                 terminate = false;
             }

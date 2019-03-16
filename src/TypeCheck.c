@@ -23,7 +23,7 @@ TYPE *strToType(char *s){
 
 TYPE *findSelectorIdType(char *name, TYPE *structType){
     TYPE *t = structType;
-    while (t->kind != k_type_struct){
+    while (t->kind != k_type_struct || t->underLineType){
         t = t->underLineType;
     }
     FIELD_DCL *f_dcl = t->struct_type.field_dcls;
@@ -103,6 +103,8 @@ bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
         exit(1);
         return false;
     }
+    isTypeBaseType(t1);
+    isTypeBaseType(t2);
     // printf("checkSameType %s, %s\n", t1->id,t2->id);
     switch (t1->kind) {
         case k_slices:
@@ -303,7 +305,7 @@ void typeFuncDecl(FUNCDECL *f) {
                     exit(1);
                 }
                 typeSTMT(body, f->signature->result->type);
-            }
+             }
         }
         // body = body->val.block;
         // // function return type is not void
@@ -544,7 +546,7 @@ void typeEXP(EXP *exp) {
             printf("line %d::%s::%s::%s\n",exp->lineno, exp->val.cast.type->id, exp->val.cast.exp->type->id,exp->val.cast.exp->type->underLineType->id);
             if (!isNumeric(exp->val.cast.type) || !isNumeric(exp->val.cast.exp->type)){
                 if (!checkSameType(exp->val.cast.type, strToType("string"), true) || !isInteger(exp->val.cast.exp->type)){
-                    errorType("valid cast type","invalid cast type",exp->lineno);
+                    errorType(exp->val.cast.type->id, exp->val.cast.exp->type->id, exp->lineno);
                 }
             }
         }
@@ -559,8 +561,15 @@ void typeEXP(EXP *exp) {
             errorType("array or slice", exp->val.append.head->type->id, exp->lineno);
         }
         TYPE *expectedType = exp->val.append.head->val.array.exp->type;
+        if (expectedType->id == NULL) {
+            printf("here\n");
+        } else {
+            printf("NOT NULL\n");
+        }
+        printf("%s\n", expectedType->id);
+        printf("%s\n", exp->val.append.tail->type->id);
         if (!checkSameType(expectedType, exp->val.append.tail->type, false)){
-            errorType(expectedType->id, exp->val.append.tail->type->id, exp->lineno);
+             errorType(expectedType->id, exp->val.append.tail->type->id, exp->lineno);
         }
         exp->type = exp->val.append.head->type;
         exp->kind = exp->val.append.head->kind;
@@ -607,11 +616,12 @@ void typeEXP(EXP *exp) {
             errorType("struct", exp->val.array.exp->type->id, exp->lineno);
         }
         TYPE *correspondingType = findSelectorIdType(exp->val.selector.name, exp->val.selector.exp->type);
-        if (correspondingType == NULL){
-            errorType(exp->val.selector.name, "Does Not Exist", exp->lineno);
-        } else {
-            exp->type = correspondingType;
-        }
+         if (correspondingType == NULL){
+            //  printf("line %d::%d\n", exp->lineno, exp->val.selector.exp->type->underLineType->underLineType->kind);
+             errorType(exp->val.selector.name, "Does Not Exist", exp->lineno);
+         } else {
+              exp->type = correspondingType;
+         }
         break;
     // case idExpr:
     //     break;
@@ -709,10 +719,16 @@ void typeAssignStmt(STMT *stmt) {
         typeEXP(lhs);
         typeEXP(rhs);
         checkExpListLValue(lhs);
-        if (!checkSameType(lhs->type, rhs->type, true)) {
-                // printf("alhs: %d, rhs: %d\n", lhs->type->kind,rhs->type->kind);
-                printf("alhs: %s %d, rhs: %s %d, under: %s\n", lhs->type->id, lhs->type->kind,rhs->type->id, rhs->type->kind,rhs->type->underLineType->id);
+        // if (lhs->type == NULL) {
+        //     printf("left null"); 
+        // }
+        // if (rhs->type == NULL) {
+        //     printf("right null"); 
+        // }
 
+        // printf("lhs %s\n", lhs->type->id);
+        // printf("rhs %s\n", rhs->type->id);
+        if (!checkSameType(lhs->type, rhs->type, true)) {
                 fprintf(stderr, "Error: (line %d) invalid assignment\n", lhs->lineno);
                 exit(1);
         }
@@ -724,7 +740,8 @@ void typeAssignStmt(STMT *stmt) {
                 while (lhs != NULL && rhs != NULL){
                     bool sameType = false;
                     if (strcmp(lhs->type->id, rhs->type->id) == 0) {
-                        sameType = checkSameType(lhs->type, rhs->type, true);
+                        // printf("");
+                        sameType = checkSameType(rhs->type, lhs->type, true);
                     } else {
                         sameType = checkSameType(lhs->type, rhs->type, false);
                     }

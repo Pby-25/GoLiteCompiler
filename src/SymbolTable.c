@@ -203,7 +203,6 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts) {
                 printf(" -> ");
             printType(ts);
             return resolveType(st, ts->underLineType);
-
         } else {
             if(ts->kind == k_array || ts->kind == k_slices){
                 if(isTypeDeclared(st, ts->underLineType)){
@@ -262,27 +261,23 @@ TYPE *createType(TYPESPEC *ts, SymbolTable *st){
     new_type->lineno = ts->lineno;
     new_type->id = ts->id;
     new_type->kind = ts->type->kind;
-
-    SYMBOL *sbb = getSymbol(st, ts->type->id);
-    if (sbb != NULL && sbb->kind == sk_typeDcl) {
-        // printf("line %d::%s::%s::%s/before\n", ts->lineno, ts->id, ts->type->id,sbb->type->id);
-        new_type->underLineType = sbb->type;
-        // printf("line %d::%s::%s::%s/after\n", ts->lineno, ts->id, ts->type->id,sbb->type->id);
-    } else if (strcmp(ts->type->id, "struct")==0){
+    if (ts->type->id == NULL || strncmp(ts->type->id, "[", 1)==0){
+        new_type->underLineType = ts->type;
+    } else if (ts->type->id == NULL || strcmp(ts->type->id, "struct")==0) {
         new_type->underLineType = ts->type;
         symbolFieldDcl(st, ts->type->struct_type.field_dcls, ts->id, ts->lineno);
     } else {
-        // if()
-        // printf("type kind%s", ts->type);
-        if (!isTypeDeclared(st, ts->type) ) {
-            // printSymbolTable(st);
-            // printf("type kind%d", t->kind);
-                errorNotDeclared(ts->lineno,"type",ts->type->id);
-            }
-        
+        SYMBOL *sbb = getSymbol(st, ts->type->id);
+        if (sbb != NULL && sbb->kind == sk_typeDcl) {
+            // printf("line %d::%s::%s::%s/before\n", ts->lineno, ts->id, ts->type->id,sbb->type->id);
+            new_type->underLineType = sbb->type;
+            // printf("line %d::%s::%s::%s/after\n", ts->lineno, ts->id, ts->type->id,sbb->type->id);
+        } else {
+            if (!isTypeDeclared(st, ts->type) ) {
+                    errorNotDeclared(ts->lineno,"type",ts->type->id);
+                }    
+        }   
     }
-    
-    // new_type->
     return new_type;
 }
 
@@ -294,31 +289,44 @@ void symbolTypeSpec(TYPESPEC *ts, int needParen, SymbolTable *st) {
 
     checkTypeNameValid(ts);
 
+    TYPE *t = createType(ts, st);
     if (strcmp(ts->id, "_")!=0){
-        SYMBOL *sb = putSymbol(st, ts->id, ts->type, sk_typeDcl);
+        SYMBOL *sb = putSymbol(st, t->id, t, sk_typeDcl);
         if (sb == NULL) {
             errorReDeclared(ts->lineno, "type", ts->id);
         }
     }
 
+    // if (strcmp(ts->id, "_")!=0){
+    //     SYMBOL *sb = putSymbol(st, ts->id, ts->type, sk_typeDcl);
+    //     if (sb == NULL) {
+    //         errorReDeclared(ts->lineno, "type", ts->id);
+    //     }
+    // }
+
     
-    SYMBOL *sbb = getSymbol(st, ts->type->id);
-    if (sbb != NULL && sbb->kind == sk_typeDcl) {
-        // printf("line %d::%s::%s::%s/before\n", ts->lineno, ts->id, ts->type->id,sbb->type->id);
-        ts->type->underLineType = sbb->type;
-        // printf("line %d::%s::%s::%s/after\n", ts->lineno, ts->id, ts->type->id,sbb->type->id);
-    } else if (strcmp(ts->type->id, "struct")==0){
-        symbolFieldDcl(st, ts->type->struct_type.field_dcls, ts->id, ts->lineno);
-    } else {
-        // if()
-        // printf("type kind%s", ts->type);
-        if (!isTypeDeclared(st, ts->type) ) {
-            // printSymbolTable(st);
-            // printf("type kind%d", t->kind);
-                errorNotDeclared(ts->lineno,"type",ts->type->id);
-            }
+    // SYMBOL *sbb = getSymbol(st, ts->type->id);
+    // if (sbb != NULL && sbb->kind == sk_typeDcl) {
+    //     // printf("line %d::%s::%s::%s/before\n", ts->lineno, ts->id, ts->type->id,sbb->type->id);
+    //     ts->type->underLineType = sbb->type;
+    //     // printf("line %d::%s::%s::%s/after\n", ts->lineno, ts->id, ts->type->id,sbb->type->id);
+    // } else if (strcmp(ts->type->id, "struct")==0){
+    //     symbolFieldDcl(st, ts->type->struct_type.field_dcls, ts->id, ts->lineno);
+    // } else {
+    //     // if()
+    //     // printf("type kind%s", ts->type);
+    //     if (!isTypeDeclared(st, ts->type) ) {
+    //         if (ts->type->id == NULL || strncmp(ts->type->id, "[", 1)==0){
+
+    //         } else {
+    //             errorNotDeclared(ts->lineno,"type",ts->type->id);
+    //         }
+    //         // printSymbolTable(st);
+    //         // printf("type kind%d", t->kind);
+                
+    //         }
         
-    }
+    // }
 
 
 
