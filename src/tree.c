@@ -256,6 +256,7 @@ TYPE *makeTypeId(char *id, int lineno) {
     TYPE *t = malloc(sizeof(TYPE));
     t->kind = k_type_id;
     t->id = id;
+    t->underLineType = NULL;
     return t;
 }
 
@@ -292,6 +293,7 @@ TYPE *makeTypeStruct(FIELD_DCL *f, int lineno) {
     t->id = str_cat("struct","");
     t->kind = k_type_struct;
     t->struct_type.field_dcls = f;
+    t->underLineType = NULL;
     return t;
 }
 
@@ -299,6 +301,7 @@ TYPE *makeTypeT(TYPE *t1, int lineno) {
     TYPE *t = malloc(sizeof(TYPE));
     t->kind = k_type_type;
     t->types = t1;
+    t->underLineType = NULL;
     return t;
 }
 

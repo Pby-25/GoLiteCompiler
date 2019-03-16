@@ -180,6 +180,8 @@ bool isTypeBaseType(TYPE *t) {
             t->id_type.baseTypeKind = btk;
             t->id_type.isBaseType = true;
             return true;
+        }else{
+            if(tc== tc->underLineType){}
         }
         tc = tc->underLineType;
     }
@@ -240,7 +242,30 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts) {
     // return ts;
 }
 
-
+TYPE *createType(TYPESPEC *ts, SymbolTable *st){
+    TYPE *new_type = malloc(sizeof(TYPE));
+    new_type->lineno = ts->lineno;
+    new_type->id = ts->id;
+    new_type->kind = ts->type->kind;
+    if (ts->type->id == NULL || strncmp(ts->type->id, "[", 1)==0){
+        new_type->underLineType = ts->type;
+    } else if (ts->type->id == NULL || strcmp(ts->type->id, "struct")==0) {
+        new_type->underLineType = ts->type;
+        symbolFieldDcl(st, ts->type->struct_type.field_dcls, ts->id, ts->lineno);
+    } else {
+        SYMBOL *sbb = getSymbol(st, ts->type->id);
+        if (sbb != NULL && sbb->kind == sk_typeDcl) {
+            // printf("line %d::%s::%s::::%s::%s/before\n", ts->lineno, new_type->id, new_type->underLineType->id, ts->type->id,sbb->type->id);
+            new_type->underLineType = sbb->type;
+            // printf("line %d::%s::%s::::%s/after\n", ts->lineno, new_type->id, new_type->underLineType->id, ts->type->id);
+        } else {
+            if (!isTypeDeclared(st, ts->type) ) {
+                    errorNotDeclared(ts->lineno,"type",ts->type->id);
+                }    
+        }   
+    }
+    return new_type;
+}
 
 void checkTypeNameValid(TYPESPEC *ts) {
     TYPESPEC *temp = ts;
@@ -256,30 +281,7 @@ void checkTypeNameValid(TYPESPEC *ts) {
     }
 }
 
-TYPE *createType(TYPESPEC *ts, SymbolTable *st){
-    TYPE *new_type = malloc(sizeof(TYPE));
-    new_type->lineno = ts->lineno;
-    new_type->id = ts->id;
-    new_type->kind = ts->type->kind;
-    if (ts->type->id == NULL || strncmp(ts->type->id, "[", 1)==0){
-        new_type->underLineType = ts->type;
-    } else if (ts->type->id == NULL || strcmp(ts->type->id, "struct")==0) {
-        new_type->underLineType = ts->type;
-        symbolFieldDcl(st, ts->type->struct_type.field_dcls, ts->id, ts->lineno);
-    } else {
-        SYMBOL *sbb = getSymbol(st, ts->type->id);
-        if (sbb != NULL && sbb->kind == sk_typeDcl) {
-            // printf("line %d::%s::%s::%s/before\n", ts->lineno, ts->id, ts->type->id,sbb->type->id);
-            new_type->underLineType = sbb->type;
-            // printf("line %d::%s::%s::%s/after\n", ts->lineno, ts->id, ts->type->id,sbb->type->id);
-        } else {
-            if (!isTypeDeclared(st, ts->type) ) {
-                    errorNotDeclared(ts->lineno,"type",ts->type->id);
-                }    
-        }   
-    }
-    return new_type;
-}
+bool isTypeDeclared(SymbolTable *st, TYPE *t);
 
 void symbolTypeSpec(TYPESPEC *ts, int needParen, SymbolTable *st) {
     // return;
@@ -288,6 +290,12 @@ void symbolTypeSpec(TYPESPEC *ts, int needParen, SymbolTable *st) {
     }
 
     checkTypeNameValid(ts);
+
+    if ( (strcmp(ts->type->id, ts->id) == 0 || !isTypeDeclared(st, ts->type)) && !isStruct(ts->type) )  {
+        fprintf(stderr, "Error: (line %d) invalid recursive type declaration\n",
+                    ts->lineno);
+            exit(1);
+    }
 
     TYPE *t = createType(ts, st);
     if (strcmp(ts->id, "_")!=0){
@@ -477,7 +485,7 @@ bool isTypeDeclared(SymbolTable *st, TYPE *t) {
         case k_slices:
         case k_array:
             // printf("isTypeDeclared %s, %s\n", t->id,t->underLineType->id);
-            if(t->underLineType != NULL && isIdBaseType(t->underLineType->id) != -1){
+            if( isIdBaseType(t->underLineType->id) != -1){
                 return true;
             } else {
                 // printSymbolTable(st);
@@ -510,20 +518,21 @@ void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
             exit(1);
         }
         // getSymbolCurrentScope(s, i->id);
-
-        SYMBOL *sbb = getSymbol(s, t->id);
-        if (sbb != NULL && sbb->kind == sk_typeDcl) {
-            // printf("line %d::%s::%s/before\n", i->lineno, t->id,sbb->type->id);
-            t->underLineType = sbb->type;
-            // printf("line %d::%s::%s/after\n", i->lineno, t->id,sbb->type->id);
-        }
-        // ts->type->underLineType = sbb->type;
-        // printSymbolTable(s);
         if (t == NULL) {
             t = malloc(sizeof(TYPE));
             t->id = "<infer>";
             t->kind = k_infer;
         }
+        SYMBOL *sbb = getSymbol(s, t->id);
+        if (t->underLineType == NULL && sbb != NULL && sbb->kind == sk_typeDcl) {
+            // printf("line %d::%s::%s/before\n", i->lineno, t->id,sbb->type->id);
+            // if (strcmp())
+            t->underLineType = sbb->type->underLineType;
+            // printf("line %d::%s::%s/after\n", i->lineno, t->id,sbb->type->id);
+        }
+        // ts->type->underLineType = sbb->type;
+        // printSymbolTable(s);
+
         if (t->id == NULL) {
             // t->id = i->id;
             if (t->underLineType != NULL) {
@@ -553,7 +562,7 @@ void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
                 funcType->params = p;
             } else {
                 PARAM_TYPE *next_one = funcType->params;
-                while (next_one)
+                while (next_one->next)
                     next_one = next_one->next;
                 next_one->next = p;
             }
@@ -759,18 +768,22 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
                 // printSymbolTable(s);
                 // printf("symbol funcExpr %s\n", sb->type->id);
                 exp->val.cast.exp = exp->val.func.args;
+                exp->type = exp->val.cast.type;
+                symbolEXP(s,exp->val.cast.exp);
             } else {
                 exp->type = sb->type;
             }
         } else {
             errorNotDeclared(exp->lineno, "func", exp->val.func.name->val.id);
         }
-        symbolEXP(s, exp->val.func.args);
+        // symbolEXP(s, exp->val.func.args);
         break;
     case castExpr:
+        // printf("symbol castExpr \n");
         // TODO: for now cast is represented as funcExpr
         // symbolEXP(s, exp->val.cast.type);
         symbolEXP(s, exp->val.cast.exp);
+        exp->type = exp->val.cast.type;
         break;
     case appendExpr:
         symbolEXP(s, exp->val.append.head);
@@ -1015,12 +1028,14 @@ void symbolShortVarDec(SymbolTable *st, STMT *s) {
     symbolEXP(st, s->val.shortVarDecStmtVal.exps);
     ID_LIST *next_id;
     ID_LIST *curr_id = s->val.shortVarDecStmtVal.ids;
-    EXP *curr_exp = s->val.shortVarDecStmtVal.exps;
+    EXP *curr_exp = s->val.shortVarDecStmtVal.exps; 
     do {
         next_id = curr_id->next;
         curr_id->next = NULL;
+        symbolEXP(st, curr_exp);
+        TYPE *t = curr_exp->type;
         symbolIDList(st, curr_id,
-                 curr_exp->type, NULL, allowAssignment);        // Seg fault when using cast expr 
+                 curr_exp->type, t, allowAssignment);        // Seg fault when using cast expr 
         curr_id = next_id;
         curr_exp = curr_exp->next;
     } while (next_id);
@@ -1035,7 +1050,8 @@ void symbolBooleanConstant(SymbolTable *s, char *boolVal) {
 void symbolBaseType(SymbolTable *s, char *typeName) {
     TYPE *type = malloc(sizeof(TYPE));
     type->id = typeName;
-    // type->underLineType = type;
+    type->kind = k_type_id;
+    type->underLineType = type;
     if (printSymbol)
         printf("%s [type] = %s\n", type->id, type->id);
     putSymbol(s, type->id, type, sk_typeDcl);

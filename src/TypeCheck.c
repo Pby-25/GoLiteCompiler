@@ -139,8 +139,8 @@ bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
             // printf("names: %s, %s",t1->id, t2->id);
             if(checkBaseType){
                 // printf("here\n");
-                TYPE *t1c = t1;
-                TYPE *t2c = t2;
+                // TYPE *t1c = t1;
+                // TYPE *t2c = t2;
                 // while(t1c->underLineType!=NULL){
                 //     t1c = t1c->underLineType;
                 // }
@@ -149,7 +149,14 @@ bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
                 // }
                 // printf("checkBaseType %d, %d\n",t1->id_type.baseTypeKind,t2->id_type.baseTypeKind);
                 // return strcmp(t1c->id, t2c->id)==0;
-                return t1->id_type.baseTypeKind == t2->id_type.baseTypeKind;
+
+
+                // if (t1->id_type.baseTypeKind || t2->id_type.baseTypeKind){
+                    return t1->id_type.baseTypeKind == t2->id_type.baseTypeKind;
+                // } else {
+                //     return checkSameType(t1->underLineType, t2->underLineType, checkBaseType);
+                // }
+                
             }
             return strcmp(t1->id, t2->id)==0;
             break;
@@ -543,7 +550,7 @@ void typeEXP(EXP *exp) {
             errorType("base",exp->val.cast.type->id,exp->lineno);
         } 
         if (!checkSameType(exp->val.cast.type, exp->val.cast.exp->type, true)){
-            printf("line %d::%s::%s::%s\n",exp->lineno, exp->val.cast.type->id, exp->val.cast.exp->type->id,exp->val.cast.exp->type->underLineType->id);
+            // printf("line %d::%d::%d::%s::%s::%s\n",exp->lineno, exp->val.cast.type->kind, exp->val.cast.exp->type->kind, exp->val.cast.type->id, exp->val.cast.exp->type->id,exp->val.cast.exp->type->underLineType->id);
             if (!isNumeric(exp->val.cast.type) || !isNumeric(exp->val.cast.exp->type)){
                 if (!checkSameType(exp->val.cast.type, strToType("string"), true) || !isInteger(exp->val.cast.exp->type)){
                     errorType(exp->val.cast.type->id, exp->val.cast.exp->type->id, exp->lineno);
@@ -560,15 +567,8 @@ void typeEXP(EXP *exp) {
         if (!isArrayOrSlice(exp->val.append.head->type)){
             errorType("array or slice", exp->val.append.head->type->id, exp->lineno);
         }
-        TYPE *expectedType = exp->val.append.head->val.array.exp->type;
-        if (expectedType->id == NULL) {
-            printf("here\n");
-        } else {
-            printf("NOT NULL\n");
-        }
-        printf("%s\n", expectedType->id);
-        printf("%s\n", exp->val.append.tail->type->id);
-        if (!checkSameType(expectedType, exp->val.append.tail->type, false)){
+        TYPE *expectedType = exp->val.append.head->type;
+        if (!checkSameType(expectedType, exp->val.append.tail->type, true)){
              errorType(expectedType->id, exp->val.append.tail->type->id, exp->lineno);
         }
         exp->type = exp->val.append.head->type;
@@ -719,16 +719,7 @@ void typeAssignStmt(STMT *stmt) {
         typeEXP(lhs);
         typeEXP(rhs);
         checkExpListLValue(lhs);
-        // if (lhs->type == NULL) {
-        //     printf("left null"); 
-        // }
-        // if (rhs->type == NULL) {
-        //     printf("right null"); 
-        // }
-
-        // printf("lhs %s\n", lhs->type->id);
-        // printf("rhs %s\n", rhs->type->id);
-        if (!checkSameType(lhs->type, rhs->type, true)) {
+        if (!checkSameType(lhs->type, rhs->type, false)) {
                 fprintf(stderr, "Error: (line %d) invalid assignment\n", lhs->lineno);
                 exit(1);
         }
@@ -815,6 +806,30 @@ bool checkExpListBaseType(EXP *exp_list) {
         temp = temp->next;
     }
     return base;
+}
+
+void checkDuplicateIdInList(ID_LIST *i) {
+    if (i == NULL) return;
+    ID_LIST *temp = i;
+    ID_LIST *curr = i;
+    while (temp != NULL) {
+       // printf("%s\n", temp->id);
+        // curr = temp->next;
+        // //printf("here\n");
+        // if (curr == NULL) {
+
+        // }
+        // while (curr != NULL) {
+        //     printf("temp: %s\n", temp->id);
+        //     printf("curr: %s\n", curr->id);
+        //     if (strcmp(temp->id, curr->id) == 0) {
+        //         fprintf(stderr, "Error: (line %d) duplicate variable in one short declaration\n", i->lineno);
+        //         exit(1);
+        //     }
+        //     curr = curr->next;
+        // }
+        temp = temp->next;
+    }
 }
 
 void typeSTMT(STMT *stmt, TYPE *returnType) {
@@ -923,6 +938,7 @@ void typeSTMT(STMT *stmt, TYPE *returnType) {
             }
             break;
         case shortVarDecStmt:
+            checkDuplicateIdInList(stmt->val.shortVarDecStmtVal.ids);
             typeIdListExpList(stmt->val.shortVarDecStmtVal.ids, stmt->val.shortVarDecStmtVal.exps);
             // TODO: check redeclaration typechecks!
             break;
