@@ -57,7 +57,7 @@ void symbolSpecialFuncDecl(SymbolTable *t, FUNCDECL *f, speicialFuncK spK);
 // void printIndentation();
 void symbolShortVarDec(SymbolTable *st, STMT *s);
 TYPE *resolveType(SymbolTable *st, TYPE *ts);
-bool isTypeBaseType(TYPE *t);
+bool isTypeBaseType(TYPE *t, bool checkDeep);
 BaseTypeKind isIdBaseType(char *id);
 void printSymbolTable(SymbolTable *t);
 bool isTypeDeclared(SymbolTable *st, TYPE *t, bool field_dcl);

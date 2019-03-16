@@ -257,6 +257,7 @@ TYPE *makeTypeId(char *id, int lineno) {
     t->kind = k_type_id;
     t->id = id;
     t->underLineType = NULL;
+    t->result = NULL;
     return t;
 }
 
@@ -273,6 +274,7 @@ TYPE *makeTypeSlices(TYPE *type, int lineno) {
     t->kind = k_slices;
     t->slices_type.type = type;
     t->underLineType = type;
+    t->result = NULL;
     return t;
 }
 
@@ -285,6 +287,7 @@ TYPE *makeTypeArray(int size, TYPE *type, int lineno) {
     t->array_type.type = type;
     t->array_type.size = size;
     t->underLineType = type;
+    t->result = NULL;
     return t;
 }
 
@@ -294,6 +297,7 @@ TYPE *makeTypeStruct(FIELD_DCL *f, int lineno) {
     t->kind = k_type_struct;
     t->struct_type.field_dcls = f;
     t->underLineType = NULL;
+    t->result = NULL;
     return t;
 }
 
@@ -302,6 +306,7 @@ TYPE *makeTypeT(TYPE *t1, int lineno) {
     t->kind = k_type_type;
     t->types = t1;
     t->underLineType = NULL;
+    t->result = NULL;
     return t;
 }
 
