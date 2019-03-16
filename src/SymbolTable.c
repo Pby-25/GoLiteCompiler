@@ -207,9 +207,14 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts) {
             printType(ts);
             ts->underLineType = sb->type->underLineType;
             return resolveType(st, ts->underLineType);
-        } else {
+        } else 
             if(ts->kind == k_array || ts->kind == k_slices){
-                if(isTypeDeclared(st, ts->underLineType, false)){
+                if(isTypeDeclared(st, ts->underLineType)){
+                    SYMBOL *sb = getSymbol(st, ts->underLineType->id);
+                    ts->underLineType = sb->type;
+                    if (printSymbol)
+                        printf(" -> ");
+                    printType(ts);
                     return ts;
                 }
             }
