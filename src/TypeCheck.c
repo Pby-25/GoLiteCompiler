@@ -374,9 +374,27 @@ bool isArrayOrSlice(TYPE *t) {
         // printf("again\n");
         // printf("is null\n")
         // printf("isArrayOrSlice %s, kind%d\n", t->id, t->kind);
+        printf("here\n");
+        printf("%d\n", t->underLineType->kind);
         return isArrayOrSlice(t->underLineType);
     }
-    //return false;
+    return false;
+}
+
+bool isValidSliceType(TYPE *type) {
+    if (type == NULL) return false;
+    bool valid = true;
+    // char *id = type->id;
+    // if (id != NULL) {
+    //     do {
+    //         printf("%");
+    //         if (*id == '[' && *(id + 1) != ']') {
+    //             valid = false;
+    //             break;
+    //         }   
+    //     } while (id++);
+    // }
+    return valid;
 }
 
 bool isStruct(TYPE *t) {
@@ -583,6 +601,9 @@ void typeEXP(EXP *exp) {
         if (!isArrayOrSlice(exp->val.append.head->type)){
             errorType("array or slice", exp->val.append.head->type->id, exp->lineno);
         }
+        // if (!isValidSliceType(exp->val.append.head->type)) {
+        //     errorType("slice", exp->val.append.head->type->id, exp->lineno);
+        // }
         TYPE *expectedType = exp->val.append.head->type->underLineType;
         if (!checkSameType(expectedType, exp->val.append.tail->type, true)){
              errorType(expectedType->id, exp->val.append.tail->type->id, exp->lineno);
@@ -885,7 +906,7 @@ void typeSTMT(STMT *stmt, TYPE *returnType) {
                 fprintf(stderr, "Error: (line %d) expression in print statement must be of base type\n", stmt->lineno);
                 exit(1);
             }
-            break;
+             break;
         case printlnStmt:
             typeEXP(stmt->val.printlnExpList);
             if (!checkExpListBaseType(stmt->val.printExpList)){

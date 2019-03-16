@@ -1118,7 +1118,7 @@ void symbolBaseType(SymbolTable *s, char *typeName) {
     TYPE *type = malloc(sizeof(TYPE));
     type->id = typeName;
     type->kind = k_type_id;
-    type->underLineType = type;
+    type->underLineType = NULL;
     if (printSymbol)
         printf("%s [type] = %s\n", type->id, type->id);
     putSymbol(s, type->id, type, sk_typeDcl);
