@@ -610,6 +610,15 @@ void typeEXP(EXP *exp) {
             exp->val.array.exp->type = under;
             // exp->type = exp->val.array.exp->type;
         }
+//                     if(head != NULL && head->underLineType!=NULL){
+//             TYPE *under = head->underLineType;
+//             while(under && !isTypeBaseType(under) && under->kind == k_type_id){
+//                 // indirect
+//                 under = under->underLineType;
+//             }
+//             exp->type = under->underLineType;
+//             exp->val.array.exp->type = under->underLineType;
+//         }
         break;
     case selectorExpr:
         typeEXP(exp->val.selector.exp);
