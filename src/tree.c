@@ -319,6 +319,7 @@ FIELD_DCL *makeFieldDcl(ID_LIST *id_list, TYPE *type, int lineno) {
     f->id_list = id_list;
     f->type = type;
     f->lineno = lineno;
+    f->next = NULL;
     return f;
 }
 

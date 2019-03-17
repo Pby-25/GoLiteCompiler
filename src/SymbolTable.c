@@ -243,7 +243,12 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts) {
                     TYPE *tc = ts;
                     while (tc != NULL &&
                            (tc->kind == k_array || tc->kind == k_slices)) {
-                        putSymbol(st, tc->id, tc, typeDcl);
+
+                        SYMBOL *sb = putSymbol(st, tc->id, tc, sk_typeDcl);
+                        if(sb == NULL){
+                            SYMBOL *ssb = getSymbol(st, tc->id);
+                            tc = ssb->type;
+                        }
                         tc = tc->underLineType;
                     }
                     SYMBOL *sb = getSymbol(st, ts->underLineType->id);
@@ -262,7 +267,14 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts) {
                     return ts;
                 }
             }
-            errorNotDeclared(ts->lineno, "type", ts->id);
+            if(ts->kind == k_funcsig){
+                putSymbol(st, ts->id, ts, sk_funcDcl);
+                return ts;
+            }
+            if(ts->kind == k_infer){
+                return ts;
+            }
+            errorNotDeclared(ts->lineno, "type1", ts->id);
         }
     }
 }
@@ -283,7 +295,7 @@ void createType(TYPESPEC *ts, SymbolTable *st, TYPE *new_type) {
             new_type->underLineType = sbb->type;
         } else {
             if (!isTypeDeclared(st, ts->type, false)) {
-                errorNotDeclared(ts->lineno, "type", ts->type->id);
+                errorNotDeclared(ts->lineno, "type2", ts->type->id);
             }
         }
     }
@@ -447,6 +459,7 @@ void printIDList(ID_LIST *idl) {
         printIDList(idl->next);
     }
 }
+
 void symbolField_Dcl(FIELD_DCL *f) {
     if (f == NULL) {
         return;
@@ -548,12 +561,26 @@ TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
             symbolFieldDcl(s, t->struct_type.field_dcls, "", i->lineno);
         } else {
             if (!isTypeDeclared(s, t, check_outer_scope)) {
-                errorNotDeclared(i->lineno, "type", t->id);
+                if(t->kind == k_infer){
+
+                }else{
+                    errorNotDeclared(i->lineno, "type", t->id);
+                }
+                
             }
         }
         i->type = t;
-        if (strcmp(i->id, "_") != 0)
+        if (strcmp(i->id, "_") != 0){
             putSymbol(s, i->id, t, sk_varDcl);
+            // if(t!=NULL){
+            //     SYMBOL *s = putSymbol(s, t->id, t, sk_typeDcl);
+            //     if(s == NULL){
+            //         SYMBOL *sb = getSymbol(s,t->id);
+            //         t=sb->type;
+            //     }
+            // }
+        }
+            
 
         if (funcType != NULL) {
             PARAM_TYPE *p = malloc(sizeof(PARAM_TYPE));
@@ -750,6 +777,7 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
     case rightShiftExpr:
         symbolEXP(s, exp->val.binary.lhs);
         symbolEXP(s, exp->val.binary.rhs);
+        exp->type = exp->val.binary.lhs->type;
         break;
     case uMinusExpr:
     case uPlusExpr:
@@ -757,6 +785,7 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
     case uCaretExpr:
     case uBitwiseAndExpr:
         symbolEXP(s, exp->val.unary.exp);
+        exp->type = exp->val.unary.exp->type;
         break;
     case funcExpr:;
         SYMBOL *sb = getSymbol(s, exp->val.func.name->val.id);
@@ -773,6 +802,7 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
                 exp->type = sb->type;
             }
         } else {
+            // printSymbolTable(s);
             errorNotDeclared(exp->lineno, "func", exp->val.func.name->val.id);
         }
         break;
@@ -780,15 +810,31 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
         symbolEXP(s, exp->val.cast.exp);
         exp->type = exp->val.cast.type;
         break;
-    case appendExpr:
+    case appendExpr:;
         symbolEXP(s, exp->val.append.head);
         symbolEXP(s, exp->val.append.tail);
+
+        TYPE *rr = resolveType(s, exp->val.append.head->type);
+        while (rr && *rr->id != '[') {
+            rr = rr->underLineType;
+        }
+        if(rr == NULL){
+            exp->type = exp->val.append.head->type;
+        }else{
+            // exp->type = rr->underLineType;
+            exp->type = exp->val.append.head->type;
+            exp->val.append.head->type = rr;
+        }
         break;
-    case lenExpr:
+    case lenExpr:;
         symbolEXP(s, exp->val.expr);
+        SYMBOL *ssbb = getSymbol(s,"int");
+        exp->type = ssbb->type;
         break;
-    case capExpr:
+    case capExpr:;
         symbolEXP(s, exp->val.expr);
+        SYMBOL *ssbs = getSymbol(s,"int");
+        exp->type = ssbs->type;
         break;
     case arrayExpr:
     case sliceExpr:;
@@ -802,11 +848,16 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
         while (r && *r->id != '[') {
             r = r->underLineType;
         }
-        exp->type = r->underLineType;
-        exp->val.array.exp->type = r;
+        if(r == NULL){
+            exp->type = exp->val.array.exp->type;
+        }else{
+            exp->type = r->underLineType;
+            exp->val.array.exp->type = r;
+        }
         break;
     case selectorExpr:
         symbolEXP(s, exp->val.selector.exp);
+        exp->type = exp->val.selector.exp->type;
         break;
     case idExpr:;
         if (strcmp(exp->val.id, "_") != 0) {
@@ -827,6 +878,9 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
                 isTypeBaseType(sbb->type, true);
                 exp->type = sbb->type;
             }
+        } else {
+            exp->type = strToType("int");
+            exp->type->id = "_";
         }
         break;
     case intExpr:
@@ -877,6 +931,7 @@ void symbolCASE_CLAUSE(SymbolTable *s, CASE_CLAUSE *c) {
 
 void symbolFOR_CLAUSE(SymbolTable *s, FOR_CLAUSE *f) {
     if (f != NULL) {
+        // SymbolTable new = scopeSymbolTable
         symbolSTMT(s, NULL, f->first, false, false);
         symbolEXP(s, f->condtion);
         symbolSTMT(s, NULL, f->post, false, false);
@@ -1028,7 +1083,7 @@ void symbolShortVarDec(SymbolTable *st, STMT *s) {
         next_id = curr_id->next;
         symbolEXP(st, curr_exp);
         TYPE *t = curr_exp->type;
-        SYMBOL *sb = getSymbol(st, curr_id->id);
+        SYMBOL *sb = getSymbolCurrentScope(st, curr_id->id);
         if (sb != NULL) {
             // already declared
             t = sb->type;
