@@ -323,75 +323,31 @@ void symbolTypeSpec(TYPESPEC *ts, int needParen, SymbolTable *st) {
     if (ts == NULL) {
         return;
     }
-
     checkTypeNameValid(ts);
-
     if ( (strcmp(ts->type->id, ts->id) == 0 || !isTypeDeclared(st, ts->type, false)) && !isStruct(ts->type))  {
-
         if (!isValidRecursive(ts->id, ts->type->id)){
-
             fprintf(stderr, "Error: (line %d) invalid recursive type declaration\n",
                     ts->lineno);
             exit(1);
         }
-
     }
 
     TYPE *t = malloc(sizeof(TYPE));
-    // TYPE *t = createType(ts, st);
-  
     if (strcmp(ts->id, "_")!=0){
-        SYMBOL *sb = putSymbol(st, ts->id, t, sk_typeDcl);
+        SYMBOL *sb = putSymbol(st, ts->id, t , sk_typeDcl);
         if (sb == NULL) {
             errorReDeclared(ts->lineno, "type", ts->id);
         }
     }
 
     createType(ts, st, t);
-
-    // if (strcmp(ts->id, "_")!=0){
-    //     SYMBOL *sb = putSymbol(st, ts->id, ts->type, sk_typeDcl);
-    //     if (sb == NULL) {
-    //         errorReDeclared(ts->lineno, "type", ts->id);
-    //     }
-    // }
-
-    
-    // SYMBOL *sbb = getSymbol(st, ts->type->id);
-    // if (sbb != NULL && sbb->kind == sk_typeDcl) {
-    //     // printf("line %d::%s::%s::%s/before\n", ts->lineno, ts->id, ts->type->id,sbb->type->id);
-    //     ts->type->underLineType = sbb->type;
-    //     // printf("line %d::%s::%s::%s/after\n", ts->lineno, ts->id, ts->type->id,sbb->type->id);
-    // } else if (strcmp(ts->type->id, "struct")==0){
-    //     symbolFieldDcl(st, ts->type->struct_type.field_dcls, ts->id, ts->lineno);
-    // } else {
-    //     // if()
-    //     // printf("type kind%s", ts->type);
-    //     if (!isTypeDeclared(st, ts->type) , false) {
-    //         if (ts->type->id == NULL || strncmp(ts->type->id, "[", 1)==0){
-
-    //         } else {
-    //             errorNotDeclared(ts->lineno,"type",ts->type->id);
-    //         }
-    //         // printSymbolTable(st);
-    //         // printf("type kind%d", t->kind);
-                
-    //         }
-        
-    // }
-
-
-
-    // printf(" (line %d)::%s\n", ts->lineno, ts->type->underLineType->id);
-
     if (printSymbol)
         printf("%s [type] = %s", ts->id, ts->id);
     TYPE *resolved = resolveType(st, ts->type);
     if (resolved != NULL) {
-
         ts->type->id_type = resolved->id_type;
     }
-    // printf("symbolTypeSpec tsid:%s tstypeid: %s\n", ts->id, ts->type->id);
+    
     symbolTypeSpec(ts->next, 0, st);
 }
 
@@ -518,7 +474,17 @@ void symbolFieldDcl(SymbolTable *st, FIELD_DCL *fdcl, char *id, int lineno){
         if(strcmp(f->type->id, id)==0){
             errorReDeclared(lineno, id, id);
         }
-        symbolIDList(inner_table, f->id_list, f->type, NULL, false, true);
+        // SYMBOL *symbol = getSymbol(st, f->type->id);
+        // if (symbol != NULL && symbol->type != NULL && symbol->kind == sk_typeDcl){
+            // symbolIDList(inner_table, f->id_list, symbol->type, NULL, false, true);
+        // } else{
+            TYPE *typeInTable = symbolIDList(inner_table, f->id_list, f->type, NULL, false, true);
+            if (typeInTable != NULL){
+                f->type = typeInTable;
+            }
+            
+        // }
+        
         f = f->next;
     }    
 }
@@ -558,8 +524,9 @@ bool isTypeDeclared(SymbolTable *st, TYPE *t, bool check_outer_scope) {
     return false;
 }
 
-void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
+TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
                   bool allowAssignment, bool check_outer_scope) {
+    TYPE *typeInTable = NULL;
     if (i != NULL) {
         if (getSymbolCurrentScope(s, i->id) != NULL && !allowAssignment) {
             fprintf(stderr,
@@ -582,6 +549,7 @@ void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
         if (sbb != NULL && sbb->kind == sk_typeDcl) {
             // printf("line %d::%s::%s/before\n", i->lineno, t->id,sbb->type->id);
             // if (strcmp())
+            typeInTable = sbb->type;
             t->underLineType = sbb->type->underLineType;
             // t = sbb->type;
             // printf("line %d::%s::%s/after\n", i->lineno, t->id,sbb->type->id);
@@ -645,6 +613,7 @@ void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
 
         symbolIDList(s, i->next, t, funcType, allowAssignment, check_outer_scope);
     }
+    return typeInTable;
 }
 
 void symbolParams(SymbolTable *t, PARAMS *p, TYPE *funcType) {
@@ -993,7 +962,7 @@ void symbolSTMT(SymbolTable *s, SymbolTable *new_st, STMT *stmt, bool to_indent,
             if (printSymbol)
                 printf("\n");
             symbol_indentation++;
-            // printFunctionSignature();
+            printFunctionSignature();
             symbolSTMT(new_st, NULL, stmt->val.block, true, true);
             symbol_indentation--;
             // printIndentation();

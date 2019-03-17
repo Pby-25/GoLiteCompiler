@@ -115,6 +115,7 @@ bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
         exit(1);
         return false;
     }
+
     isTypeBaseType(t1, true);
     isTypeBaseType(t2, true);
     // printf("checkSameType %s, %s\n", t1->id,t2->id);
@@ -439,7 +440,7 @@ void typeEXP(EXP *exp) {
         // } else {
         //     printf("(line %d)::nah\n", exp->lineno);
         // }
-        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type, false)){
+        if (!checkSameExpType(exp->val.binary.lhs, exp->val.binary.rhs)){
             errorType(exp->val.binary.lhs->type->id,exp->val.binary.rhs->type->id,exp->lineno);
         } else if (!isBool(exp->val.binary.lhs->type)){
             errorType("bool",exp->val.binary.lhs->type->id,exp->lineno);
@@ -453,7 +454,7 @@ void typeEXP(EXP *exp) {
     case notequalsExpr:
         typeEXP(exp->val.binary.lhs);
         typeEXP(exp->val.binary.rhs);
-        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type, false)){
+        if (!checkSameExpType(exp->val.binary.lhs, exp->val.binary.rhs)){
             errorType(exp->val.binary.lhs->type->id,exp->val.binary.rhs->type->id,exp->lineno);
         } else if (!isComparable(exp->val.binary.lhs->type)){
             errorType("comparable",exp->val.binary.lhs->type->id,exp->lineno);
@@ -469,7 +470,7 @@ void typeEXP(EXP *exp) {
     case greaterEqualsExpr:
         typeEXP(exp->val.binary.lhs);
         typeEXP(exp->val.binary.rhs);
-        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type, false)){
+        if (!checkSameExpType(exp->val.binary.lhs, exp->val.binary.rhs)){
             errorType(exp->val.binary.lhs->type->id,exp->val.binary.rhs->type->id,exp->lineno);
         } else if (!isOrdered(exp->val.binary.lhs->type)){
             errorType("ordered",exp->val.binary.lhs->type->id,exp->lineno);
@@ -482,7 +483,7 @@ void typeEXP(EXP *exp) {
     case plusExpr:
         typeEXP(exp->val.binary.lhs);
         typeEXP(exp->val.binary.rhs);
-        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type, false)){
+        if (!checkSameExpType(exp->val.binary.lhs, exp->val.binary.rhs)){
             errorType(exp->val.binary.lhs->type->id,exp->val.binary.rhs->type->id,exp->lineno);
         } else if (!isOrdered(exp->val.binary.lhs->type)){
             errorType("ordered",exp->val.binary.lhs->type->id,exp->lineno);
@@ -497,7 +498,7 @@ void typeEXP(EXP *exp) {
     case divExpr:
         typeEXP(exp->val.binary.lhs);
         typeEXP(exp->val.binary.rhs);
-        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type, false)){
+        if (!checkSameExpType(exp->val.binary.lhs, exp->val.binary.rhs)){
             errorType(exp->val.binary.lhs->type->id,exp->val.binary.rhs->type->id,exp->lineno);
         } else if (!isNumeric(exp->val.binary.lhs->type)){
             errorType("numeric",exp->val.binary.lhs->type->id,exp->lineno);
@@ -516,7 +517,7 @@ void typeEXP(EXP *exp) {
     case rightShiftExpr:
         typeEXP(exp->val.binary.lhs);
         typeEXP(exp->val.binary.rhs);
-        if (!checkSameType(exp->val.binary.lhs->type, exp->val.binary.rhs->type, false)){
+        if (!checkSameExpType(exp->val.binary.lhs, exp->val.binary.rhs)){
             errorType(exp->val.binary.lhs->type->id,exp->val.binary.rhs->type->id,exp->lineno);
         } else if (!isInteger(exp->val.binary.lhs->type)){
             errorType("integer",exp->val.binary.lhs->type->id,exp->lineno);
@@ -774,6 +775,13 @@ void checkExpListLValue(EXP *exp) {
     }
 }
 
+bool checkSameExpType(EXP* lhs, EXP *rhs){
+    if (strcmp(lhs->type->id, rhs->type->id) == 0 && lhs->type != rhs->type){
+        return false;
+    }
+    return checkSameType(lhs->type, rhs->type, false);
+}
+
 void typeAssignStmt(STMT *stmt) {
     if (stmt != NULL) {
         EXP *lhs = stmt->val.assignStmtVal.lhs;
@@ -795,34 +803,38 @@ void typeAssignStmt(STMT *stmt) {
                     bool sameType = false;
 // bool sameType = lhs->type == rhs->type;
                 
-                if (strcmp(lhs->type->id, rhs->type->id) == 0 && lhs->type->kind == k_type_id && rhs->type->kind == k_type_id && lhs->type != rhs->type){
-                    // printf("line %d::%s!\n",lhs->lineno,lhs->type->id);
-                }
-                
-                //            else if (!checkSameType(lhs->type, rhs->type, false)) {
-                // printf("lhs typeid: %s, rhs id: %s", lhs->type->id, rhs->type->id);
-                // fprintf(stderr, "Error: (line %d) 1invalid assignment\n", lhs->lineno);
-                // exit(1);
-                //         }
-
-
-                    if (strcmp(lhs->type->id, rhs->type->id) == 0) {
-                        // printf("line %d::lhs type:%d::rhs type:%d\n", lhs->lineno, lhs->type->kind, rhs->type->kind);
-                        sameType = checkSameType(rhs->type, lhs->type, true);
-                    } 
-
-
-                    // else {
-                    //     sameType = checkSameType(lhs->type, rhs->type, false);
-                    // }
-
+                    // if (strcmp(lhs->type->id, rhs->type->id) == 0 && lhs->type != rhs->type){
+                    //     // if (!isTypeBaseType(lhs->type, false) || !isTypeBaseType(rhs->type, false)){
+                    //         // printf("line %d::%s!\n",lhs->lineno,lhs->type->id);
+                    //     fprintf(stderr, "Error: (line %d) invalid assignment\n", lhs->lineno);
+                    //     exit(1);
+                    //     // }
                     
-                    if (!sameType) {
-                        // printf("alhs: %d, rhs: %d\n", lhs->type->kind,rhs->type->kind);
-                        // printf("alhs: %s %d, rhs: %s %d\n", lhs->type->id, lhs->type->kind,rhs->type->id, rhs->type->kind);
-                        fprintf(stderr, "Error: (line %d) 2invalid assignment\n", lhs->lineno);
+                    // } else 
+                    if (!checkSameExpType(lhs, rhs)) {
+                        // printf("lhs typeid: %s, rhs id: %s", lhs->type->id, rhs->type->id);
+                        fprintf(stderr, "Error: (line %d) 1invalid assignment\n", lhs->lineno);
                         exit(1);
                     }
+
+
+                    // if (strcmp(lhs->type->id, rhs->type->id) == 0) {
+                    //     // printf("line %d::lhs type:%d::rhs type:%d\n", lhs->lineno, lhs->type->kind, rhs->type->kind);
+                    //     sameType = checkSameType(rhs->type, lhs->type, true);
+                    // } 
+
+
+                    // // else {
+                    // //     sameType = checkSameType(lhs->type, rhs->type, false);
+                    // // }
+
+                    
+                    // if (!sameType) {
+                    //     // printf("alhs: %d, rhs: %d\n", lhs->type->kind,rhs->type->kind);
+                    //     // printf("alhs: %s %d, rhs: %s %d\n", lhs->type->id, lhs->type->kind,rhs->type->id, rhs->type->kind);
+                    //     fprintf(stderr, "Error: (line %d) 2invalid assignment\n", lhs->lineno);
+                    //     exit(1);
+                    // }
                     // if (!isAddressable(lhs)){
                     //     errorType("Addressable", lhs->type->id, lhs->lineno);
                     // }
