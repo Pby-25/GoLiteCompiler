@@ -62,4 +62,6 @@ BaseTypeKind isIdBaseType(char *id);
 void printSymbolTable(SymbolTable *t);
 bool isTypeDeclared(SymbolTable *st, TYPE *t, bool field_dcl);
 void symbolFieldDcl(SymbolTable *st, FIELD_DCL *fdcl, char *id, int lineno);
+
+extern SymbolTable *top_level_table;
 #endif

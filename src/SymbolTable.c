@@ -9,6 +9,7 @@
 bool printSymbol = false;
 char *functionSignature = NULL;
 int symbol_indentation = 0;
+SymbolTable *top_level_table = NULL;
 
 void printFunctionSignature() {
     if (functionSignature != NULL) {
@@ -51,7 +52,20 @@ SYMBOL *putSymbol(SymbolTable *t, char *id, TYPE *type, symbolKind sk) {
     }
     SYMBOL *s = malloc(sizeof(SYMBOL));
     s->name = id;
-    s->type = type;
+
+    SYMBOL *variableType = NULL;
+    if (type != NULL && type->id != NULL){
+        variableType = getSymbol(t, type->id);
+    }
+    
+    if (sk==sk_varDcl && variableType != NULL && variableType->kind == sk_typeDcl){
+        s->type = variableType->type;
+    } else {
+        s->type = type;
+    }
+    
+    // s->type = type;
+
     s->kind = sk;
     s->next = t->table[i];
     t->table[i] = s;
@@ -561,14 +575,15 @@ void symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
         }
         SYMBOL *sbb = getSymbol(s, t->id);
         if (check_outer_scope && sbb!=NULL && sbb->kind != sk_typeDcl){
-            // Search one stack higher incase it is in a struct
+            // Search one stack higher incase it is in a struct or something else
                 sbb = getSymbol(s->parent, t->id);
                 // printf("line %d::%d::%s\n", i->lineno, sbb->kind,sbb->type->id);
             }
-        if (t->underLineType == NULL && sbb != NULL && sbb->kind == sk_typeDcl) {
+        if (sbb != NULL && sbb->kind == sk_typeDcl) {
             // printf("line %d::%s::%s/before\n", i->lineno, t->id,sbb->type->id);
             // if (strcmp())
             t->underLineType = sbb->type->underLineType;
+            // t = sbb->type;
             // printf("line %d::%s::%s/after\n", i->lineno, t->id,sbb->type->id);
         }
         // ts->type->underLineType = sbb->type;
@@ -661,7 +676,13 @@ void symbolResult(SymbolTable *t, SymbolTable *new_st, RESULT *r,
         } else {
             if (printSymbol)
                 printf("%s", r->type->id);
-            funcType->result = r->type;
+            SYMBOL *symbol = getSymbol(t, r->type->id);
+            if (symbol != NULL && symbol->type != NULL){
+                funcType->result = symbol->type;
+                r->type = symbol->type;
+            } else {
+                funcType->result = r->type;
+            }
         }
     } else {
         if (printSymbol)
@@ -850,18 +871,24 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
         if(!checkSameType(exp->val.array.index->type, strToType("int"), true)){
             errorNotDeclared(exp->lineno, "index is not a int type", "");
         }
-        TYPE *r = resolveType(s, exp->val.array.exp->type);
-        exp->val.array.exp->type = r;
-        TYPE *head = r;
-        while(head != NULL){
-            if(head->kind==k_slices || head->kind == k_array){
-                // printf("yea %s, under: %s, \n", head->id,head->underLineType->id);
-                exp->val.array.exp->type = head;
-                exp->type = head;
-                break;
-            }
-            head = head->underLineType;
-        }
+        // printSymbolTable(s);
+        // TYPE *r = resolveType(s, exp->val.array.exp->type);
+        // // exp->val.array.exp->type = r;
+        // TYPE *head = r;
+        // while(head != NULL){
+        //     // if(head->kind!=NULL)
+        //     if(head->kind==k_slices || head->kind == k_array){
+        //         // printf("yea %s, under: %s, \n", head->id,head->underLineType->id);
+        //         // exp->val.array.exp->type = head->underLineType;
+        //         // exp->type = head->underLineType;
+        //         head = head->underLineType;
+        //         break;
+        //     }
+        //     head = head->underLineType;
+        // }
+        // exp->val.array.exp->type = head;
+        // exp->type = head;
+        // exp->val.array.exp->type = exp->val.array.exp->type->underLineType;
         break;
     case selectorExpr:
         symbolEXP(s, exp->val.selector.exp);
@@ -1119,8 +1146,9 @@ void symbolBaseType(SymbolTable *s, char *typeName) {
     type->id = typeName;
     type->kind = k_type_id;
     type->underLineType = NULL;
+    isTypeBaseType(type, false);
     if (printSymbol)
-        printf("%s [type] = %s\n", type->id, type->id);
+        printf("%s [type] = %s\n", type->id, type->id); 
     putSymbol(s, type->id, type, sk_typeDcl);
 }
 
@@ -1136,11 +1164,11 @@ void symbolAllBaseTypes(SymbolTable *s) {
 
 void makeSymbolTable(PROGRAM *root) {
     if (root != NULL) {
-        SymbolTable *s = initSymbolTable();
+        top_level_table = initSymbolTable();
         if (printSymbol)
             printf("{\n");
-        symbolAllBaseTypes(s);
-        symbolTopDecl(s, root->top_decl);
+        symbolAllBaseTypes(top_level_table);
+        symbolTopDecl(top_level_table, root->top_decl);
         if (printSymbol)
             printf("}\n");
     }

@@ -14,11 +14,15 @@ void errorType(char *expected, char *actual, int lineno) {
 }
 
 TYPE *strToType(char *s){
-    TYPE *t = malloc(sizeof(TYPE));
-    t->id = s;
-    t->kind = k_type_id;
-    isTypeBaseType(t, false);
-    return t;
+    // TYPE *t = malloc(sizeof(TYPE));
+    // t->id = s;
+    // t->kind = k_type_id;
+    // isTypeBaseType(t, false);
+    // return t;
+
+    SYMBOL *symbol = getSymbol(top_level_table, s);
+    return symbol->type;
+    
 }
 
 TYPE *findSelectorIdType(char *name, TYPE *structType){
@@ -791,8 +795,8 @@ void typeAssignStmt(STMT *stmt) {
                     bool sameType = false;
 // bool sameType = lhs->type == rhs->type;
                 
-                if (lhs->type->kind == k_type_id && rhs->type->kind == k_type_id && lhs->type != rhs->type){
-                    // printf("he");
+                if (strcmp(lhs->type->id, rhs->type->id) == 0 && lhs->type->kind == k_type_id && rhs->type->kind == k_type_id && lhs->type != rhs->type){
+                    // printf("line %d::%s!\n",lhs->lineno,lhs->type->id);
                 }
                 
                 //            else if (!checkSameType(lhs->type, rhs->type, false)) {
