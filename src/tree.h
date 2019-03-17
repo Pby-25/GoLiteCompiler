@@ -194,6 +194,7 @@ ID_LIST *makeIdList(ID_LIST *l, char *id, int lineno);
 struct EXP {
     int lineno;
     ExpKind kind;
+    // bool addressable;
     union {
         char *id;
         char *stringVal;

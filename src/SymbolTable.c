@@ -7,16 +7,30 @@
 #include <string.h>
 
 bool printSymbol = false;
-char *functionSignature = NULL;
+PARAMS *functionParamsId = NULL;
+PARAM_TYPE *functionParamsType = NULL;
 int symbol_indentation = 0;
 SymbolTable *top_level_table = NULL;
 
 void printFunctionSignature() {
-    if (functionSignature != NULL) {
-        if (printSymbol)
-            printf("%s", functionSignature);
-        functionSignature = NULL;
+    PARAMS *p = functionParamsId;
+    PARAM_TYPE *t = functionParamsType;
+    if (printSymbol){
+        while(p!=NULL && t!=NULL){
+            ID_LIST *i = p->id_list;
+            while (i!=NULL){
+                printf("%s [variable] = ", i->id);
+                printType(t->type);
+                printf("\n");
+                i = i->next;
+            }       
+            p = p->next;
+            t = t->next;
+        }
+
     }
+    functionParamsId = NULL;
+    functionParamsType = NULL;
 }
 
 SymbolTable *initSymbolTable() {
@@ -595,19 +609,21 @@ TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
                 next_one->next = p;
             }
 
-            if (printSymbol)
+            if (printSymbol){
                 printf("%s", t->id);
+            }
+
             if (i->next != NULL) {
                 if (printSymbol)
                     printf(", ");
             }
         } else {
-            if (printSymbol)
+            if (printSymbol){
                 printf("%s [variable] = ", i->id);
-            if (printSymbol)
                 printType(t);
-            if (printSymbol)
                 printf("\n");
+            }
+                
         }
 
         symbolIDList(s, i->next, t, funcType, allowAssignment,
@@ -648,13 +664,19 @@ void symbolResult(SymbolTable *t, SymbolTable *new_st, RESULT *r,
                 funcType->result = symbol->type;
                 r->type = symbol->type;
             } else {
-                funcType->result = r->type;
+                funcType->result = resolveType(t, r->type);
+                
             }
         }
+        // funcType->underLineType = funcType->result;
+        
     } else {
+        funcType->result = NULL;
         if (printSymbol)
             printf("void");
     }
+
+    // funcType->underLineType = funcType->result;
     if (printSymbol)
         printf("\n");
 }
@@ -699,8 +721,11 @@ void symbolFuncDecl(SymbolTable *t, FUNCDECL *f) {
     funcType->params = NULL;
     funcType->result = NULL;
     SymbolTable *new_st = symbolSig(t, f->signature, funcType);
+    // if (funcType->result) funcType->underLineType = funcType->result;
     if (strcmp(f->id, "_") != 0)
         putSymbol(t, f->id, funcType, sk_funcDcl);
+    functionParamsId = f->signature->params;
+    functionParamsType = funcType->params;
     symbolSTMT(t, new_st, f->body, true, true);
 }
 
@@ -837,20 +862,29 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
         exp->type = ssbs->type;
         break;
     case arrayExpr:
-    case sliceExpr:;
+    case sliceExpr:
         symbolEXP(s, exp->val.array.exp);
         symbolEXP(s, exp->val.array.index);
         if (!checkSameType(exp->val.array.index->type, strToType("int"),
                            true)) {
             errorNotDeclared(exp->lineno, "index is not a int type", "");
         }
-        TYPE *r = resolveType(s, exp->val.array.exp->type);
+        TYPE *r;
+        // if (exp->val.array.exp->type->result != NULL){
+        //     // r = exp->val.array.exp->type->result;
+        // } else {
+            r = resolveType(s, exp->val.array.exp->type);
+        // }
+       
         while (r && *r->id != '[') {
+            // if (r->id) printf(":%s:",r->id);
             r = r->underLineType;
         }
         if(r == NULL){
+            // printf("nada");
             exp->type = exp->val.array.exp->type;
         }else{
+            // printf("something");
             exp->type = r->underLineType;
             exp->val.array.exp->type = r;
         }

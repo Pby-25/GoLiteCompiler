@@ -79,16 +79,19 @@ bool isComparable(TYPE *t) {
 
 bool checkSameStruct(FIELD_DCL *field1, FIELD_DCL *field2) {
     // printf("here001!!\n");
+    if (!field1 || !field2){
+        return false;
+    }
+    ID_LIST *idlist1 = field1->id_list;
+    ID_LIST *idlist2 = field2->id_list;
     while (field1 && field2) {
         // printf("here999!!\n");
         if (!checkSameType(field1->type, field2->type, false)){
             // printf("here002!!\n");
             return false;
         }
-            
-            
-        ID_LIST *idlist1 = field1->id_list;
-        ID_LIST *idlist2 = field2->id_list;
+                       
+
         while (idlist1 && idlist2) {
             // printf("here991!!\n");
             if (strcmp(idlist1->id, idlist2->id) != 0){
@@ -102,11 +105,17 @@ bool checkSameStruct(FIELD_DCL *field1, FIELD_DCL *field2) {
         if (!idlist1){
             // printf("here111!!\n");
             field1 = field1->next;
+            if (field1) {
+                idlist1 = field1->id_list;
+            } 
         }
             
         if (!idlist2){
             // printf("here112!!\n");
             field2 = field2->next;
+            if (field2) {
+                idlist2 = field2->id_list;
+            } 
         }
             
     }
@@ -738,6 +747,7 @@ void typeCASE_CLAUSE(CASE_CLAUSE *c, TYPE *returnType, TYPE *switchExpType) {
 }
 
 bool isAddressable(EXP *exp) {
+    // return exp->addressable;
     switch (exp->kind) {
     case idExpr:
         return true;
