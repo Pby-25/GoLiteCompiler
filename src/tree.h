@@ -2,21 +2,11 @@
 #define _treeH
 #include <stdbool.h>
 
-typedef enum {
-    inLoop,
-    inSwitch,
-    other
-} State;
+typedef enum { inLoop, inSwitch, other } State;
 
-typedef enum {
-    caseK,
-    defaultK
-} SwitchCaseK;
+typedef enum { caseK, defaultK } SwitchCaseK;
 
-typedef enum {
-    typeDcl,
-    varDcl
-} DclKind;
+typedef enum { typeDcl, varDcl } DclKind;
 
 typedef enum {
     btk_int,
@@ -27,18 +17,13 @@ typedef enum {
 } BaseTypeKind;
 
 typedef enum {
-    normal, 
-    plus, 
+    normal,
+    plus,
     minus,
     mult,
     divide,
-    or,
-    xor, 
-    mod, 
-    leftShift,
-    rightShift,
-    and,
-    bitclear
+    or
+    , xor, mod, leftShift, rightShift, and, bitclear
 } AssignKind;
 
 typedef enum {
@@ -162,7 +147,7 @@ struct TYPE {
     struct {
         FIELD_DCL *field_dcls;
     } struct_type;
-    struct{
+    struct {
         bool isBaseType;
         BaseTypeKind baseTypeKind;
     } id_type;
@@ -253,8 +238,6 @@ EXP *makeSelectorExp(EXP *struct_exp, char *field_name, int lineno);
 EXP *makeLenExp(EXP *exp, int lineno);
 EXP *makeCapExp(EXP *exp, int lineno);
 
-
-
 struct DCL {
     int lineno;
     DclKind kind;
@@ -266,7 +249,6 @@ struct DCL {
 
 typedef struct FOR_CLAUSE FOR_CLAUSE;
 typedef struct CASE_CLAUSE CASE_CLAUSE;
-
 
 struct STMT {
     int lineno;
@@ -315,7 +297,6 @@ struct STMT {
     STMT *next;
 };
 
-
 struct FOR_CLAUSE {
     int lineno;
     STMT *first;
@@ -331,7 +312,6 @@ struct CASE_CLAUSE {
     CASE_CLAUSE *next;
 };
 
-
 struct TYPESPEC {
     int lineno;
     char *id;
@@ -345,7 +325,6 @@ struct TYPEDECL {
     int lineno;
     TYPESPEC *typeSpec;
 };
-
 
 struct VARSPEC {
     int lineno;
@@ -364,7 +343,6 @@ struct VARDECL {
 };
 VARDECL *makeVarDecl(VARSPEC *vs, int lineno);
 
-
 struct PARAMS {
     int lineno;
     PARAMS *next;
@@ -372,13 +350,11 @@ struct PARAMS {
     TYPE *type;
 };
 
-
 struct RESULT {
     int lineno;
     PARAMS *params;
     TYPE *type;
 };
-
 
 struct SIGNATURE {
     int lineno;
@@ -433,7 +409,6 @@ struct IMPORT {
     IMPORT *next;
 };
 
-
 struct PROGRAM {
     int lineno;
     PACKAGE *package;
@@ -451,7 +426,8 @@ TYPEDECL *makeTypeDecl(TYPESPEC *spec, int lineno);
 IMPORT *makeImport(char *id, int lineno);
 IMPORT *makeImportList(IMPORT *list, IMPORT *elem);
 
-CASE_CLAUSE *makeCaseClause(int kind, CASE_CLAUSE *list, EXP *caseExp, STMT *caseStmt,int lineno);
+CASE_CLAUSE *makeCaseClause(int kind, CASE_CLAUSE *list, EXP *caseExp,
+                            STMT *caseStmt, int lineno);
 
 FOR_CLAUSE *makeForClause(STMT *first, EXP *last, STMT *doStmt, int lineno);
 
@@ -461,19 +437,22 @@ DCL *makeTypeDcl(TYPEDECL *dcl, int lineno);
 STMT *makeContinueStmt(int lineno);
 STMT *makeBreakStmt(int lineno);
 STMT *makeBlockStmt(STMT *block, int lineno);
-STMT *makeIfStmt(STMT *ifSimpleStmt, EXP *ifCond, STMT *ifBody, STMT *elseStmt, int lineno);
+STMT *makeIfStmt(STMT *ifSimpleStmt, EXP *ifCond, STMT *ifBody, STMT *elseStmt,
+                 int lineno);
 STMT *makeElseStmt(STMT *elseBody, STMT *ifStmt, int lineno);
 STMT *makePrintStmt(EXP *printExpList, int lineno);
 STMT *makePrintlnStmt(EXP *printlnExpList, int lineno);
 STMT *makeReturnStmt(EXP *returnExp, int lineno);
-STMT *makeSwitchStmt(STMT *switchSimpleStmt, EXP *switchExp, CASE_CLAUSE *switchCases, int lineno);
+STMT *makeSwitchStmt(STMT *switchSimpleStmt, EXP *switchExp,
+                     CASE_CLAUSE *switchCases, int lineno);
 STMT *makeEmptyStmt(int yylineno);
 STMT *makeExpStmt(EXP *expStmtVal, int yylineno);
 STMT *makeAssignStmt(EXP *lhs, EXP *rhs, AssignKind assignKind, int lineno);
 STMT *makeIncStmt(EXP *incExp, int lineno);
 STMT *makeDecStmt(EXP *decExp, int lineno);
 STMT *makeShortVarDecStmt(ID_LIST *ids, EXP *exps, int lineno);
-STMT *makeForStmt(EXP *forCond, FOR_CLAUSE *forClause, STMT *forBody, int lineno);
+STMT *makeForStmt(EXP *forCond, FOR_CLAUSE *forClause, STMT *forBody,
+                  int lineno);
 STMT *makeDclStmt(DCL *dcl, int lineno);
 STMT *makeStmtList(STMT *list, STMT *current, int lineno);
 

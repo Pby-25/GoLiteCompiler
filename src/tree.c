@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-
 STMT *makeStmtList(STMT *list, STMT *v, int lineno) {
     if (list == NULL) {
         return v;
@@ -70,74 +68,74 @@ EXP *makeStringRawExp(char *stringval, int lineno) {
     e->lineno = lineno;
     e->kind = stringRawExpr;
     // e->addressable = false;
-    char *itpString = malloc(strlen(stringval)*2+1);
+    char *itpString = malloc(strlen(stringval) * 2 + 1);
     char *ptrSource = stringval;
     char *ptrDest = itpString;
 
-    while (*ptrSource){
-        switch (*ptrSource){
-            case '\\':
-                *ptrDest = '\\';
-                ptrDest ++;
-                *ptrDest = '\\';
-                ptrDest ++;
-                break;
-            case '\a':
-                *ptrDest = '\\';
-                ptrDest ++;
-                *ptrDest = 'a';
-                ptrDest ++;
-                break;
-            case '\b':
-                *ptrDest = '\\';
-                ptrDest ++;
-                *ptrDest = 'b';
-                ptrDest ++;
-                break;
-            case '\f':
-                *ptrDest = '\\';
-                ptrDest ++;
-                *ptrDest = 'f';
-                ptrDest ++;
-                break;
-            case '\n':
-                *ptrDest = '\\';
-                ptrDest ++;
-                *ptrDest = 'n';
-                ptrDest ++;
-                break;
-            case '\r':
-                *ptrDest = '\\';
-                ptrDest ++;
-                *ptrDest = 'r';
-                ptrDest ++;
-                break;
-            case '\t':
-                *ptrDest = '\\';
-                ptrDest ++;
-                *ptrDest = 't';
-                ptrDest ++;
-                break;
-            case '\v':
-                *ptrDest = '\\';
-                ptrDest ++;
-                *ptrDest = 'v';
-                ptrDest ++;
-                break;
-            case '"':
-                *ptrDest = '\\';
-                ptrDest ++;
-                *ptrDest = '"';
-                ptrDest ++;
-                break;
-            case '`':
-                break;
-            default:
-                *ptrDest = *ptrSource;
-                ptrDest ++;
-                break;
-        }   
-        ptrSource ++;
+    while (*ptrSource) {
+        switch (*ptrSource) {
+        case '\\':
+            *ptrDest = '\\';
+            ptrDest++;
+            *ptrDest = '\\';
+            ptrDest++;
+            break;
+        case '\a':
+            *ptrDest = '\\';
+            ptrDest++;
+            *ptrDest = 'a';
+            ptrDest++;
+            break;
+        case '\b':
+            *ptrDest = '\\';
+            ptrDest++;
+            *ptrDest = 'b';
+            ptrDest++;
+            break;
+        case '\f':
+            *ptrDest = '\\';
+            ptrDest++;
+            *ptrDest = 'f';
+            ptrDest++;
+            break;
+        case '\n':
+            *ptrDest = '\\';
+            ptrDest++;
+            *ptrDest = 'n';
+            ptrDest++;
+            break;
+        case '\r':
+            *ptrDest = '\\';
+            ptrDest++;
+            *ptrDest = 'r';
+            ptrDest++;
+            break;
+        case '\t':
+            *ptrDest = '\\';
+            ptrDest++;
+            *ptrDest = 't';
+            ptrDest++;
+            break;
+        case '\v':
+            *ptrDest = '\\';
+            ptrDest++;
+            *ptrDest = 'v';
+            ptrDest++;
+            break;
+        case '"':
+            *ptrDest = '\\';
+            ptrDest++;
+            *ptrDest = '"';
+            ptrDest++;
+            break;
+        case '`':
+            break;
+        default:
+            *ptrDest = *ptrSource;
+            ptrDest++;
+            break;
+        }
+        ptrSource++;
     }
     *ptrDest = '\0';
     e->val.stringVal = strdup(itpString);
@@ -281,7 +279,7 @@ TYPE *makeTypeId(char *id, int lineno) {
     return t;
 }
 
-char *str_cat(char *str1, char *str2){
+char *str_cat(char *str1, char *str2) {
     char *str3 = (char *)malloc(1 + strlen(str1) + strlen(str2));
     strcpy(str3, str1);
     strcat(str3, str2);
@@ -300,9 +298,9 @@ TYPE *makeTypeSlices(TYPE *type, int lineno) {
 
 TYPE *makeTypeArray(int size, TYPE *type, int lineno) {
     TYPE *t = malloc(sizeof(TYPE));
-    char* size_str;
-    asprintf (&size_str, "%i", size);
-    t->id = str_cat(str_cat(str_cat("[",size_str),"]"),type->id);
+    char *size_str;
+    asprintf(&size_str, "%i", size);
+    t->id = str_cat(str_cat(str_cat("[", size_str), "]"), type->id);
     t->kind = k_array;
     t->array_type.type = type;
     t->array_type.size = size;
@@ -313,7 +311,7 @@ TYPE *makeTypeArray(int size, TYPE *type, int lineno) {
 
 TYPE *makeTypeStruct(FIELD_DCL *f, int lineno) {
     TYPE *t = malloc(sizeof(TYPE));
-    t->id = str_cat("struct","");
+    t->id = str_cat("struct", "");
     t->kind = k_type_struct;
     t->struct_type.field_dcls = f;
     t->underLineType = NULL;

@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "/Users/zisheng/workspace/goLite/src/minic",
-            "args": ["symbol"],
+            "args": ["typecheck"],
             "stopAtEntry": false,
             "cwd": "/Users/zisheng/workspace/goLite",
             "environment": [],
