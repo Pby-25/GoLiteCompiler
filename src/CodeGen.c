@@ -334,65 +334,66 @@
 //            "*argv[])\n{\n");
 // }
 
-// void str_replace(char *target, const char *needle, const char *replacement) {
-//     char buffer[1024] = {0};
-//     char *insert_point = &buffer[0];
-//     const char *tmp = target;
-//     size_t needle_len = strlen(needle);
-//     size_t repl_len = strlen(replacement);
+void str_replace(char *target, const char *needle, const char *replacement) {
+    char buffer[1024] = {0};
+    char *insert_point = &buffer[0];
+    const char *tmp = target;
+    size_t needle_len = strlen(needle);
+    size_t repl_len = strlen(replacement);
 
-//     while (1) {
-//         const char *p = strstr(tmp, needle);
+    while (1) {
+        const char *p = strstr(tmp, needle);
 
-//         // walked past last occurrence of needle; copy remaining part
-//         if (p == NULL) {
-//             strcpy(insert_point, tmp);
-//             break;
-//         }
+        // walked past last occurrence of needle; copy remaining part
+        if (p == NULL) {
+            strcpy(insert_point, tmp);
+            break;
+        }
 
-//         // copy part before needle
-//         memcpy(insert_point, tmp, p - tmp);
-//         insert_point += p - tmp;
+        // copy part before needle
+        memcpy(insert_point, tmp, p - tmp);
+        insert_point += p - tmp;
 
-//         // copy replacement string
-//         memcpy(insert_point, replacement, repl_len);
-//         insert_point += repl_len;
+        // copy replacement string
+        memcpy(insert_point, replacement, repl_len);
+        insert_point += repl_len;
 
-//         // adjust pointers, move on
-//         tmp = p + needle_len;
-//     }
+        // adjust pointers, move on
+        tmp = p + needle_len;
+    }
 
-//     // write altered string back to target
-//     strcpy(target, buffer);
-// }
-// void codeGenProgram(PROGRAM *root, char *file_name) {
+    // write altered string back to target
+    strcpy(target, buffer);
+}
 
-//     typeCheckProgram(root);
+void codeGenProgram(PROGRAM *root, char *file_name) {
 
-//     // append .c to file name
-//     str_replace(file_name, ".min", ".c");
-//     remove(file_name);
+    typeCheckProgram(root);
 
-//     // // redirect stdout to new file
-//     int out = open(file_name, O_RDWR | O_APPEND | O_CREAT, 0600);
-//     if (-1 == out) {
-//         perror("Error: ");
-//         return;
-//     }
-//     int save_out = dup(fileno(stdout));
-//     if (-1 == dup2(out, fileno(stdout))) {
-//         perror("Error: cannot redirect stdout");
-//         return;
-//     }
+    // append .c to file name
+    str_replace(file_name, ".min", ".py");
+    remove(file_name);
 
-//     //
-//     codeGenHeader();
-//     codeGenStatement(root->statements, 1);
-//     printf("}\n");
+    // // redirect stdout to new file
+    int out = open(file_name, O_RDWR | O_APPEND | O_CREAT, 0600);
+    if (-1 == out) {
+        perror("Error: ");
+        return;
+    }
+    int save_out = dup(fileno(stdout));
+    if (-1 == dup2(out, fileno(stdout))) {
+        perror("Error: cannot redirect stdout");
+        return;
+    }
 
-//     // put stdout back
-//     fflush(stdout);
-//     close(out);
-//     dup2(save_out, fileno(stdout));
-//     close(save_out);
-// }
+    //
+    // codeGenHeader();
+    // codeGenStatement(root->top_decl, 1);
+    printf("}\n");
+
+    // put stdout back
+    fflush(stdout);
+    close(out);
+    dup2(save_out, fileno(stdout));
+    close(save_out);
+}

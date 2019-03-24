@@ -716,7 +716,7 @@ bool isAddressable(EXP *exp) {
     case idExpr:
         return true;
     case funcExpr:
-        if (isArrayOrSlice(exp->type) || isStruct(exp->type)) {
+        if (isSlices(exp->type)) {
             return true;
         } else {
             return false;

@@ -244,9 +244,14 @@ void weedEXP(EXP *exp, int blank_allow) {
         weedEXP(exp->val.append.head, 0);
         weedEXP(exp->val.append.tail, 0);
         break;
+        
+    case lenExpr:
+    case capExpr:
+        weedEXP(exp->val.expr, 0);
+        break;
 
     case arrayExpr:
-    // case sliceExpr:
+    case sliceExpr:
         weedEXP(exp->val.array.exp, 0);
         weedEXP(exp->val.array.index, 0);
         break;
@@ -378,14 +383,31 @@ void weedSTMT(STMT *stmt, int inLoop, int inSwitch) {
             break;
         case assignStmt:
             checkExpListLengthEqual(stmt->val.assignStmtVal.lhs, stmt->val.assignStmtVal.rhs);
-            weedEXP(stmt->val.assignStmtVal.lhs, 1);
+            switch (stmt->val.assignStmtVal.assignKind)
+            {
+                case normal:
+                    weedEXP(stmt->val.assignStmtVal.lhs, 1);
+                    break;
+                case plus:
+                    if(stmt && stmt->val.assignStmtVal.lhs && 
+                        strcmp(stmt->val.assignStmtVal.lhs->val.id, "_")==0){
+                        fprintf(stderr,
+                                "Error: (line %d) _ can not be in inc exp\n",
+                                stmt->val.assignStmtVal.lhs->lineno);
+                        exit(1);
+                    }
+                default:
+                    weedEXP(stmt->val.assignStmtVal.lhs, 0);
+                    break;
+            }
+            
             weedEXP(stmt->val.assignStmtVal.rhs, 0);
             break;
         case incStmt:
-            weedEXP(stmt->val.incExp, 1);
+            weedEXP(stmt->val.incExp, 0);
             break;
         case decStmt:
-            weedEXP(stmt->val.decExp, 1);
+            weedEXP(stmt->val.decExp, 0);
             break;
         case shortVarDecStmt:
             weedIdListExpList(stmt->val.shortVarDecStmtVal.ids,
