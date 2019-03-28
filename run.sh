@@ -30,4 +30,9 @@ fi
 # make clean -C ./src
 # make -C ./src
 
-./src/minic "$1" < "$2"
+if [ "$1" = "codegen" ];
+then
+	./src/minic "$1" "$2"
+else
+	./src/minic "$1" < "$2"
+fi

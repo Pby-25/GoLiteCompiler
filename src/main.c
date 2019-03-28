@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
             int r = yyparse();
             if (r == 0) {
                 if (root != NULL) {
-                    // codeGenProgram(root, argv[2]);
+                    codePROGRAM(root, argv[2]);
                     printf("OK\n");
                 } else {
                     printf("root null\n");
