@@ -169,7 +169,24 @@ bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
         if (checkBaseType) {
             return t1->id_type.baseTypeKind == t2->id_type.baseTypeKind;
         }
-        return strcmp(t1->id, t2->id) == 0;
+        if(t1 == t2){
+            return true;
+        }else{
+            if(isIdBaseType(t2->id)!=-1 && isIdBaseType(t2->id)!=-1){
+                return strcmp(t1->id, t2->id) == 0;
+            }else{
+                return false;
+            }
+            
+        }
+        // return ;
+        // if(t1->id_type.isBaseType && t2->id_type.isBaseType){
+        //     return strcmp(t1->id, t2->id) == 0;
+        // }else{
+        //     // printf("here\n");
+        //     return t1 == t2;
+        // }
+        // return strcmp(t1->id, t2->id) == 0 && &t1 == &t2;
         break;
     case k_type_type:
         if (t2->kind == k_type_type) {
@@ -770,7 +787,7 @@ void typeAssignStmt(STMT *stmt) {
                                   rhs->type, false)) {
                     return;
                 } else {
-                    fprintf(stderr, "Error: (line %d) invalid assignment\n",
+                    fprintf(stderr, "Error: (line %d) invalid assignment1\n",
                             lhs->lineno);
                     exit(1);
                 }
@@ -780,8 +797,8 @@ void typeAssignStmt(STMT *stmt) {
         case normal:
             while (lhs != NULL && rhs != NULL) {
                 bool sameType = false;
-                if (!checkSameExpType(lhs, rhs)) {
-                    fprintf(stderr, "Error: (line %d) invalid assignment\n",
+                if (!checkSameType(lhs->type, rhs->type, false)) {
+                    fprintf(stderr, "Error: (line %d) invalid assignment2\n",
                             lhs->lineno);
                     exit(1);
                 }

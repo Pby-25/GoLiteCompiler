@@ -547,11 +547,11 @@ TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
                     i->lineno, i->id);
             exit(1);
         }
-        if (t == NULL) {
-            t = malloc(sizeof(TYPE));
-            t->id = "<infer>";
-            t->kind = k_infer;
-        }
+        // if (t == NULL) {
+        //     t = malloc(sizeof(TYPE));
+        //     t->id = "<infer>";
+        //     t->kind = k_infer;
+        // }
         SYMBOL *sbb = getSymbol(s, t->id);
         if (check_outer_scope && sbb != NULL && sbb->kind != sk_typeDcl) {
             // Search one stack higher incase it is in a struct or something
