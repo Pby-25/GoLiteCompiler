@@ -29,5 +29,6 @@ TYPE *strToType(char *s);
 TYPE *findSelectorIdType(char *name, TYPE *structType);
 bool isArrayOrSlice(TYPE *t);
 bool isStruct(TYPE *t);
+bool isSlices(TYPE *t);
 
 #endif

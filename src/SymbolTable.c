@@ -445,6 +445,11 @@ void symbolVarSpec(SymbolTable *s, VARSPEC *vs, int infunc) {
             symbolEXP(s, c);
             if (vsPtr->type == NULL) {
                 vsPtr->type = vsPtr->exp_list->type;
+            } else if (vsPtr->type->id != NULL){
+                SYMBOL *sb = getSymbol(s, vsPtr->type->id);
+                if (sb != NULL && sb->kind == sk_typeDcl){
+                    vsPtr->type = sb->type;
+                }
             }
             symbolIDList(s, vsPtr->id_list, vsPtr->type, NULL, false, false);
             vsPtr = vsPtr->next;
@@ -458,6 +463,13 @@ void symbolVarSpec(SymbolTable *s, VARSPEC *vs, int infunc) {
         TYPE *type = vs->type;
         if (type == NULL) {
             type = vsPtr->exp_list->type;
+        } else if (type->id != NULL){
+            SYMBOL *sb = getSymbol(s, type->id);
+            if (sb != NULL && sb->kind == sk_typeDcl){
+                    type = sb->type;
+                    vs->type = type;
+            }
+            
         }
         symbolIDList(s, vs->id_list, type, NULL, false, false);
     }
@@ -558,10 +570,15 @@ TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
             // else
             sbb = getSymbol(s->parent, t->id);
         }
-        if (sbb != NULL && sbb->kind == sk_typeDcl) {
-            typeInTable = sbb->type;
-            t->underLineType = sbb->type->underLineType;
-        }
+        if (sbb != NULL) {
+            if (sbb->kind == sk_typeDcl){
+                typeInTable = sbb->type;
+                t->underLineType = sbb->type->underLineType;
+            } 
+        } 
+
+        i->type = t;
+
         if (t->id == NULL) {
             if (t->underLineType != NULL) {
                 t->id = t->underLineType->id;
@@ -579,7 +596,9 @@ TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
                 }
             }
         }
-        i->type = t;
+        
+        // i->type = t;
+        
         if (strcmp(i->id, "_") != 0) {
             putSymbol(s, i->id, t, sk_varDcl);
         }
@@ -622,6 +641,12 @@ TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
 void symbolParams(SymbolTable *t, PARAMS *p, TYPE *funcType) {
 
     if (p != NULL) {
+        if (p->type && p->type->id){
+            SYMBOL *sb = getSymbol(t, p->type->id);
+            if (sb != NULL && sb->kind == sk_typeDcl){
+                    p->type = sb->type;
+            }
+        }
         symbolIDList(t, p->id_list, p->type, funcType, false, true);
         if (p->next != NULL) {
             if (printSymbol)
@@ -797,10 +822,10 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
         if (sb != NULL) {
             if (sb->kind == sk_typeDcl) {
                 exp->kind = castExpr;
-                exp->val.cast.type = sb->type;
-                exp->val.cast.type->id = sb->name;
+                // exp->val.cast.type = sb->type;
+                // exp->val.cast.type->id = sb->name;
                 exp->val.cast.exp = exp->val.func.args;
-                exp->type = exp->val.cast.type;
+                exp->type = sb->type;
                 symbolEXP(s, exp->val.cast.exp);
             } else {
                 symbolEXP(s, exp->val.func.args);
@@ -810,10 +835,10 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
             errorNotDeclared(exp->lineno, "func", exp->val.func.name->val.id);
         }
         break;
-    case castExpr:
-        symbolEXP(s, exp->val.cast.exp);
-        exp->type = exp->val.cast.type;
-        break;
+    // case castExpr:
+    //     symbolEXP(s, exp->val.cast.exp);
+    //     exp->type = exp->val.cast.type;
+    //     break;
     case appendExpr:;
         symbolEXP(s, exp->val.append.head);
         symbolEXP(s, exp->val.append.tail);
@@ -963,18 +988,19 @@ void symbolSTMT(SymbolTable *s, SymbolTable *new_st, STMT *stmt, bool to_indent,
             if (printSymbol)
                 printf("}\n");
             break;
-        case ifStmt:
+        case ifStmt:;
+            SymbolTable *inew = scopeSymbolTable(s);
             if (stmt->val.ifStmtVal.ifSimpleStmt != NULL) {
-                symbolSTMT(s, NULL, stmt->val.ifStmtVal.ifSimpleStmt, false,
+                symbolSTMT(inew, NULL, stmt->val.ifStmtVal.ifSimpleStmt, false,
                            false);
             }
-            symbolEXP(s, stmt->val.ifStmtVal.ifCond);
+            symbolEXP(inew, stmt->val.ifStmtVal.ifCond);
             bool newLine = false;
             if (stmt->val.ifStmtVal.elseStmt == NULL) {
                 newLine = true;
             }
-            symbolSTMT(s, NULL, stmt->val.ifStmtVal.ifBody, false, newLine);
-            symbolSTMT(s, NULL, stmt->val.ifStmtVal.elseStmt, false, newLine);
+            symbolSTMT(inew, NULL, stmt->val.ifStmtVal.ifBody, false, newLine);
+            symbolSTMT(inew, NULL, stmt->val.ifStmtVal.elseStmt, false, newLine);
             break;
         case elseStmt:
             symbolSTMT(s, NULL, stmt->val.elseStmtVal.elseBody, false, newLine);

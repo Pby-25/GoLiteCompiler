@@ -275,13 +275,13 @@ void codeAppend(EXP *head, EXP *tail){
 }
 
 void codeCastBaseType(TYPE *type, EXP *exp ) {
-    if (type == NULL || exp == NULL) return;
-    switch (type->id) {
-        case "int": 
-        case "float64":
-        case "bool":
+    // if (type == NULL || exp == NULL) return;
+    // switch (type->id) {
+    //     case "int": 
+    //     case "float64":
+    //     case "bool":
         
-    }
+    // }
 }
 
 void codeEXP(EXP *exp) {

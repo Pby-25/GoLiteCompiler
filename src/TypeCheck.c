@@ -241,6 +241,7 @@ void typeIdListExpList(ID_LIST *idl, EXP *el) {
     EXP *ec = el;
     while (ic != NULL && ec != NULL) {
         if (!checkSameType(ic->type, ec->type, false)) {
+            // printf("maybe here\n");
             errorType(ic->type->id, ec->type->id, ic->lineno);
         }
         typeEXP(ec);
@@ -595,23 +596,23 @@ void typeEXP(EXP *exp) {
     case castExpr:
         checkExpLength(exp->val.cast.exp);
         typeEXP(exp->val.cast.exp);
-        if (!isTypeBaseType(exp->val.cast.type, true) ||
-            isArrayOrSlice(exp->val.cast.type)) {
-            errorType("expected base type", exp->val.cast.type->id,
+        if (!isTypeBaseType(exp->type, true) ||
+            isArrayOrSlice(exp->type)) {
+            errorType("expected base type", exp->type->id,
                       exp->lineno);
         }
-        if (!checkSameType(exp->val.cast.type, exp->val.cast.exp->type, true)) {
-            if (!isNumeric(exp->val.cast.type) ||
+        if (!checkSameType(exp->type, exp->val.cast.exp->type, true)) {
+            if (!isNumeric(exp->type) ||
                 !isNumeric(exp->val.cast.exp->type)) {
-                if (!checkSameType(exp->val.cast.type, strToType("string"),
+                if (!checkSameType(exp->type, strToType("string"),
                                    true) ||
                     !isInteger(exp->val.cast.exp->type)) {
-                    errorType(exp->val.cast.type->id,
+                    errorType(exp->type->id,
                               exp->val.cast.exp->type->id, exp->lineno);
                 }
             }
         }
-        exp->type = exp->val.cast.type;
+        // exp->type = exp->val.cast.type;
         break;
 
     case appendExpr:
