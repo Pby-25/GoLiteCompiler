@@ -32,6 +32,21 @@ void codeHelperStrutToStr(){
     printf("    return res[:-1] + '}'\n");
 }
 
+void codeHelperArrayToStr(){
+    printf("def array_to_str(l):\n");
+    printf("    res='['\n");
+    printf("    for e in l:\n");
+    printf("        res += str(e) + ' '\n");
+    printf("    return res[:-1] + ']'\n");
+}
+
+void codeHelperBasicTypes(){
+    printf("___int = 0\n");
+    printf("___float64 = 0.0\n");
+    printf("___rune = 0\n");
+    printf("___string = ''\n");
+    printf("___bool = False\n");
+}
 
 void indent() {
     for (int i = 0; i < code_indentation; i++) {
@@ -40,12 +55,16 @@ void indent() {
 }
 
 void codeImports(IMPORT *i) {
-    printf("import copy\n");
+    // printf("import copy\n");
+    printf("from copy import deepcopy\n");
+    printf("from collections import OrderedDict\n");
     // if (i != NULL) {
     //     // printf("#import %s\n", i->id);
     //     codeImports(i->next);
     // }
     codeHelperStrutToStr();
+    codeHelperArrayToStr();
+    codeHelperBasicTypes();
 }
 
 void codeDecl(DCL *d, int infunc) {
@@ -154,9 +173,10 @@ void codeTypeSpec(TYPESPEC *ts, int needParen) {
         return;
     }
 
-    char *defVal = getDefalutValues(ts->type);
-    printf("%s = ", ts->id);
-    printf("%s\n", defVal);
+    // char *defVal = getDefalutValues(ts->type);
+    // printf("%s = ", ts->id);
+    // printf("%s\n", defVal);
+
     codeTypeSpec(ts->next,0);
 }
 
@@ -189,15 +209,15 @@ void codeVarSpec(VARSPEC *vs, int infunc) {
         printf("= ");
         codeEXP(c, false);
     } else {
-        printf("= ");
-        ID_LIST * t = vs->id_list;
-        while(t){
-            codeVarTypes(vs->type);
-            if(t->next){
-                printf(", ");
-            }
-            t = t->next;
-        }
+        // printf("= ");
+        // ID_LIST * t = vs->id_list;
+        // while(t){
+        //     codeVarTypes(vs->type);
+        //     if(t->next){
+        //         printf(", ");
+        //     }
+        //     t = t->next;
+        // }
     }
     printf("\n");
     codeVarSpec(vs->next, infunc);
@@ -523,7 +543,7 @@ void codeEXP(EXP *exp, bool to_print) {
         printf("%f", exp->val.floatVal);
         break;
     case runeExpr:
-        printf("%s", exp->val.runeVal);
+        printf("%d", exp->val.runeVal);
         break;
     case stringItpExpr: // might need escape
         printf("%s", exp->val.stringVal);

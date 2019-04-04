@@ -183,7 +183,7 @@ struct EXP {
     union {
         char *id;
         char *stringVal;
-        char *runeVal;
+        int runeVal;
         int intVal;
         bool boolVal;
         double floatVal;

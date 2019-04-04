@@ -143,11 +143,45 @@ EXP *makeStringRawExp(char *stringval, int lineno) {
 }
 
 EXP *makeRuneExp(char *runeval, int lineno) {
+    int rune;
+    if (runeval[1] == '\\'){
+        switch (runeval[2]){
+            case 'a':
+                rune = '\a';
+                break;
+            case 'b':
+                rune = '\b';
+                break;
+            case 'f':
+                rune = '\f';
+                break;
+            case 'n':
+                rune = '\n';
+                break;
+            case 'r':
+                rune = '\r';
+                break;
+            case 't':
+                rune = '\t';
+                break;
+            case 'v':
+                rune = '\v';
+                break;
+            case '\\':
+                rune = '\\';
+                break;
+            case '\'':
+                rune = '\'';
+                break;
+        }
+    } else {
+        rune = runeval[1];
+    }
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = runeExpr;
     // e->addressable = false;
-    e->val.runeVal = runeval;
+    e->val.runeVal = rune;
     return e;
 }
 
