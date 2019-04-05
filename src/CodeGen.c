@@ -791,7 +791,7 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
         case printlnStmt:
             printf("print(*format_check(");
             codeEXP(stmt->val.printlnExpList, true);
-            printf("), sep=' ', end='\n')");
+            printf("), sep=' ', end='\\n')");
             break;
         case returnStmt:
             printf("return ");
