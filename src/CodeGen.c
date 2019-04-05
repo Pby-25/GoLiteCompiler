@@ -70,6 +70,19 @@ void codeHelperCast(){
     printf("    return exp\n");   
 }
 
+void codeHelperAppend(){
+    printf("def appending(slicer, newcomer):\n");
+    printf("    if slicer.count(None) > 0:\n");
+    printf("        if slicer.count(None) != 1:\n");
+    printf("            i = slicer.index(None)\n");
+    printf("            return [element if index != i for index, element in enumerate(slicer)]\n");
+    printf("        else:\n");
+    printf("            slicer[-1] = newcomer\n");
+    printf("            return slicer\n");
+    printf("    else:\n");
+    printf("        return slicer + [newcomer] + [None]*abs(len(newcomer)-1)\n");
+    printf("    return exp\n");   
+}
 
 void codeHelperBasicTypes(){
     printf("___int = 0\n");
@@ -376,26 +389,26 @@ void codeTopDecl(TOPDECL *t) {
     }
 }
 
-void codeAppend(EXP *head, EXP *tail){
-    codeEXP(head, false, false);
-    printf (" + [");
-    codeEXP(tail, false, false);
-    printf ("]");
-    if (isSlices(head->type)){
-        printf("\n");
-        indent();
-        printf("_ = len(");
-        codeEXP(head, false, false);
-        printf(")\n");
-        indent();
-        printf("if (_-1)&(_-2) == 0:\n"); // check if _-1 is power of 2
-        code_indentation++;
-        indent();
-        codeEXP(head, false, false);
-        printf (" + [None]*abs(_-2)");
-        code_indentation--;
-    } 
-}
+// void codeAppend(EXP *head, EXP *tail){
+//     codeEXP(head, false, false);
+//     printf (" + [");
+//     codeEXP(tail, false, false);
+//     printf ("]");
+//     if (isSlices(head->type)){
+//         printf("\n");
+//         indent();
+//         printf("_ = len(");
+//         codeEXP(head, false, false);
+//         printf(")\n");
+//         indent();
+//         printf("if (_-1)&(_-2) == 0:\n"); // check if _-1 is power of 2
+//         code_indentation++;
+//         indent();
+//         codeEXP(head, false, false);
+//         printf (" + [None]*abs(_-2)");
+//         code_indentation--;
+//     } 
+// }
 
 // void codeCastBaseType(TYPE *type, EXP *exp ) {
     // if (type == NULL || exp == NULL) return;
@@ -584,7 +597,12 @@ void codeEXP(EXP *exp, bool to_print, bool to_copy) {
         break;
 
     case appendExpr:
-        codeAppend(exp->val.append.head, exp->val.append.tail);
+        printf("appending(");
+        codeEXP(exp->val.append.head, false, false);
+        printf(", ");
+        codeEXP(exp->val.append.tail, false, false);
+        printf(")");
+        // codeAppend(exp->val.append.head, exp->val.append.tail);
         break;
     case lenExpr:
         if (isSlices(exp->type)) {
