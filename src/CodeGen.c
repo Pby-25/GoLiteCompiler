@@ -284,7 +284,7 @@ void codeVarSpec(VARSPEC *vs, int infunc) {
     EXP *c = vs->exp_list;
     if (c != NULL) {
         printf("= ");
-        codeEXP(c, false, false);
+        codeEXP(c, false, true);
     } else {
         printf("= ");
         ID_LIST * i = vs->id_list;
@@ -407,10 +407,10 @@ void codeAppend(EXP *head, EXP *tail){
     // }
 // }
 
-void codeEXP(EXP *exp, bool to_print, bool func_arg) {
+void codeEXP(EXP *exp, bool to_print, bool to_copy) {
     if (exp == NULL)
         return;
-    if (func_arg && !isSlices(exp->type)){
+    if (to_copy && !isSlices(exp->type)){
         printf("deepcopy(");
     }
     switch (exp->kind) {
@@ -662,12 +662,12 @@ void codeEXP(EXP *exp, bool to_print, bool func_arg) {
     default:
         break;
     }
-    if (func_arg && !isSlices(exp->type)){
+    if (to_copy && !isSlices(exp->type)){
         printf(")");
     }
     if (exp->next != NULL) {
             printf(", ");
-            codeEXP(exp->next, to_print, func_arg);
+            codeEXP(exp->next, to_print, to_copy);
     }
 }
 
@@ -746,7 +746,7 @@ void codeAssignStmt(STMT *stmt) {
             printf(" &= ~");
             break;
         }
-        codeEXP(stmt->val.assignStmtVal.rhs, false, false);
+        codeEXP(stmt->val.assignStmtVal.rhs, false, true);
     }
 }
 
@@ -857,7 +857,7 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
         case shortVarDecStmt:
             codeIDList(stmt->val.shortVarDecStmtVal.ids, false);
             printf(" = ");
-            codeEXP(stmt->val.shortVarDecStmtVal.exps, false, false);
+            codeEXP(stmt->val.shortVarDecStmtVal.exps, false, true);
             break;
         case forStmt:
             printf("def ___():\n");
