@@ -44,6 +44,20 @@ void codeHelperArrayToStr(){
     printf("    return res[:-1] + ']'\n");
 }
 
+void codeHelperFloatFormatCheck(){
+    printf("def format_check(*args):\n");
+    printf("    res=[]\n");
+    printf("    for arg in args:\n");
+    printf("        if isinstance(arg, float):\n");
+    printf("            floating_str = '{}'.format('+' if arg>=0 else '')\n");
+    printf("            floating_str += '{:.6e}'.format(arg)\n");
+    printf("            floating_str = floating_str if floating_str[-3].isdigit() else floating_str[:-2] + '0' + floating_str[-2:]\n");
+    printf("            res.append(floating_str)\n");
+    printf("        else:\n");
+    printf("            res.append(arg)\n");
+    printf("    return res\n");
+}
+
 void codeHelperCast(){
     printf("def casting(typa, exp):\n");
     printf("    if isinstance(typa, str):\n");
@@ -52,6 +66,8 @@ void codeHelperCast(){
     printf("        return int(exp)\n");
     printf("    if isinstance(typa, float):\n");
     printf("        return float(exp)\n");
+    printf("    if isinstance(typa, bool):\n");
+    printf("        return bool(exp)\n");
     printf("    return exp\n");   
 }
 
@@ -768,14 +784,14 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             code_indentation--;
             break;
         case printStmt:
-            printf("print(");
+            printf("print(*format_check(");
             codeEXP(stmt->val.printExpList, true);
-            printf(", sep='', end='')");
+            printf("), sep='', end='')");
             break;
         case printlnStmt:
-            printf("print(");
+            printf("print(*format_check(");
             codeEXP(stmt->val.printlnExpList, true);
-            printf(", sep=' ', end='\n')");
+            printf("), sep=' ', end='\n')");
             break;
         case returnStmt:
             printf("return ");

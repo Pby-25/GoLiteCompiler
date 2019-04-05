@@ -19,7 +19,7 @@ int yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno, 
     char *runeval;
     char *id;
     char *stringval;
-    float floatval;
+    double floatval;
     struct EXP *EXP;
     struct STMT *STMT;
     struct PROGRAM *PROGRAM;
