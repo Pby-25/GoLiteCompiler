@@ -1,2 +1,16 @@
 # programs/
 .DS_Store
+src/CodeGen.o
+src/SymbolTable.o
+src/TypeCheck.o
+src/lex.yy.o
+src/main.o
+src/mini.output
+src/mini.tab.c
+src/mini.tab.h
+src/mini.tab.o
+src/minic
+src/pretty.o
+src/tree.o
+src/weed.o
+programs/*

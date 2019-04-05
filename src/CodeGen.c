@@ -40,6 +40,17 @@ void codeHelperArrayToStr(){
     printf("    return res[:-1] + ']'\n");
 }
 
+void codeHelperCast(){
+    printf("def casting(type, exp):\n");
+    printf("    if isinstance(type, str):\n");
+    printf("        return chr(exp)\n");
+    printf("    if isinstance(type, int):\n");
+    printf("        return int(exp)\n");
+    printf("    if isinstance(type, float):\n");
+    printf("        return float(exp)\n");
+    printf("    return exp\n");   
+}
+
 void codeHelperBasicTypes(){
     printf("___int = 0\n");
     printf("___float64 = 0.0\n");
@@ -64,6 +75,7 @@ void codeImports(IMPORT *i) {
     // }
     codeHelperStrutToStr();
     codeHelperArrayToStr();
+    codeHelperCast();
     codeHelperBasicTypes();
 }
 
@@ -363,7 +375,7 @@ void codeAppend(EXP *head, EXP *tail){
     } 
 }
 
-void codeCastBaseType(TYPE *type, EXP *exp ) {
+// void codeCastBaseType(TYPE *type, EXP *exp ) {
     // if (type == NULL || exp == NULL) return;
     // switch (type->id) {
     //     case "int": 
@@ -371,7 +383,7 @@ void codeCastBaseType(TYPE *type, EXP *exp ) {
     //     case "bool":
         
     // }
-}
+// }
 
 void codeEXP(EXP *exp, bool to_print) {
     if (exp == NULL)
@@ -539,9 +551,9 @@ void codeEXP(EXP *exp, bool to_print) {
         break;
 
     case castExpr:
-        codeCastBaseType(exp->val.cast.type, exp->val.cast.exp);
-        (exp->val.cast.type);
-        printf("(");
+        // codeCastBaseType(exp->val.cast.type, exp->val.cast.exp);
+        // (exp->val.cast.type);
+        printf("casting(___%s, ", exp->type->id);
         codeEXP(exp->val.cast.exp, false);
         printf(")");
         break;
