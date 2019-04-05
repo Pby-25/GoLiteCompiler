@@ -49,8 +49,7 @@ void codeHelperFloatFormatCheck(){
     printf("    res=[]\n");
     printf("    for arg in args:\n");
     printf("        if isinstance(arg, float):\n");
-    printf("            floating_str = '{}'.format('+' if arg>=0 else '')\n");
-    printf("            floating_str += '{:.6e}'.format(arg)\n");
+    printf("            floating_str = '{}{:.6e}'.format('+' if arg>=0 else '', arg)\n");
     printf("            floating_str = floating_str if floating_str[-3].isdigit() else floating_str[:-2] + '0' + floating_str[-2:]\n");
     printf("            res.append(floating_str)\n");
     printf("        else:\n");
