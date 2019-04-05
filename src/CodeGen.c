@@ -41,12 +41,12 @@ void codeHelperArrayToStr(){
 }
 
 void codeHelperCast(){
-    printf("def casting(type, exp):\n");
-    printf("    if isinstance(type, str):\n");
+    printf("def casting(typa, exp):\n");
+    printf("    if isinstance(typa, str):\n");
     printf("        return chr(exp)\n");
-    printf("    if isinstance(type, int):\n");
+    printf("    if isinstance(typa, int):\n");
     printf("        return int(exp)\n");
-    printf("    if isinstance(type, float):\n");
+    printf("    if isinstance(typa, float):\n");
     printf("        return float(exp)\n");
     printf("    return exp\n");   
 }
