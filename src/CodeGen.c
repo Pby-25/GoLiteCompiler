@@ -24,6 +24,11 @@ void freeUID(int u){
     } // Else too bad
 }
 
+void codeHelperPass(){
+    printf("def do_nothing():\n");
+    printf("    pass\n");
+}
+
 void codeHelperStrutToStr(){
     printf("def struct_to_str(s):\n");
     printf("    if not s:\n");
@@ -106,6 +111,7 @@ void codeImports(IMPORT *i) {
     //     // printf("#import %s\n", i->id);
     //     codeImports(i->next);
     // }
+    codeHelperPass();
     codeHelperStrutToStr();
     codeHelperArrayToStr();
     codeHelperFloatFormatCheck();
@@ -784,7 +790,8 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             printf("break");
             break;
         case blockStmt:
-            // TODO fix block assign to var
+            printf("do_nothing()\n");
+            indent();
             printf("def ___():\n");
             code_indentation++;
             codeSTMT(stmt->val.block, true, true, NULL);
