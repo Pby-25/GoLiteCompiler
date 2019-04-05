@@ -26,6 +26,8 @@ void freeUID(int u){
 
 void codeHelperStrutToStr(){
     printf("def struct_to_str(s):\n");
+    printf("    if not s:\n");
+    printf("        return '{}'\n");
     printf("    res='{'\n");
     printf("    for e in s.values():\n");
     printf("        res += str(e) + ' '\n");
@@ -34,6 +36,8 @@ void codeHelperStrutToStr(){
 
 void codeHelperArrayToStr(){
     printf("def array_to_str(l):\n");
+    printf("    if not l:\n");
+    printf("        return '[]'\n");
     printf("    res='['\n");
     printf("    for e in l:\n");
     printf("        res += str(e) + ' '\n");
