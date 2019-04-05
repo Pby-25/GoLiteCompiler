@@ -168,10 +168,54 @@ char *getDefalutValues(TYPE *t){
     return NULL;
 }
 
+void codeDefaultValues(TYPE *t){
+    switch (t->kind)
+    {
+        case k_slices:
+            printf("[]");
+            break;
+        case k_array:
+            printf("[");
+            codeDefaultValues(t->underLineType);
+            printf(" for _ in range(%d)]", t->array_type.size);
+            break;
+        case k_type_struct:
+            printf("OrderedDict([");
+            FIELD_DCL *f = t->struct_type.field_dcls;
+            while(f){
+                ID_LIST *i = f->id_list;
+                while(i){
+                    printf("(\"%s\", ", i->id);
+                    codeDefaultValues(f->type);
+                    printf(")");
+                    if(i->next){
+                        printf(", ");
+                    }
+                    i = i->next;
+                }
+                if(f->next){
+                    printf(", ");
+                }
+                f = f->next;
+            }
+            printf("])");
+            break;
+    
+        default:
+            printf("deepcopy(___%s)", t->id);
+            break;
+    }
+}
+
 void codeTypeSpec(TYPESPEC *ts, int needParen) {
     if (ts == NULL) {
         return;
     }
+
+    indent();
+    printf("___%s = ", ts->id);
+    codeDefaultValues(ts->type);
+    printf("\n");
 
     // char *defVal = getDefalutValues(ts->type);
     // printf("%s = ", ts->id);
@@ -187,15 +231,15 @@ void codeVarTypes(TYPE *t){
 
     char *defVal = getDefalutValues(t);
     printf("%s", defVal);
-    // if(t->kind == k_array){
-    //     char *defVal = getDefalutValues(t);
-    //     printf("%s", defVal);
-    // }else if( t->kind == k_slices){
-    //     char *defVal = getDefalutValues(t);
-    //     printf("%s", defVal);
-    // }else {
-    //     printf("%s", defVal);
-    // }
+    if(t->kind == k_array){
+        char *defVal = getDefalutValues(t);
+        printf("%s", defVal);
+    }else if( t->kind == k_slices){
+        char *defVal = getDefalutValues(t);
+        printf("%s", defVal);
+    }else {
+        printf("%s", defVal);
+    }
 }
 
 void codeVarSpec(VARSPEC *vs, int infunc) {
@@ -209,6 +253,16 @@ void codeVarSpec(VARSPEC *vs, int infunc) {
         printf("= ");
         codeEXP(c, false);
     } else {
+        printf("= ");
+        ID_LIST * i = vs->id_list;
+        while(i){
+            codeDefaultValues(vs->type);
+            if(i->next){
+                printf(", ");
+            }
+            i = i->next;
+        }
+
         // printf("= ");
         // ID_LIST * t = vs->id_list;
         // while(t){
