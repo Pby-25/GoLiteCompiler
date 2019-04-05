@@ -372,6 +372,7 @@ void codeAppend(EXP *head, EXP *tail){
         indent();
         codeEXP(head, false);
         printf (" + [None]*(_-2)");
+        code_indentation--;
     } 
 }
 
@@ -591,9 +592,13 @@ void codeEXP(EXP *exp, bool to_print) {
         if (to_print && exp->type != NULL){
             switch (exp->type->kind)
             {
+                case k_slices:
+                case k_array:
+                    printf("array_to_str(___%s)", exp->val.id);
+                    break;
                 case k_type_struct:
                     printf("struct_to_str(___%s)", exp->val.id);
-                    break;
+                    break;                
                 default:
                     printf("___%s", exp->val.id);
                     break;
@@ -611,9 +616,7 @@ void codeEXP(EXP *exp, bool to_print) {
     case runeExpr:
         printf("%d", exp->val.runeVal);
         break;
-    case stringItpExpr: // might need escape
-        printf("%s", exp->val.stringVal);
-        break;
+    case stringItpExpr: 
     case stringRawExpr:
         printf("\"%s\"", exp->val.stringVal);
         break;
@@ -626,7 +629,7 @@ void codeEXP(EXP *exp, bool to_print) {
 
     if (exp->next != NULL) {
             printf(", ");
-            codeEXP(exp->next, false);
+            codeEXP(exp->next, to_print);
     }
 }
 
