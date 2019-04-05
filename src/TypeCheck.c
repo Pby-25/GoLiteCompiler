@@ -658,9 +658,14 @@ void typeEXP(EXP *exp) {
             errorType("array or slice", exp->val.array.exp->type->id,
                       exp->lineno);
         }
+
         // Allow index to be null, maybe create new kind later
         if (!isInteger(exp->val.array.index->type)) {
             errorType("integer", exp->val.array.index->type->id, exp->lineno);
+        }
+
+        if(isSlices(exp->val.array.exp->type)){
+            exp->kind = sliceExpr;
         }
 
         break;
@@ -782,7 +787,7 @@ void typeAssignStmt(STMT *stmt) {
             if (lhs && strcmp(lhs->val.id, "_") == 0) {
                 return;
             } else {
-                if (lhs && lhs->kind == arrayExpr && lhs->val.array.exp &&
+                if (lhs && lhs->kind == sliceExpr && lhs->val.array.exp &&
                     lhs->val.array.exp->type->kind == k_slices &&
                     checkSameType(lhs->val.array.exp->type->underLineType,
                                   rhs->type, false)) {
