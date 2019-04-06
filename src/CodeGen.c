@@ -24,6 +24,11 @@ void freeUID(int u){
     } // Else too bad
 }
 
+void codeHelperPass(){
+    printf("def do_nothing():\n");
+    printf("    pass\n");
+}
+
 void codeHelperFloatFormatCheck(){
     printf("def format_check(*args):\n");
     printf("    res=[]\n");
@@ -50,6 +55,20 @@ void codeHelperCast(){
     printf("    return exp\n");   
 }
 
+void codeHelperAppend(){
+    printf("def appending(slicer, newcomer):\n");
+    printf("    if slicer.count(None) > 0:\n");
+    printf("        if slicer.count(None) != 1:\n");
+    printf("            i = slicer.index(None)\n");
+    printf("            return [element if index != i for index, element in enumerate(slicer)]\n");
+    printf("        else:\n");
+    printf("            slicer[-1] = newcomer\n");
+    printf("            return slicer\n");
+    printf("    else:\n");
+    printf("        return slicer + [newcomer] + [None]*abs(len(newcomer)-1)\n");
+    printf("    return exp\n");   
+}
+
 void codeHelperBasicTypes(){
     printf("___int = 0\n");
     printf("___float64 = 0.0\n");
@@ -71,6 +90,7 @@ void codeImports(IMPORT *i) {
     //     // printf("#import %s\n", i->id);
     //     codeImports(i->next);
     // }
+    codeHelperPass();
     codeHelperFloatFormatCheck();
     codeHelperCast();
     codeHelperBasicTypes();
@@ -351,29 +371,6 @@ void codeTopDecl(TOPDECL *t) {
     }
 }
 
-void codeAppend(EXP *head, EXP *tail){
-    codeEXP(head, false);
-    printf (" + [");
-    codeEXP(tail, false);
-    printf ("] if ");
-    codeEXP(head, false);
-    printf (".count(None) != 1 else ");
-    if (isSlices(head->type)){
-        printf("\n");
-        indent();
-        printf("_ = len(");
-        codeEXP(head, false);
-        printf(")\n");
-        indent();
-        printf("if (_-1)&(_-2) == 0:\n"); // check if _-1 is power of 2
-        code_indentation++;
-        indent();
-        codeEXP(head, false);
-        printf (" + [None]*abs(_-2)");
-        code_indentation--;
-    } 
-}
-
 // void codeCastBaseType(TYPE *type, EXP *exp ) {
     // if (type == NULL || exp == NULL) return;
     // switch (type->id) {
@@ -561,7 +558,11 @@ void codeEXP(EXP *exp, bool to_copy) {
         break;
 
     case appendExpr:
-        codeAppend(exp->val.append.head, exp->val.append.tail);
+        printf("appending(");
+        codeEXP(exp->val.append.head, false);
+        printf(", ");
+        codeEXP(exp->val.append.tail, false);
+        printf(")");
         break;
     case lenExpr:
         if (isSlices(exp->type)) {
@@ -602,23 +603,7 @@ void codeEXP(EXP *exp, bool to_copy) {
         printf(".%s", exp->val.selector.name);
         break;
     case idExpr:
-        // if (to_print && exp->type != NULL){
-        //     switch (exp->type->kind)
-        //     {
-        //         case k_slices:
-        //         case k_array:
-        //             printf("array_to_str(___%s)", exp->val.id);
-        //             break;
-        //         case k_type_struct:
-        //             printf("struct_to_str(___%s)", exp->val.id);
-        //             break;                
-        //         default:
-        //             printf("___%s", exp->val.id);
-        //             break;
-        //     }
-        // } else {
-            printf("___%s", exp->val.id);
-        // }
+        printf("___%s", exp->val.id);
         break;
     case intExpr:
         printf("%d", exp->val.intVal);
@@ -743,7 +728,8 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             printf("break");
             break;
         case blockStmt:
-            // TODO fix block assign to var
+            printf("do_nothing()\n");
+            indent();
             printf("def ___():\n");
             code_indentation++;
             codeSTMT(stmt->val.block, true, true, NULL);
