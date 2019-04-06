@@ -448,10 +448,7 @@ void prettyEXP(EXP *exp) {
         printf("%s", exp->val.stringVal);
         break;
     case stringRawExpr:
-        printf("\"%s\"", exp->val.stringVal);
-        break;
-    case boolExpr:
-        exp->val.boolVal ? printf("true") : printf("false");
+        printf("%s", exp->val.stringVal);
         break;
     default:
         break;

@@ -67,7 +67,6 @@ void indent() {
 void codeImports(IMPORT *i) {
     // printf("import copy\n");
     printf("from copy import deepcopy\n");
-    printf("from collections import OrderedDict\n");
     // if (i != NULL) {
     //     // printf("#import %s\n", i->id);
     //     codeImports(i->next);
@@ -190,14 +189,13 @@ void codeDefaultValues(TYPE *t){
             printf(" for _ in range(%d)]", t->array_type.size);
             break;
         case k_type_struct:
-            printf("OrderedDict([");
+            printf("{");
             FIELD_DCL *f = t->struct_type.field_dcls;
             while(f){
                 ID_LIST *i = f->id_list;
                 while(i){
-                    printf("(\"%s\", ", i->id);
+                    printf("\"%s\": ", i->id);
                     codeDefaultValues(f->type);
-                    printf(")");
                     if(i->next){
                         printf(", ");
                     }
@@ -208,7 +206,7 @@ void codeDefaultValues(TYPE *t){
                 }
                 f = f->next;
             }
-            printf("])");
+            printf("}");
             break;
     
         default:

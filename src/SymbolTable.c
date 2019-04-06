@@ -904,6 +904,14 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
                             exp->lineno, exp->val.id);
                     exit(1);
                 }
+                if (sbb->kind == sk_constant){
+                    exp->kind = boolExpr;
+                    if (strcmp("true", sbb->name) == 0){
+                        exp->val.boolVal = true;
+                    } else {
+                        exp->val.boolVal = false;
+                    }
+                }
                 isTypeBaseType(sbb->type, true);
                 exp->type = sbb->type;
             }
@@ -1123,6 +1131,7 @@ void symbolShortVarDec(SymbolTable *st, STMT *s) {
 }
 
 void symbolBooleanConstant(SymbolTable *s, char *boolVal) {
+    putSymbol(s, boolVal, strToType("bool"), sk_constant);
     if (printSymbol)
         printf("%s [constant] = %s\n", boolVal, boolVal);
 }

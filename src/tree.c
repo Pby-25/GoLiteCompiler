@@ -32,20 +32,7 @@ EXP *makeExpList(EXP *list, EXP *v, int lineno) {
     return list;
 }
 
-EXP *makeBooleanExp(bool boolval, int lineno) {
-    EXP *e = malloc(sizeof(EXP));
-    e->lineno = lineno;
-    e->kind = boolExpr;
-    // e->addressable = false;
-    e->val.boolVal = boolval;
-    return e;
-}
-
 EXP *makeIdentifierExp(char *identifier, int lineno) {
-    if (strcmp(identifier, "true") == 0)
-        return makeBooleanExp(true, lineno);
-    else if (strcmp(identifier, "false") == 0)
-        return makeBooleanExp(false, lineno);
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = idExpr;
