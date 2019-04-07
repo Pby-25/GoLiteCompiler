@@ -741,7 +741,7 @@ void codeAssignStmt(STMT *stmt) {
         }
         codeEXP(stmt->val.assignStmtVal.rhs, true);
         code_indentation--;
-        printf("catch UnboundLocalError:\n"); // Will only occur in function call
+        printf("except UnboundLocalError:\n"); // Will only occur in function call
         code_indentation++;
         indent();
         printf("globals()['");
