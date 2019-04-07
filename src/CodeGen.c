@@ -371,7 +371,7 @@ void codeFuncDecl(FUNCDECL *f) {
             codeSTMT(f->body->val.block, true, true, NULL);
         } else {
             indent();
-            printf("pass");
+            printf("pass\n");
         }
         code_indentation--;
 
@@ -635,7 +635,7 @@ void codeEXP(EXP *exp, bool to_copy) {
         }
         break;
     case intExpr:
-        printf("%d", exp->val.intVal);
+        printf("%ld", exp->val.intVal);
         break;
     case floatExpr:
         printf("%.*f", DBL_DIG-1, exp->val.floatVal);

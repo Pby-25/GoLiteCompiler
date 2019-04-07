@@ -436,7 +436,7 @@ void prettyEXP(EXP *exp) {
         printf("%s", exp->val.id);
         break;
     case intExpr:
-        printf("%d", exp->val.intVal);
+        printf("%ld", exp->val.intVal);
         break;
     case floatExpr:
         printf("%f", exp->val.floatVal);

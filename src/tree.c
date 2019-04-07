@@ -178,7 +178,7 @@ EXP *makeRuneExp(char *runeval, int lineno) {
     return e;
 }
 
-EXP *makeIntExp(int intval, int lineno) {
+EXP *makeIntExp(long intval, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = intExpr;

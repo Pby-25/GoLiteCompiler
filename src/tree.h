@@ -187,7 +187,7 @@ struct EXP {
         char *id;
         char *stringVal;
         int runeVal;
-        int intVal;
+        long intVal;
         bool boolVal;
         double floatVal;
         struct {
@@ -228,7 +228,7 @@ EXP *makeIdentifierExp(char *identifier, int lineno);
 EXP *makeStringItpExp(char *stringval, int lineno);
 EXP *makeStringRawExp(char *stringval, int lineno);
 EXP *makeRuneExp(char *runeval, int lineno);
-EXP *makeIntExp(int intval, int lineno);
+EXP *makeIntExp(long intval, int lineno);
 EXP *makeFloat64Exp(double float64val, int lineno);
 EXP *makeBoolExp(int boolval, int lineno);
 EXP *makeBinaryExp(ExpKind kind, EXP *lhs, EXP *rhs, int lineno);

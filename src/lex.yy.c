@@ -1410,14 +1410,15 @@ YY_RULE_SETUP
 #line 181 "mini.l"
 {
     if (g_tokens) printf ("tINTVAL(%s)\n", yytext);
-    yylval.intval = atoi(yytext);
+    char *ptr;
+    yylval.intval = strtol(yytext, &ptr, 0);
     NEED_SEMI_CONLON = 1;
     return tINTVAL;
 }
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 188 "mini.l"
+#line 189 "mini.l"
 {
         yylval.stringval = strdup(yytext);
  	   if (g_tokens) printf ("tIDENTIFIER(%s)\n", yylval.stringval);
@@ -1428,7 +1429,7 @@ YY_RULE_SETUP
 case 87:
 /* rule 87 can match eol */
 YY_RULE_SETUP
-#line 195 "mini.l"
+#line 196 "mini.l"
 {
         yylval.runeval = strdup(yytext);
         if (g_tokens) printf("tRUNEVAL(%s)\n",yylval.runeval);
@@ -1438,7 +1439,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 203 "mini.l"
+#line 204 "mini.l"
 {
         yylval.stringval = strdup(yytext);
         if (g_tokens) printf("tSTRINGITPVAL(%s)\n",yylval.stringval);
@@ -1449,7 +1450,7 @@ YY_RULE_SETUP
 case 89:
 /* rule 89 can match eol */
 YY_RULE_SETUP
-#line 210 "mini.l"
+#line 211 "mini.l"
 {
         yylval.stringval = strdup(yytext);
         if (g_tokens) printf("tSTRINGRAWVAL(%s)\n",yylval.stringval);
@@ -1459,7 +1460,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 217 "mini.l"
+#line 218 "mini.l"
 {
     if (g_tokens) printf("tBANG");
     NEED_SEMI_CONLON = 0;
@@ -1468,15 +1469,15 @@ YY_RULE_SETUP
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 225 "mini.l"
+#line 226 "mini.l"
 { fprintf (stderr, "Error: (line %d) unexpected character '%s'\n", yylineno, yytext); exit(1); }
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 226 "mini.l"
+#line 227 "mini.l"
 ECHO;
 	YY_BREAK
-#line 1480 "lex.yy.c"
+#line 1481 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2491,5 +2492,5 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 226 "mini.l"
+#line 227 "mini.l"
 
