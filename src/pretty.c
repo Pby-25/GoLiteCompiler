@@ -442,7 +442,7 @@ void prettyEXP(EXP *exp) {
         printf("%f", exp->val.floatVal);
         break;
     case runeExpr:
-        printf("%d", exp->val.runeVal);
+        printf("'%c'", exp->val.runeVal);
         break;
     case stringItpExpr:
         printf("%s", exp->val.stringVal);
