@@ -741,6 +741,8 @@ void codeAssignStmt(STMT *stmt) {
         }
         codeEXP(stmt->val.assignStmtVal.rhs, true);
         code_indentation--;
+        printf("\n");
+        indent();
         printf("except UnboundLocalError:\n"); // Will only occur in function call
         code_indentation++;
         indent();
@@ -919,12 +921,38 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             codeAssignStmt(stmt);
             break;
         case incStmt:
+            printf("try:\n");
+            code_indentation++;
+            indent();
             codeEXP(stmt->val.incExp, false);
-            printf("+=1");
+            printf("+=1\n");
+            code_indentation--;
+            printf("\n");
+            indent();
+            printf("except UnboundLocalError:\n"); // Will only occur in function call
+            code_indentation++;
+            indent();
+            printf("globals()['");
+            codeEXP(stmt->val.incExp, false);
+            printf("']+=1");
+            code_indentation--;
             break;
         case decStmt:
+            printf("try:\n");
+            code_indentation++;
+            indent();
             codeEXP(stmt->val.decExp, false);
-            printf("-=1");
+            printf("-=1\n");
+            code_indentation--;
+            printf("\n");
+            indent();
+            printf("except UnboundLocalError:\n"); // Will only occur in function call
+            code_indentation++;
+            indent();
+            printf("globals()['");
+            codeEXP(stmt->val.decExp, false);
+            printf("']-=1");
+            code_indentation--;
             break;
         case shortVarDecStmt:
             codeIDList(stmt->val.shortVarDecStmtVal.ids, false);
