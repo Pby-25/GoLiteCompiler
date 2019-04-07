@@ -180,7 +180,8 @@ print       {if (g_tokens) printf("tPRINT\n");NEED_SEMI_CONLON = 0;return tPRINT
 
 {INT} {
     if (g_tokens) printf ("tINTVAL(%s)\n", yytext);
-    yylval.intval = atoi(yytext);
+    char *ptr;
+    yylval.intval = strtol(yytext, &ptr, 0);
     NEED_SEMI_CONLON = 1;
     return tINTVAL;
 }

@@ -14,7 +14,7 @@ int yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno, 
 
 
 %union {
-    int intval;
+    long intval;
     struct TYPE *type;
     char *runeval;
     char *id;
