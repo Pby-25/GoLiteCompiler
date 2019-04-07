@@ -11,6 +11,7 @@ PARAMS *functionParamsId = NULL;
 PARAM_TYPE *functionParamsType = NULL;
 int symbol_indentation = 0;
 SymbolTable *top_level_table = NULL;
+unsigned long long variable_id = 1;
 
 void printFunctionSignature() {
     PARAMS *p = functionParamsId;
@@ -64,7 +65,7 @@ SYMBOL *putSymbol(SymbolTable *t, char *id, TYPE *type, symbolKind sk) {
     }
     SYMBOL *s = malloc(sizeof(SYMBOL));
     s->name = id;
-
+    s->uid = sk == sk_varDcl ? variable_id++ : 0;
     SYMBOL *variableType = NULL;
     if (type != NULL && type->id != NULL) {
         variableType = getSymbol(t, type->id);
@@ -601,6 +602,7 @@ TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
         
         if (strcmp(i->id, "_") != 0) {
             putSymbol(s, i->id, t, sk_varDcl);
+            i->uid = getSymbol(s, i->id)->uid;
         }
 
         if (funcType != NULL) {
@@ -913,6 +915,7 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
                     }
                 }
                 isTypeBaseType(sbb->type, true);
+                exp->uid = sbb->uid;
                 exp->type = sbb->type;
             }
         } else {

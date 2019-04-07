@@ -9,6 +9,7 @@ typedef enum { mainK, initK } speicialFuncK;
 
 typedef struct SYMBOL {
     char *name;
+    unsigned long long uid;
     TYPE *type;
     symbolKind kind;
     struct SYMBOL *next;

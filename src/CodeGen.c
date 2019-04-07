@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <float.h>
 
 
 int code_indentation = 0;
@@ -22,6 +23,11 @@ void freeUID(int u){
     if (uid == u + 1){
         uid--;
     } // Else too bad
+}
+
+void codeHelperBreak(){
+    printf("class Broke(Exception):\n");
+    printf("    pass\n");
 }
 
 void codeHelperPass(){
@@ -60,12 +66,12 @@ void codeHelperAppend(){
     printf("    if slicer.count(None) > 0:\n");
     printf("        if slicer.count(None) != 1:\n");
     printf("            i = slicer.index(None)\n");
-    printf("            return [element if index != i for index, element in enumerate(slicer)]\n");
+    printf("            return [element if index != i else newcomer for index, element in enumerate(slicer)]\n");
     printf("        else:\n");
     printf("            slicer[-1] = newcomer\n");
     printf("            return slicer\n");
     printf("    else:\n");
-    printf("        return slicer + [newcomer] + [None]*abs(len(newcomer)-1)\n");
+    printf("        return slicer + [newcomer] + [None]*abs(len(slicer)-1)\n");
     printf("    return exp\n");   
 }
 
@@ -90,36 +96,38 @@ void codeImports(IMPORT *i) {
     //     // printf("#import %s\n", i->id);
     //     codeImports(i->next);
     // }
+    codeHelperBreak();
     codeHelperPass();
     codeHelperFloatFormatCheck();
     codeHelperCast();
+    codeHelperAppend();
     codeHelperBasicTypes();
 }
 
-void codeDecl(DCL *d, int infunc) {
+void codeDecl(DCL *d, int to_indent) {
     if (d != NULL) {
         switch (d->kind) {
         case typeDcl:
-            codeTypeDcl(d->val.typeDecl);
+            codeTypeDcl(d->val.typeDecl, to_indent);
             break;
         case varDcl:
-            codeVarDcl(d->val.varDecl,infunc);
+            codeVarDcl(d->val.varDecl,to_indent);
             break;
         }
     }
 }
-void codeTypeDcl(TYPEDECL *t) {
+void codeTypeDcl(TYPEDECL *t, int to_indent) {
     if (t != NULL) {
         // printf("type ");
         // code_indentation ++;
-        codeTypeSpec(t->typeSpec, 1);
+        codeTypeSpec(t->typeSpec, to_indent);
         // code_indentation --;
     }
 }
 
-void codeVarDcl(VARDECL *v, int infunc) {
+void codeVarDcl(VARDECL *v, int to_indent) {
     if (v != NULL) {
-        codeVarSpec(v->var_specs, infunc);
+        codeVarSpec(v->var_specs, to_indent);
     }
 }
 
@@ -235,12 +243,13 @@ void codeDefaultValues(TYPE *t){
     }
 }
 
-void codeTypeSpec(TYPESPEC *ts, int needParen) {
+void codeTypeSpec(TYPESPEC *ts, int to_indent) {
     if (ts == NULL) {
         return;
     }
-
-    indent();
+    if (to_indent){
+        indent();
+    }
     printf("___%s = ", ts->id);
     codeDefaultValues(ts->type);
     printf("\n");
@@ -249,7 +258,7 @@ void codeTypeSpec(TYPESPEC *ts, int needParen) {
     // printf("%s = ", ts->id);
     // printf("%s\n", defVal);
 
-    codeTypeSpec(ts->next,0);
+    codeTypeSpec(ts->next,1);
 }
 
 void codeVarTypes(TYPE *t){
@@ -270,9 +279,12 @@ void codeVarTypes(TYPE *t){
     }
 }
 
-void codeVarSpec(VARSPEC *vs, int infunc) {
+void codeVarSpec(VARSPEC *vs, int to_indent) {
     if (vs == NULL) {
         return;
+    }
+    if (to_indent){
+        indent();
     }
     codeIDList(vs->id_list, false);
     printf(" ");
@@ -302,7 +314,7 @@ void codeVarSpec(VARSPEC *vs, int infunc) {
         // }
     }
     printf("\n");
-    codeVarSpec(vs->next, infunc);
+    codeVarSpec(vs->next, 1);
 }
 
 void codeIDList(ID_LIST *i, bool func_params) {
@@ -310,7 +322,8 @@ void codeIDList(ID_LIST *i, bool func_params) {
         if (func_params && strcmp(i->id, "_") == 0){
             printf("___%d", getUID());
         } else {
-            printf("___%s", i->id);
+            // printf("___%s", i->id);
+            printf("_%llu", i->uid);
         }
         if (i->next != NULL) {
             printf(", "); 
@@ -342,13 +355,13 @@ void codeSig(SIGNATURE *s) {
 void codeFuncDecl(FUNCDECL *f) {
     if (f != NULL) {
         if (strcmp(f->id, "main") == 0){
-            main_body = f->body;
+            main_body = f->body->val.block;
             return;
         }
         printf("def ___%s(", f->id);
         codeSig(f->signature);
         code_indentation++;
-        codeSTMT(f->body, true, true, NULL);
+        codeSTMT(f->body->val.block, true, true, NULL);
         code_indentation--;
         if (strcmp(f->id, "init") == 0){
             indent();
@@ -600,16 +613,17 @@ void codeEXP(EXP *exp, bool to_copy) {
         break;
     case selectorExpr:
         codeEXP(exp->val.selector.exp, false);
-        printf(".%s", exp->val.selector.name);
+        printf("[\"%s\"]", exp->val.selector.name);
         break;
     case idExpr:
-        printf("___%s", exp->val.id);
+        // printf("___%s", exp->val.id);
+        printf("_%llu", exp->uid);
         break;
     case intExpr:
         printf("%d", exp->val.intVal);
         break;
     case floatExpr:
-        printf("%f", exp->val.floatVal);
+        printf("%.*f", DBL_DIG-1, exp->val.floatVal);
         break;
     case runeExpr:
         printf("%d", exp->val.runeVal);
@@ -720,49 +734,64 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
         switch (stmt->kind) {
         case continueStmt:
             if (post_stmt != NULL){
-                codeSTMT(post_stmt, true, true, NULL);
+                codeSTMT(post_stmt, false, true, NULL);
             }
+            indent();
             printf("continue");
             break;
         case breakStmt:
-            printf("break");
+            printf("raise Broke");
             break;
         case blockStmt:
             printf("do_nothing()\n");
-            indent();
-            printf("def ___():\n");
-            code_indentation++;
+            // indent();
+            // printf("def ___():\n");
+            // code_indentation++;
             codeSTMT(stmt->val.block, true, true, NULL);
-            code_indentation--;
-            indent();
-            printf("___()\n");
+            // code_indentation--;
+            // indent();
+            // printf("___()\n");
             break;
         case ifStmt:
-            printf("def ___():\n");
-            code_indentation++;
+            // printf("def ___():\n");
+            // code_indentation++;
+            
             if (stmt->val.ifStmtVal.ifSimpleStmt != NULL) {
-                codeSTMT(stmt->val.ifStmtVal.ifSimpleStmt, true, true, NULL);  
+                codeSTMT(stmt->val.ifStmtVal.ifSimpleStmt, false, true, NULL);
+                indent();
             }
-            indent();
+            // indent();
             printf("if ");
             codeEXP(stmt->val.ifStmtVal.ifCond, false);
             printf(":\n");
-            bool newLine = false;
-            if(stmt->val.ifStmtVal.elseStmt == NULL){
-                newLine = true;
-            }
-            codeSTMT(stmt->val.ifStmtVal.ifBody->val.block, false, newLine, NULL);
-            codeSTMT(stmt->val.ifStmtVal.elseStmt, true, newLine, NULL);
+            // bool newLine = false;
+            // if(stmt->val.ifStmtVal.elseStmt == NULL){
+            //     newLine = true;
+            // }
+            code_indentation++;
+            codeSTMT(stmt->val.ifStmtVal.ifBody->val.block, true, true, NULL);
             code_indentation--;
-            indent();
-            printf("___()");
+            if (stmt->val.ifStmtVal.elseStmt != NULL){
+                codeSTMT(stmt->val.ifStmtVal.elseStmt, true, true, NULL);
+            }
+            
+            // code_indentation--;
+            // indent();
+            // printf("___()");
             break;
         case elseStmt:
             printf("else:\n");
-            codeSTMT(stmt->val.elseStmtVal.elseBody->val.block, false, true, NULL);
-            code_indentation++;
-            codeSTMT(stmt->val.elseStmtVal.ifStmt, true, true, NULL);
-            code_indentation--;
+            if(stmt->val.elseStmtVal.elseBody != NULL){
+                code_indentation++;
+                codeSTMT(stmt->val.elseStmtVal.elseBody->val.block, true, true, NULL);
+                code_indentation--;
+            }
+            if (stmt->val.elseStmtVal.ifStmt != NULL){
+                code_indentation++;
+                codeSTMT(stmt->val.elseStmtVal.ifStmt, true, true, NULL);
+                code_indentation--;
+            }
+
             break;
         case printStmt:
             printf("print(*format_check(");
@@ -779,7 +808,8 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             codeEXP(stmt->val.returnExp, false);
             break;
         case switchStmt:
-            printf("def ___():\n");
+            // printf("def ___():\n");
+            printf("try:\n");
             code_indentation++;
             if (stmt->val.switchStmtVal.switchSimpleStmt != NULL) {
                 codeSTMT(stmt->val.switchStmtVal.switchSimpleStmt, true, true, NULL);
@@ -796,7 +826,12 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             codeCASE_CLAUSE(stmt->val.switchStmtVal.switchCases, temporaryVar, true);
             code_indentation--;
             indent();
-            printf("___()");
+            // printf("___()");
+            printf("except Broke:\n");
+            code_indentation++;
+            indent();
+            printf("pass");
+            code_indentation--;
             freeUID(temporaryVar);
             break;
         case emptyStmt:
@@ -823,7 +858,8 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             codeEXP(stmt->val.shortVarDecStmtVal.exps, true);
             break;
         case forStmt:
-            printf("def ___():\n");
+            // printf("def ___():\n");
+            printf("try:\n");
             code_indentation++;
             if (stmt->val.forStmtVal.forClause == NULL){
                 indent();
@@ -854,17 +890,22 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             }
             code_indentation--;
             indent();
-            printf("___()");
+            // printf("___()");
+            printf("except Broke:\n");
+            code_indentation++;
+            indent();
+            printf("pass");
+            code_indentation--;
             break;
         case dclStmt:
-            codeDecl(stmt->val.decStmtVal, 1);
+            codeDecl(stmt->val.decStmtVal, 0);
             break;
         }
         if (new_line && stmt->kind != emptyStmt) {
             printf("\n");
         }
         if (stmt->next){
-            codeSTMT(stmt->next, to_indent, new_line, NULL);    
+            codeSTMT(stmt->next, to_indent, new_line, post_stmt);    
         }
     }
 }
@@ -905,21 +946,21 @@ void codePROGRAM(PROGRAM *root, char *file_name) {
 
     typeCheckProgram(root);
 
-    // // append .c to file name
-    // str_replace(file_name, ".go", ".py");
-    // remove(file_name);
+    // append .c to file name
+    str_replace(file_name, ".go", ".py");
+    remove(file_name);
 
-    // // // redirect stdout to new file
-    // int out = open(file_name, O_RDWR | O_APPEND | O_CREAT, 0600);
-    // if (-1 == out) {
-    //     perror("Error: open file");
-    //     return;
-    // }
-    // int save_out = dup(fileno(stdout));
-    // if (-1 == dup2(out, fileno(stdout))) {
-    //     perror("Error: cannot redirect stdout");
-    //     return;
-    // }
+    // // redirect stdout to new file
+    int out = open(file_name, O_RDWR | O_APPEND | O_CREAT, 0600);
+    if (-1 == out) {
+        perror("Error: open file");
+        return;
+    }
+    int save_out = dup(fileno(stdout));
+    if (-1 == dup2(out, fileno(stdout))) {
+        perror("Error: cannot redirect stdout");
+        return;
+    }
 
    
     if (root != NULL) {
@@ -937,9 +978,9 @@ void codePROGRAM(PROGRAM *root, char *file_name) {
         
     }
 
-    // // put stdout back
-    // fflush(stdout);
-    // close(out);
-    // dup2(save_out, fileno(stdout));
-    // close(save_out);
+    // put stdout back
+    fflush(stdout);
+    close(out);
+    dup2(save_out, fileno(stdout));
+    close(save_out);
 }

@@ -445,10 +445,10 @@ void prettyEXP(EXP *exp) {
         printf("'%c'", exp->val.runeVal);
         break;
     case stringItpExpr:
-        printf("%s", exp->val.stringVal);
+        printf("\"%s\"", exp->val.stringVal);
         break;
     case stringRawExpr:
-        printf("%s", exp->val.stringVal);
+        printf("\"%s\"", exp->val.stringVal);
         break;
     default:
         break;

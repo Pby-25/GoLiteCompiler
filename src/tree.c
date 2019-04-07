@@ -36,7 +36,6 @@ EXP *makeIdentifierExp(char *identifier, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = idExpr;
-    // e->addressable = true;
     e->val.id = strdup(identifier);
     return e;
 }
@@ -45,8 +44,17 @@ EXP *makeStringItpExp(char *stringval, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = stringItpExpr;
-    // e->addressable = false;
-    e->val.stringVal = strdup(stringval);
+    char *itpString = malloc(strlen(stringval)+1);
+    char *ptrSource = stringval+1;
+    char *ptrDest = itpString;
+    while (*ptrSource) {
+        *ptrDest = *ptrSource;
+        ptrDest++;
+        ptrSource++;
+    }
+    ptrDest--;
+    *ptrDest = '\0';
+    e->val.stringVal = strdup(itpString);
     return e;
 }
 
@@ -54,7 +62,6 @@ EXP *makeStringRawExp(char *stringval, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = stringRawExpr;
-    // e->addressable = false;
     char *itpString = malloc(strlen(stringval) * 2 + 1);
     char *ptrSource = stringval;
     char *ptrDest = itpString;
@@ -167,7 +174,6 @@ EXP *makeRuneExp(char *runeval, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = runeExpr;
-    // e->addressable = false;
     e->val.runeVal = rune;
     return e;
 }
@@ -176,7 +182,6 @@ EXP *makeIntExp(int intval, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = intExpr;
-    // e->addressable = false;
     e->val.intVal = intval;
     return e;
 }
@@ -185,7 +190,6 @@ EXP *makeFloat64Exp(double float64val, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = floatExpr;
-    // e->addressable = false;
     e->val.floatVal = float64val;
     return e;
 }
@@ -194,7 +198,6 @@ EXP *makeBinaryExp(ExpKind kind, EXP *lhs, EXP *rhs, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = kind;
-    // e->addressable = lhs->addressable && rhs->addressable;
     e->val.binary.lhs = lhs;
     e->val.binary.rhs = rhs;
     return e;
@@ -204,7 +207,6 @@ EXP *makeUnaryExp(ExpKind kind, EXP *exp, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = kind;
-    // e->addressable = exp->addressable;
     e->val.unary.exp = exp;
     return e;
 }
@@ -213,7 +215,6 @@ EXP *makeFuncExp(EXP *func_exp, EXP *args, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = funcExpr;
-    // e->addressable = false;
     e->val.func.name = func_exp;
     e->val.func.args = args;
     return e;
@@ -223,7 +224,6 @@ EXP *makeCastExp(TYPE *type, EXP *exp, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = castExpr;
-    // e->addressable = false;
     e->val.cast.exp = exp;
     return e;
 }
@@ -232,7 +232,6 @@ EXP *makeAppendExp(EXP *head, EXP *tail, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = appendExpr;
-    // e->addressable = false;
     e->val.append.head = head;
     e->val.append.tail = tail;
     return e;
@@ -242,7 +241,6 @@ EXP *makeArrayIndexExp(EXP *array_exp, EXP *index, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = arrayExpr;
-    // e->addressable = array_exp->addressable;
     e->val.array.exp = array_exp;
     e->val.array.index = index;
     return e;
@@ -252,7 +250,6 @@ EXP *makeSelectorExp(EXP *struct_exp, char *field_name, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = selectorExpr;
-    // e->addressable = true;//struct_exp->addressable;
     e->val.selector.exp = struct_exp;
     e->val.selector.name = strdup(field_name);
     return e;
@@ -262,7 +259,6 @@ EXP *makeLenExp(EXP *exp, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = lenExpr;
-    // e->addressable = false;
     e->val.expr = exp;
     return e;
 }
@@ -271,7 +267,6 @@ EXP *makeCapExp(EXP *exp, int lineno) {
     EXP *e = malloc(sizeof(EXP));
     e->lineno = lineno;
     e->kind = capExpr;
-    // e->addressable = false;
     e->val.expr = exp;
     return e;
 }

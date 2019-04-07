@@ -168,6 +168,7 @@ TYPE *makeTypeT(TYPE *t1, int lineno);
 struct ID_LIST {
     int lineno;
     char *id;
+    unsigned long long uid;
     TYPE *type;
     ID_LIST *next;
 };
@@ -179,7 +180,7 @@ ID_LIST *makeIdList(ID_LIST *l, char *id, int lineno);
 struct EXP {
     int lineno;
     ExpKind kind;
-    // bool addressable;
+    unsigned long long uid;
     union {
         char *id;
         char *stringVal;

@@ -5,11 +5,11 @@
 void codePROGRAM(PROGRAM *root, char *file_name);
 void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt);
 void codeImports(IMPORT *i);
-void codeDecl(DCL* d, int infunc);
-void codeTypeDcl(TYPEDECL *t);
-void codeVarDcl(VARDECL *v, int infunc);
+void codeDecl(DCL* d, int to_indent);
+void codeTypeDcl(TYPEDECL *t, int to_indent);
+void codeVarDcl(VARDECL *v, int to_indent);
 void codeTypeSpec(TYPESPEC *ts, int needParen);
-void codeVarSpec(VARSPEC *vs, int infunc);
+void codeVarSpec(VARSPEC *vs, int to_indent);
 void prettType(TYPE *t);
 void codeField_Dcl(FIELD_DCL *f);
 void codeIDList(ID_LIST *i, bool func_params);
