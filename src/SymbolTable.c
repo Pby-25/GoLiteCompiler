@@ -66,6 +66,7 @@ SYMBOL *putSymbol(SymbolTable *t, char *id, TYPE *type, symbolKind sk) {
     SYMBOL *s = malloc(sizeof(SYMBOL));
     s->name = id;
     s->uid = sk == sk_varDcl ? variable_id++ : 0;
+    s->scope = t;
     SYMBOL *variableType = NULL;
     if (type != NULL && type->id != NULL) {
         variableType = getSymbol(t, type->id);
@@ -602,7 +603,9 @@ TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
         
         if (strcmp(i->id, "_") != 0) {
             putSymbol(s, i->id, t, sk_varDcl);
-            i->uid = getSymbol(s, i->id)->uid;
+            SYMBOL *isb = getSymbol(s, i->id);
+            i->uid = isb->uid;
+            i->top_level = isb->scope == top_level_table;
         }
 
         if (funcType != NULL) {
@@ -916,6 +919,7 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
                 }
                 isTypeBaseType(sbb->type, true);
                 exp->uid = sbb->uid;
+                exp->top_level = sbb->scope == top_level_table;
                 exp->type = sbb->type;
             }
         } else {

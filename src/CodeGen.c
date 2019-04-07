@@ -325,6 +325,8 @@ void codeIDList(ID_LIST *i, bool func_params) {
     if (i != NULL) {
         if (func_params && strcmp(i->id, "_") == 0){
             printf("___%d", getUID());
+        } else if (i->top_level){
+            printf("globals()['_%llu']", i->uid);
         } else {
             // printf("___%s", i->id);
             printf("_%llu", i->uid);
@@ -626,7 +628,11 @@ void codeEXP(EXP *exp, bool to_copy) {
         break;
     case idExpr:
         // printf("___%s", exp->val.id);
-        printf("_%llu", exp->uid);
+        if (exp->top_level){
+            printf("globals()['_%llu']", exp->uid);
+        } else {
+            printf("_%llu", exp->uid);
+        }
         break;
     case intExpr:
         printf("%d", exp->val.intVal);
@@ -697,9 +703,9 @@ void codeCASE_CLAUSE(CASE_CLAUSE *c, int cond_var, bool first_case) {
 
 void codeAssignStmt(STMT *stmt) {
     if (stmt != NULL) {
-        printf("try:\n");
-        code_indentation++;
-        indent();
+        // printf("try:\n");
+        // code_indentation++;
+        // indent();
         codeEXP(stmt->val.assignStmtVal.lhs, false);
         switch (stmt->val.assignStmtVal.assignKind) {
         case normal:
@@ -740,55 +746,55 @@ void codeAssignStmt(STMT *stmt) {
             break;
         }
         codeEXP(stmt->val.assignStmtVal.rhs, true);
-        code_indentation--;
-        printf("\n");
-        indent();
-        printf("except UnboundLocalError:\n"); // Will only occur in function call
-        code_indentation++;
-        indent();
-        printf("globals()['");
-        codeEXP(stmt->val.assignStmtVal.lhs, false);
-        printf("']");
-        switch (stmt->val.assignStmtVal.assignKind) {
-        case normal:
-            printf(" = ");
-            break;
-        case plus:
-            printf(" += ");
-            break;
-        case minus:
-            printf(" -= ");
-            break;
-        case mult:
-            printf(" *= ");
-            break;
-        case divide:
-            printf(" /= ");
-            break;
-        case or:
-            printf(" |= ");
-            break;
-        case xor:
-            printf(" ^= ");
-            break;
-        case mod:
-            printf(" %%= ");
-            break;
-        case leftShift:
-            printf(" <<= ");
-            break;
-        case rightShift:
-            printf(" >>= ");
-            break;
-        case and:
-            printf(" &= ");
-            break;
-        case bitclear:
-            printf(" &= ~");
-            break;
-        }
-        codeEXP(stmt->val.assignStmtVal.rhs, true);
-        code_indentation--;
+        // code_indentation--;
+        // printf("\n");
+        // indent();
+        // printf("except UnboundLocalError:\n"); // Will only occur in function call
+        // code_indentation++;
+        // indent();
+        // printf("globals()['");
+        // codeEXP(stmt->val.assignStmtVal.lhs, false);
+        // printf("']");
+        // switch (stmt->val.assignStmtVal.assignKind) {
+        // case normal:
+        //     printf(" = ");
+        //     break;
+        // case plus:
+        //     printf(" += ");
+        //     break;
+        // case minus:
+        //     printf(" -= ");
+        //     break;
+        // case mult:
+        //     printf(" *= ");
+        //     break;
+        // case divide:
+        //     printf(" /= ");
+        //     break;
+        // case or:
+        //     printf(" |= ");
+        //     break;
+        // case xor:
+        //     printf(" ^= ");
+        //     break;
+        // case mod:
+        //     printf(" %%= ");
+        //     break;
+        // case leftShift:
+        //     printf(" <<= ");
+        //     break;
+        // case rightShift:
+        //     printf(" >>= ");
+        //     break;
+        // case and:
+        //     printf(" &= ");
+        //     break;
+        // case bitclear:
+        //     printf(" &= ~");
+        //     break;
+        // }
+        // codeEXP(stmt->val.assignStmtVal.rhs, true);
+        // code_indentation--;
     }
 }
 
@@ -921,38 +927,38 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             codeAssignStmt(stmt);
             break;
         case incStmt:
-            printf("try:\n");
-            code_indentation++;
-            indent();
+            // printf("try:\n");
+            // code_indentation++;
+            // indent();
             codeEXP(stmt->val.incExp, false);
-            printf("+=1\n");
-            code_indentation--;
-            printf("\n");
-            indent();
-            printf("except UnboundLocalError:\n"); // Will only occur in function call
-            code_indentation++;
-            indent();
-            printf("globals()['");
-            codeEXP(stmt->val.incExp, false);
-            printf("']+=1");
-            code_indentation--;
+            printf("+=1");
+            // code_indentation--;
+            // printf("\n");
+            // indent();
+            // printf("except UnboundLocalError:\n"); // Will only occur in function call
+            // code_indentation++;
+            // indent();
+            // printf("globals()['");
+            // codeEXP(stmt->val.incExp, false);
+            // printf("']+=1");
+            // code_indentation--;
             break;
         case decStmt:
-            printf("try:\n");
-            code_indentation++;
-            indent();
+            // printf("try:\n");
+            // code_indentation++;
+            // indent();
             codeEXP(stmt->val.decExp, false);
-            printf("-=1\n");
-            code_indentation--;
-            printf("\n");
-            indent();
-            printf("except UnboundLocalError:\n"); // Will only occur in function call
-            code_indentation++;
-            indent();
-            printf("globals()['");
-            codeEXP(stmt->val.decExp, false);
-            printf("']-=1");
-            code_indentation--;
+            printf("-=1");
+            // code_indentation--;
+            // printf("\n");
+            // indent();
+            // printf("except UnboundLocalError:\n"); // Will only occur in function call
+            // code_indentation++;
+            // indent();
+            // printf("globals()['");
+            // codeEXP(stmt->val.decExp, false);
+            // printf("']-=1");
+            // code_indentation--;
             break;
         case shortVarDecStmt:
             codeIDList(stmt->val.shortVarDecStmtVal.ids, false);

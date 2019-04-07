@@ -169,6 +169,7 @@ struct ID_LIST {
     int lineno;
     char *id;
     unsigned long long uid;
+    bool top_level;
     TYPE *type;
     ID_LIST *next;
 };
@@ -181,6 +182,7 @@ struct EXP {
     int lineno;
     ExpKind kind;
     unsigned long long uid;
+    bool top_level;
     union {
         char *id;
         char *stringVal;

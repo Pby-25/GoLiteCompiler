@@ -10,6 +10,7 @@ typedef enum { mainK, initK } speicialFuncK;
 typedef struct SYMBOL {
     char *name;
     unsigned long long uid;
+    struct SymbolTable *scope;
     TYPE *type;
     symbolKind kind;
     struct SYMBOL *next;
