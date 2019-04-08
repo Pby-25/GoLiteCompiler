@@ -67,16 +67,22 @@ void codeHelperCast(){
 
 void codeHelperAppend(){
     printf("def appending(slicer, newcomer):\n");
-    printf("    if slicer.count(None) > 0:\n");
-    printf("        if slicer.count(None) != 1:\n");
-    printf("            i = slicer.index(None)\n");
-    printf("            return [element if index != i else newcomer for index, element in enumerate(slicer)]\n");
-    printf("        else:\n");
-    printf("            slicer[-1] = newcomer\n");
-    printf("            return slicer\n");
+    printf("    curr_len = len(slicer):\n");
+    printf("    if (curr_len + 1)&curr_len == 0:\n");
+    printf("        slicer.append(newcomer)\n");
+    printf("        return slicer\n");
     printf("    else:\n");
-    printf("        return slicer + [newcomer] + [None]*abs(len(slicer)-1)\n");
-    printf("    return exp\n");   
+    printf("        return slicer + [newcomer]\n");
+}
+
+void codeHelperSliceCap(){
+    printf("def slice_cap(slice):\n");
+    printf("    curr_len = len(slice):\n");
+    printf("    if curr_len != 1 and curr_len&(curr_len-1) == 0:\n");
+    printf("        return curr_len\n");
+    printf("    else:\n");
+    printf("        bin(curr_len)\n");
+    printf("        return 2**curr_len.bit_length()\n");
 }
 
 void codeHelperBasicTypes(){
@@ -105,6 +111,7 @@ void codeImports(IMPORT *i) {
     codeHelperFloatFormatCheck();
     codeHelperCast();
     codeHelperAppend();
+    codeHelperSliceCap();
     codeHelperBasicTypes();
 }
 
@@ -589,8 +596,13 @@ void codeEXP(EXP *exp, bool to_copy) {
         printf(")");
         break;
     case lenExpr:
+        printf("len(");
+        codeEXP(exp->val.expr, false);
+        printf(")");
+        break;
+    case capExpr:
         if (isSlices(exp->type)) {
-            printf("sum(x is not None for x in ");
+            printf("slice_cap(");
             codeEXP(exp->val.expr, false);
             printf(")");
         } else {
@@ -598,11 +610,6 @@ void codeEXP(EXP *exp, bool to_copy) {
             codeEXP(exp->val.expr, false);
             printf(")");
         }
-        break;
-    case capExpr:
-        printf("len(");
-        codeEXP(exp->val.expr, false);
-        printf(")");
         break;
     case arrayExpr:
         codeEXP(exp->val.array.exp, false);
