@@ -680,7 +680,7 @@ void symbolResult(SymbolTable *t, SymbolTable *new_st, RESULT *r,
                 funcType->result = symbol->type;
                 r->type = symbol->type;
             } else {
-                funcType->result = resolveType(t, r->type, true);
+                funcType->result = resolveType(t, r->type, false);
             }
         }
     } else {

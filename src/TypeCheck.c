@@ -239,12 +239,12 @@ void typeTypeSpec(TYPESPEC *ts, int needParen) {
 void typeIdListExpList(ID_LIST *idl, EXP *el) {
     ID_LIST *ic = idl;
     EXP *ec = el;
+    typeEXP(ec);
     while (ic != NULL && ec != NULL) {
         if (!checkSameType(ic->type, ec->type, false)) {
             // printf("maybe here\n");
             errorType(ic->type->id, ec->type->id, ic->lineno);
         }
-        typeEXP(ec);
         ic = ic->next;
         ec = ec->next;
     }
@@ -254,7 +254,7 @@ void typeVarSpec(VARSPEC *vs) {
     if (vs == NULL) {
         return;
     }
-    typeEXP(vs->exp_list);
+    // typeEXP(vs->exp_list);
     typeIdListExpList(vs->id_list, vs->exp_list);
     typeVarSpec(vs->next);
 }
