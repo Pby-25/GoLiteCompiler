@@ -67,7 +67,7 @@ void codeHelperCast(){
 
 void codeHelperAppend(){
     printf("def appending(slicer, newcomer):\n");
-    printf("    curr_len = len(slicer):\n");
+    printf("    curr_len = len(slicer)\n");
     printf("    if (curr_len + 1)&curr_len == 0:\n");
     printf("        slicer.append(newcomer)\n");
     printf("        return slicer\n");
@@ -77,7 +77,7 @@ void codeHelperAppend(){
 
 void codeHelperSliceCap(){
     printf("def slice_cap(slice):\n");
-    printf("    curr_len = len(slice):\n");
+    printf("    curr_len = len(slice)\n");
     printf("    if curr_len != 1 and curr_len&(curr_len-1) == 0:\n");
     printf("        return curr_len\n");
     printf("    else:\n");
@@ -576,7 +576,7 @@ void codeEXP(EXP *exp, bool to_copy) {
 
     case funcExpr:
         printf("___%s(", exp->val.func.name->val.id);
-        codeEXP(exp->val.func.args, false);
+        codeEXP(exp->val.func.args, true);
         printf(")");
         break;
 
@@ -605,6 +605,7 @@ void codeEXP(EXP *exp, bool to_copy) {
             printf("slice_cap(");
             codeEXP(exp->val.expr, false);
             printf(")");
+
         } else {
             printf("len(");
             codeEXP(exp->val.expr, false);
@@ -675,12 +676,13 @@ void codeCASE_CLAUSE(CASE_CLAUSE *c, int cond_var, bool first_case) {
         switch (c->kind) {
         case caseK:
             if (first_case){
-                printf("if ___%d == (", cond_var);
+                printf("if ___%d in {", cond_var);
             } else {
-                printf("elif ___%d == (", cond_var);
+                printf("elif ___%d in {", cond_var);
             }
             codeEXP(c->caseExp, false);
-            printf("):\n");
+            printf("}:\n");
+            // Best memory usage according to https://stackoverflow.com/questions/31422253/python-in-vs-which-to-use-in-this-case
             break;
         case defaultK:
             if (first_case){
