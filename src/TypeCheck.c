@@ -389,6 +389,18 @@ bool isArrayOrSlice(TYPE *t) {
     return false;
 }
 
+bool isArray(TYPE *t) {
+    if (t == NULL) {
+        return false;
+    }
+    if (t->kind == k_array) {
+        return true;
+    } else {
+        return isArray(t->underLineType);
+    }
+    return false;
+}
+
 bool isValidSliceType(TYPE *type) {
     if (type == NULL)
         return false;

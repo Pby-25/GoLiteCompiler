@@ -242,7 +242,7 @@ void codeDefaultValues(TYPE *t){
             break;
     
         default:
-            printf("deepcopy(___%s)", t->id);
+            printf("___%s", t->id);
             break;
     }
 }
@@ -409,7 +409,7 @@ void codeTopDecl(TOPDECL *t) {
 void codeEXP(EXP *exp, bool to_copy) {
     if (exp == NULL)
         return;
-    if (to_copy && !isSlices(exp->type)){
+    if (to_copy && (isArray(exp->type) || isStruct(exp->type))){
         printf("deepcopy(");
     }
     switch (exp->kind) {
@@ -653,7 +653,7 @@ void codeEXP(EXP *exp, bool to_copy) {
     default:
         break;
     }
-    if (to_copy && !isSlices(exp->type)){
+    if (to_copy && (isArray(exp->type) || isStruct(exp->type))){
         printf(")");
     }
     if (exp->next != NULL) {
