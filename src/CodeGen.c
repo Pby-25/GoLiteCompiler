@@ -616,22 +616,11 @@ void codeEXP(EXP *exp, bool to_copy) {
         }
         break;
     case arrayExpr:
-        codeEXP(exp->val.array.exp, false);
-        printf("[");
-        codeEXP(exp->val.array.index, false);
-        printf("]");
-        break;
     case sliceExpr:
         codeEXP(exp->val.array.exp, false);
         printf("[");
         codeEXP(exp->val.array.index, false);
-        printf(" if ");
-        codeEXP(exp->val.array.exp, false);
-        printf("[");
-        codeEXP(exp->val.array.index, false);
-        printf("] is not None else len(");
-        codeEXP(exp->val.array.exp, false);
-        printf(")]");
+        printf("]");
         break;
     case selectorExpr:
         codeEXP(exp->val.selector.exp, false);
