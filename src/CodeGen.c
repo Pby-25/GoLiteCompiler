@@ -65,15 +65,15 @@ void codeHelperCast(){
     printf("    return exp\n");   
 }
 
-void codeHelperAppend(){
-    printf("def appending(slicer, newcomer):\n");
-    printf("    curr_len = len(slicer)\n");
-    printf("    if (curr_len + 1)&curr_len == 0:\n");
-    printf("        slicer.append(newcomer)\n");
-    printf("        return slicer\n");
-    printf("    else:\n");
-    printf("        return slicer + [newcomer]\n");
-}
+// void codeHelperAppend(){
+//     printf("def appending(slicer, newcomer):\n");
+//     printf("    curr_len = len(slicer)\n");
+//     printf("    if curr_len == 1 or curr_len&(curr_len-1) != 0:\n");
+//     printf("        slicer.append(newcomer)\n");
+//     printf("        return slicer\n");
+//     printf("    else:\n");
+//     printf("        return slicer + [newcomer]\n");
+// }
 
 void codeHelperSliceCap(){
     printf("def slice_cap(slice):\n");
@@ -110,7 +110,7 @@ void codeImports(IMPORT *i) {
     codeHelperPass();
     codeHelperFloatFormatCheck();
     codeHelperCast();
-    codeHelperAppend();
+    // codeHelperAppend();
     codeHelperSliceCap();
     codeHelperBasicTypes();
 }
@@ -595,11 +595,13 @@ void codeEXP(EXP *exp, bool to_copy, char *switch_clause) {
         break;
 
     case appendExpr:
-        printf("appending(");
+        // printf("appending(");
         codeEXP(exp->val.append.head, false, NULL);
-        printf(", ");
+        // printf(", ");
+        printf(" + [");
         codeEXP(exp->val.append.tail, false, NULL);
-        printf(")");
+        printf("]");
+        // printf(")");
         break;
     case lenExpr:
         printf("len(");
