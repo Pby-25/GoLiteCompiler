@@ -223,31 +223,34 @@ void codeDefaultValues(TYPE *t){
             printf("[]");
             break;
         case k_array:
-            printf("[");
+            printf("[deepcopy(");
             codeDefaultValues(t->underLineType);
-            printf(" for _ in range(%d)]", t->array_type.size);
+            printf(") for _ in range(%d)]", t->array_type.size);
             break;
         case k_type_struct:
-            printf("{");
-            FIELD_DCL *f = t->struct_type.field_dcls;
-            while(f){
-                ID_LIST *i = f->id_list;
-                while(i){
-                    printf("\"%s\": ", i->id);
-                    codeDefaultValues(f->type);
-                    if(i->next){
+            if (strcmp(t->id, "struct") == 0){
+                printf("{");
+                FIELD_DCL *f = t->struct_type.field_dcls;
+                    while(f){
+                    ID_LIST *i = f->id_list;
+                    while(i){
+                        printf("\"%s\": ", i->id);
+                        codeDefaultValues(f->type);
+                        if(i->next){
+                            printf(", ");
+                        }
+                        i = i->next;
+                    }
+                    if(f->next){
                         printf(", ");
                     }
-                    i = i->next;
+                    f = f->next;
                 }
-                if(f->next){
-                    printf(", ");
-                }
-                f = f->next;
+                printf("}");
+            } else {
+                printf("deepcopy(___%s)", t->id);
             }
-            printf("}");
             break;
-    
         default:
             printf("___%s", t->id);
             break;
