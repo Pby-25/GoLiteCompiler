@@ -19,7 +19,7 @@ void codeResult(RESULT *r);
 void codeSig(SIGNATURE *s);
 void codeFuncDecl(FUNCDECL *f);
 void codeTopDecl(TOPDECL* t);
-void codeEXP(EXP *exp, bool to_copy);
+void codeEXP(EXP *exp, bool to_copy, char *switch_clause);
 void codeCASE_CLAUSE(CASE_CLAUSE *c, int cond_var, bool first_case);
 void typeIdListExpList(ID_LIST *idl, EXP *el);
 
