@@ -287,7 +287,7 @@ TYPE *resolveType(SymbolTable *st, TYPE *ts, bool print) {
             if (ts->kind == k_infer) {
                 return ts;
             }
-            errorNotDeclared(ts->lineno, "type", ts->id);
+            errorNotDeclared(ts->lineno, "type1", ts->id);
         }
     }
 }
@@ -551,9 +551,15 @@ bool isTypeDeclared(SymbolTable *st, TYPE *t, bool check_outer_scope) {
     return false;
 }
 
-TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
+TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *ti, TYPE *funcType,
                    bool allowAssignment, bool check_outer_scope) {
     TYPE *typeInTable = NULL;
+    TYPE *t = NULL;
+    if (ti != NULL && ti->kind==k_funcsig){
+        t = ti->result;
+    } else {
+        t = ti;
+    }
     if (i != NULL) {
         if (getSymbolCurrentScope(s, i->id) != NULL && !allowAssignment) {
             fprintf(stderr,
@@ -594,7 +600,7 @@ TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
                 if (t->kind == k_infer) {
 
                 } else {
-                    errorNotDeclared(i->lineno, "type", t->id);
+                    errorNotDeclared(i->lineno, "type3", t->id);
                 }
             }
         }

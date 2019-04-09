@@ -30,11 +30,6 @@ void codeHelperBreak(){
     printf("    pass\n");
 }
 
-void codeHelperPass(){
-    printf("def do_nothing():\n");
-    printf("    pass\n");
-}
-
 void codeHelperFloatFormatCheck(){
     printf("def format_check(*args):\n");
     printf("    res=[]\n");
@@ -92,7 +87,6 @@ void indent() {
 void codeImports(IMPORT *i) {
     printf("from copy import deepcopy\n");
     codeHelperBreak();
-    codeHelperPass();
     codeHelperFloatFormatCheck();
     codeHelperCast();
     codeHelperSliceCap();
@@ -531,7 +525,7 @@ void codeEXP(EXP *exp, bool to_copy, char *switch_clause) {
     }
 }
 
-void codeCASE_CLAUSE(CASE_CLAUSE *c, int cond_var, bool first_case) {
+void codeCASE_CLAUSE(CASE_CLAUSE *c, int cond_var, bool first_case, STMT *post_stmt) {
     if (c != NULL) {
         indent();
         switch (c->kind) {
@@ -558,13 +552,13 @@ void codeCASE_CLAUSE(CASE_CLAUSE *c, int cond_var, bool first_case) {
         }
         code_indentation++;
         if (c->caseStmt != NULL){
-            codeSTMT(c->caseStmt, true, true, NULL);
+            codeSTMT(c->caseStmt, true, true, post_stmt);
         } else {
             indent();
             printf("pass\n");
         }
         code_indentation--;
-        codeCASE_CLAUSE(c->next, cond_var, false);
+        codeCASE_CLAUSE(c->next, cond_var, false, post_stmt);
     }
 }
 
@@ -614,7 +608,7 @@ void codeAssignStmt(STMT *stmt) {
 }
 
 void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
-    if (to_indent && stmt!=NULL && stmt->kind != emptyStmt) {
+    if (to_indent && stmt!=NULL && stmt->kind != emptyStmt && stmt->kind != blockStmt) {
         indent();
     }
     if (stmt != NULL) {
@@ -630,8 +624,7 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             printf("raise Broke");
             break;
         case blockStmt:
-            printf("do_nothing()\n");
-            codeSTMT(stmt->val.block, true, true, NULL);
+            codeSTMT(stmt->val.block, true, true, post_stmt);
             break;
         case ifStmt:            
             if (stmt->val.ifStmtVal.ifSimpleStmt != NULL) {
@@ -643,14 +636,14 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             printf(":\n");
             code_indentation++;
             if (stmt->val.ifStmtVal.ifBody->val.block != NULL){
-                codeSTMT(stmt->val.ifStmtVal.ifBody->val.block, true, true, NULL);
+                codeSTMT(stmt->val.ifStmtVal.ifBody->val.block, true, true, post_stmt);
             } else {
                 indent();
                 printf("pass\n");
             }            
             code_indentation--;
             if (stmt->val.ifStmtVal.elseStmt != NULL){
-                codeSTMT(stmt->val.ifStmtVal.elseStmt, true, true, NULL);
+                codeSTMT(stmt->val.ifStmtVal.elseStmt, true, true, post_stmt);
             }
             break;
         case elseStmt:
@@ -658,7 +651,7 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             if(stmt->val.elseStmtVal.elseBody != NULL){
                 code_indentation++;
                 if (stmt->val.elseStmtVal.elseBody->val.block != NULL){
-                    codeSTMT(stmt->val.elseStmtVal.elseBody->val.block, true, true, NULL);
+                    codeSTMT(stmt->val.elseStmtVal.elseBody->val.block, true, true, post_stmt);
                 } else {
                     indent();
                     printf("pass\n");
@@ -667,7 +660,7 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             }
             if (stmt->val.elseStmtVal.ifStmt != NULL){
                 code_indentation++;
-                codeSTMT(stmt->val.elseStmtVal.ifStmt, true, true, NULL);
+                codeSTMT(stmt->val.elseStmtVal.ifStmt, true, true, post_stmt);
                 code_indentation--;
             }
 
@@ -701,7 +694,7 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
                 codeEXP(stmt->val.switchStmtVal.switchExp, false, NULL);
             }
             printf("\n");
-            codeCASE_CLAUSE(stmt->val.switchStmtVal.switchCases, temporaryVar, true);
+            codeCASE_CLAUSE(stmt->val.switchStmtVal.switchCases, temporaryVar, true, post_stmt);
             code_indentation--;
             indent();
             printf("except Broke:\n");
