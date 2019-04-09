@@ -65,16 +65,6 @@ void codeHelperCast(){
     printf("    return exp\n");   
 }
 
-// void codeHelperAppend(){
-//     printf("def appending(slicer, newcomer):\n");
-//     printf("    curr_len = len(slicer)\n");
-//     printf("    if curr_len == 1 or curr_len&(curr_len-1) != 0:\n");
-//     printf("        slicer.append(newcomer)\n");
-//     printf("        return slicer\n");
-//     printf("    else:\n");
-//     printf("        return slicer + [newcomer]\n");
-// }
-
 void codeHelperSliceCap(){
     printf("def slice_cap(slice):\n");
     printf("    curr_len = len(slice)\n");
@@ -100,17 +90,11 @@ void indent() {
 }
 
 void codeImports(IMPORT *i) {
-    // printf("import copy\n");
     printf("from copy import deepcopy\n");
-    // if (i != NULL) {
-    //     // printf("#import %s\n", i->id);
-    //     codeImports(i->next);
-    // }
     codeHelperBreak();
     codeHelperPass();
     codeHelperFloatFormatCheck();
     codeHelperCast();
-    // codeHelperAppend();
     codeHelperSliceCap();
     codeHelperBasicTypes();
 }
@@ -129,10 +113,7 @@ void codeDecl(DCL *d, int to_indent) {
 }
 void codeTypeDcl(TYPEDECL *t, int to_indent) {
     if (t != NULL) {
-        // printf("type ");
-        // code_indentation ++;
         codeTypeSpec(t->typeSpec, to_indent);
-        // code_indentation --;
     }
 }
 
@@ -140,80 +121,6 @@ void codeVarDcl(VARDECL *v, int to_indent) {
     if (v != NULL) {
         codeVarSpec(v->var_specs, to_indent);
     }
-}
-
-char *getDefalutValues(TYPE *t){
-    if(t==NULL || t->id == NULL){
-        return NULL;
-    }
-    char *id = t->id;
-    char *defVal;
-    if (strcmp(id, "float64") == 0) {
-        return "0.0";
-    } else if (strcmp(id, "bool") == 0) {
-       return"False";
-    } else if (strcmp(id, "rune") == 0) {
-        return"\"\"";
-    } else if (strcmp(id, "string") == 0) {
-       return"\"\"";
-    } else if (strcmp(id, "int") == 0) {
-        return "0";
-    } else { 
-        // define new thpe
-        if(t->kind == k_slices) {
-            char *s = (char*)malloc(100 * sizeof(char));
-            char *defVal;
-            if(t->underLineType && isTypeBaseType(t->underLineType, false)){
-                defVal = "";
-                sprintf(s, "list(%s)", defVal);
-                return s;
-            }else{
-                defVal = getDefalutValues(t->underLineType);
-            }
-            sprintf(s, "list(%s)", defVal);
-            return s;
-        } else if(t->kind == k_array){
-            char *s = (char*)malloc(100 * sizeof(char));
-            char *defVal = getDefalutValues(t->underLineType);
-            sprintf(s, "[%s for _ in range(%d)]", defVal, t->array_type.size);
-            return s;
-        } else if(t->kind == k_type_struct){
-            char defVal[1000];
-            memset(defVal ,'\0', 1000);
-            FIELD_DCL *f = t->struct_type.field_dcls;
-            while(f){
-                ID_LIST *t = f->id_list;
-                while(t){
-                    char *st = (char*)malloc(100 * sizeof(char));
-                    char *dd = getDefalutValues(f->type);
-                    sprintf(st, "\"%s\": %s", t->id, dd);
-                    strcat(defVal, st);
-                    if(t->next){
-                        strcat(defVal, ", ");
-                    }
-                    t = t->next;
-                }
-                if(f->next){
-                    strcat(defVal, ", ");
-                }
-                f = f->next;
-            }
-            char *s = (char*)malloc(1000 * sizeof(char));
-            memset(s ,'\0', 1000);
-            sprintf(s, "{%s}", defVal);
-            return s;
-        } else {
-            // type already defined
-            char *s = (char*)malloc(1000 * sizeof(char));
-            memset(s ,'\0', 1000);
-            sprintf(s, "copy.deepcopy(%s)", id);
-            return s;
-        }
-    }
-    // } else {
-    //     return getDefalutValues(t->underLineType);
-    // }
-    return NULL;
 }
 
 void codeDefaultValues(TYPE *t){
@@ -267,30 +174,7 @@ void codeTypeSpec(TYPESPEC *ts, int to_indent) {
     printf("___%s = ", ts->id);
     codeDefaultValues(ts->type);
     printf("\n");
-
-    // char *defVal = getDefalutValues(ts->type);
-    // printf("%s = ", ts->id);
-    // printf("%s\n", defVal);
-
     codeTypeSpec(ts->next,1);
-}
-
-void codeVarTypes(TYPE *t){
-     if(t==NULL || t->id == NULL){
-        return;
-    }
-
-    char *defVal = getDefalutValues(t);
-    printf("%s", defVal);
-    if(t->kind == k_array){
-        char *defVal = getDefalutValues(t);
-        printf("%s", defVal);
-    }else if( t->kind == k_slices){
-        char *defVal = getDefalutValues(t);
-        printf("%s", defVal);
-    }else {
-        printf("%s", defVal);
-    }
 }
 
 void codeVarSpec(VARSPEC *vs, int to_indent) {
@@ -316,16 +200,6 @@ void codeVarSpec(VARSPEC *vs, int to_indent) {
             }
             i = i->next;
         }
-
-        // printf("= ");
-        // ID_LIST * t = vs->id_list;
-        // while(t){
-        //     codeVarTypes(vs->type);
-        //     if(t->next){
-        //         printf(", ");
-        //     }
-        //     t = t->next;
-        // }
     }
     printf("\n");
     codeVarSpec(vs->next, 1);
@@ -338,7 +212,6 @@ void codeIDList(ID_LIST *i, bool func_params) {
         } else if (i->top_level){
             printf("globals()['_%llu']", i->uid);
         } else {
-            // printf("___%s", i->id);
             printf("_%llu", i->uid);
         }
         if (i->next != NULL) {
@@ -405,16 +278,6 @@ void codeTopDecl(TOPDECL *t) {
         codeTopDecl(t->next);
     }
 }
-
-// void codeCastBaseType(TYPE *type, EXP *exp ) {
-    // if (type == NULL || exp == NULL) return;
-    // switch (type->id) {
-    //     case "int": 
-    //     case "float64":
-    //     case "bool":
-        
-    // }
-// }
 
 void codeEXP(EXP *exp, bool to_copy, char *switch_clause) {
     if (exp == NULL)
@@ -587,21 +450,16 @@ void codeEXP(EXP *exp, bool to_copy, char *switch_clause) {
         break;
 
     case castExpr:
-        // codeCastBaseType(exp->val.cast.type, exp->val.cast.exp);
-        // (exp->val.cast.type);
         printf("casting(___%s, ", exp->type->id);
         codeEXP(exp->val.cast.exp, false, NULL);
         printf(")");
         break;
 
     case appendExpr:
-        // printf("appending(");
         codeEXP(exp->val.append.head, false, NULL);
-        // printf(", ");
         printf(" + [");
         codeEXP(exp->val.append.tail, false, NULL);
         printf("]");
-        // printf(")");
         break;
     case lenExpr:
         printf("len(");
@@ -632,7 +490,6 @@ void codeEXP(EXP *exp, bool to_copy, char *switch_clause) {
         printf("[\"%s\"]", exp->val.selector.name);
         break;
     case idExpr:
-        // printf("___%s", exp->val.id);
         if (exp->top_level){
             printf("globals()['_%llu']", exp->uid);
         } else {
@@ -700,18 +557,12 @@ void codeCASE_CLAUSE(CASE_CLAUSE *c, int cond_var, bool first_case) {
             break;
         }
         code_indentation++;
-        // indent();
-        // printf("def ___():\n");
-        // code_indentation++;
         if (c->caseStmt != NULL){
             codeSTMT(c->caseStmt, true, true, NULL);
         } else {
             indent();
             printf("pass\n");
         }
-        // code_indentation--;
-        // indent();
-        // printf("___()\n");
         code_indentation--;
         codeCASE_CLAUSE(c->next, cond_var, false);
     }
@@ -719,9 +570,6 @@ void codeCASE_CLAUSE(CASE_CLAUSE *c, int cond_var, bool first_case) {
 
 void codeAssignStmt(STMT *stmt) {
     if (stmt != NULL) {
-        // printf("try:\n");
-        // code_indentation++;
-        // indent();
         codeEXP(stmt->val.assignStmtVal.lhs, false, NULL);
         switch (stmt->val.assignStmtVal.assignKind) {
         case normal:
@@ -762,55 +610,6 @@ void codeAssignStmt(STMT *stmt) {
             break;
         }
         codeEXP(stmt->val.assignStmtVal.rhs, true, NULL);
-        // code_indentation--;
-        // printf("\n");
-        // indent();
-        // printf("except UnboundLocalError:\n"); // Will only occur in function call
-        // code_indentation++;
-        // indent();
-        // printf("globals()['");
-        // codeEXP(stmt->val.assignStmtVal.lhs, false, NULL);
-        // printf("']");
-        // switch (stmt->val.assignStmtVal.assignKind) {
-        // case normal:
-        //     printf(" = ");
-        //     break;
-        // case plus:
-        //     printf(" += ");
-        //     break;
-        // case minus:
-        //     printf(" -= ");
-        //     break;
-        // case mult:
-        //     printf(" *= ");
-        //     break;
-        // case divide:
-        //     printf(" /= ");
-        //     break;
-        // case or:
-        //     printf(" |= ");
-        //     break;
-        // case xor:
-        //     printf(" ^= ");
-        //     break;
-        // case mod:
-        //     printf(" %%= ");
-        //     break;
-        // case leftShift:
-        //     printf(" <<= ");
-        //     break;
-        // case rightShift:
-        //     printf(" >>= ");
-        //     break;
-        // case and:
-        //     printf(" &= ");
-        //     break;
-        // case bitclear:
-        //     printf(" &= ~");
-        //     break;
-        // }
-        // codeEXP(stmt->val.assignStmtVal.rhs, true, NULL);
-        // code_indentation--;
     }
 }
 
@@ -832,30 +631,16 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             break;
         case blockStmt:
             printf("do_nothing()\n");
-            // indent();
-            // printf("def ___():\n");
-            // code_indentation++;
             codeSTMT(stmt->val.block, true, true, NULL);
-            // code_indentation--;
-            // indent();
-            // printf("___()\n");
             break;
-        case ifStmt:
-            // printf("def ___():\n");
-            // code_indentation++;
-            
+        case ifStmt:            
             if (stmt->val.ifStmtVal.ifSimpleStmt != NULL) {
                 codeSTMT(stmt->val.ifStmtVal.ifSimpleStmt, false, true, NULL);
                 indent();
             }
-            // indent();
             printf("if ");
             codeEXP(stmt->val.ifStmtVal.ifCond, false, NULL);
             printf(":\n");
-            // bool newLine = false;
-            // if(stmt->val.ifStmtVal.elseStmt == NULL){
-            //     newLine = true;
-            // }
             code_indentation++;
             if (stmt->val.ifStmtVal.ifBody->val.block != NULL){
                 codeSTMT(stmt->val.ifStmtVal.ifBody->val.block, true, true, NULL);
@@ -867,10 +652,6 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             if (stmt->val.ifStmtVal.elseStmt != NULL){
                 codeSTMT(stmt->val.ifStmtVal.elseStmt, true, true, NULL);
             }
-            
-            // code_indentation--;
-            // indent();
-            // printf("___()");
             break;
         case elseStmt:
             printf("else:\n");
@@ -906,7 +687,6 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             codeEXP(stmt->val.returnExp, false, NULL);
             break;
         case switchStmt:
-            // printf("def ___():\n");
             printf("try:\n");
             code_indentation++;
             if (stmt->val.switchStmtVal.switchSimpleStmt != NULL) {
@@ -924,7 +704,6 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             codeCASE_CLAUSE(stmt->val.switchStmtVal.switchCases, temporaryVar, true);
             code_indentation--;
             indent();
-            // printf("___()");
             printf("except Broke:\n");
             code_indentation++;
             indent();
@@ -943,38 +722,12 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             codeAssignStmt(stmt);
             break;
         case incStmt:
-            // printf("try:\n");
-            // code_indentation++;
-            // indent();
             codeEXP(stmt->val.incExp, false, NULL);
             printf("+=1");
-            // code_indentation--;
-            // printf("\n");
-            // indent();
-            // printf("except UnboundLocalError:\n"); // Will only occur in function call
-            // code_indentation++;
-            // indent();
-            // printf("globals()['");
-            // codeEXP(stmt->val.incExp, false, NULL);
-            // printf("']+=1");
-            // code_indentation--;
             break;
         case decStmt:
-            // printf("try:\n");
-            // code_indentation++;
-            // indent();
             codeEXP(stmt->val.decExp, false, NULL);
             printf("-=1");
-            // code_indentation--;
-            // printf("\n");
-            // indent();
-            // printf("except UnboundLocalError:\n"); // Will only occur in function call
-            // code_indentation++;
-            // indent();
-            // printf("globals()['");
-            // codeEXP(stmt->val.decExp, false, NULL);
-            // printf("']-=1");
-            // code_indentation--;
             break;
         case shortVarDecStmt:
             codeIDList(stmt->val.shortVarDecStmtVal.ids, false);
@@ -982,7 +735,6 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             codeEXP(stmt->val.shortVarDecStmtVal.exps, true, NULL);
             break;
         case forStmt:
-            // printf("def ___():\n");
             printf("try:\n");
             code_indentation++;
             if (stmt->val.forStmtVal.forClause == NULL){
@@ -1025,7 +777,6 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             }
             code_indentation--;
             indent();
-            // printf("___()");
             printf("except Broke:\n");
             code_indentation++;
             indent();
