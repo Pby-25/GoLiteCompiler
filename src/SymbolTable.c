@@ -561,7 +561,7 @@ TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *ti, TYPE *funcType,
         t = ti;
     }
     if (i != NULL) {
-        if (getSymbolCurrentScope(s, i->id) != NULL && !allowAssignment) {
+        if (getSymbolCurrentScope(s, i->id) != NULL && !allowAssignment && ti->result != NULL) {
             fprintf(stderr,
                     "Error: (line %d) identifier %s has been declared\n",
                     i->lineno, i->id);

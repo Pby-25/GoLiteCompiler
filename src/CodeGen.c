@@ -30,6 +30,60 @@ void codeHelperBreak(){
     printf("    pass\n");
 }
 
+void codeHelperSlice(){
+    printf("class Slice(list):\n");
+    printf("    def __init__(self, iterable=None, previous_cap=0):\n");
+    printf("        if iterable is None:\n");
+    printf("            super().__init__()\n");
+    printf("        else:\n");
+    printf("            super().__init__(iterable)\n");
+    printf("        if previous_cap == 1:\n");
+    printf("            self.capacity = 2\n");
+    printf("            self.extend([None] * 2)\n");
+    printf("        else:\n");
+    printf("            self.capacity = previous_cap*2\n");
+    printf("            self.extend([None]*previous_cap)\n");
+    printf("        self.len_dict = {}\n");
+    printf("    def copy_to(self, new_name, old_name):\n");
+    printf("        self.len_dict[new_name] = self.len_dict.get(old_name, 0)\n");
+    printf("        return self\n");
+    printf("    def append_to(self, name, item):\n");
+    printf("        my_length = self.len_dict.get(name, 0)\n");
+    printf("        if my_length == self.capacity:\n");
+    printf("            if self.capacity == 0:\n");
+    printf("                new_slice = Slice(self, 1)\n");
+    printf("            else:\n");
+    printf("                new_slice = Slice(self, self.capacity)\n");
+    printf("            new_slice[self.capacity] = item\n");
+    printf("            new_slice.len_dict[name] = my_length+1\n");
+    printf("            return new_slice\n");
+    printf("        else:\n");
+    printf("            self[my_length] = item\n");
+    printf("            self.len_dict[name] = my_length+1\n");
+    printf("            return self\n");
+    printf("    def __getitem__(self, item):\n");
+    printf("        if not isinstance(item, int):\n");
+    printf("            name, key = item\n");
+    printf("            if key < self.len_dict.get(name, 0) or key==0:\n");
+    printf("                return super().__getitem__(key)\n");
+    printf("            else:\n");
+    printf("                raise IndexError\n");
+    printf("        else:\n");
+    printf("            return super().__getitem__(item)\n");
+    printf("    def __setitem__(self, item, value):\n");
+    printf("        if not isinstance(item, int):\n");
+    printf("            name, key = item\n");
+    printf("            if key < self.len_dict.get(name, 0) or key==0:\n");
+    printf("                return super().__setitem__(key, value)\n");
+    printf("            else:\n");
+    printf("                raise IndexError\n");
+    printf("        else:\n");
+    printf("            return super().__setitem__(item, value)\n");
+    printf("    def get_length(self, name):\n");
+    printf("        return self.len_dict.get(name, 0)\n");
+    printf("    def get_capacity(self):\n");
+    printf("        return self.capacity\n");
+}
 
 void codeHelperFloatFormatCheck(){
     printf("def format_check(*args):\n");
@@ -61,16 +115,6 @@ void codeHelperCast(){
     printf("    return exp\n");   
 }
 
-void codeHelperSliceCap(){
-    printf("def slice_cap(slice):\n");
-    printf("    curr_len = len(slice)\n");
-    printf("    if curr_len != 1 and curr_len&(curr_len-1) == 0:\n");
-    printf("        return curr_len\n");
-    printf("    else:\n");
-    printf("        bin(curr_len)\n");
-    printf("        return 2**curr_len.bit_length()\n");
-}
-
 void codeHelperBasicTypes(){
     printf("___int = 0\n");
     printf("___float64 = 0.0\n");
@@ -88,9 +132,9 @@ void indent() {
 void codeImports(IMPORT *i) {
     printf("from copy import deepcopy\n");
     codeHelperBreak();
+    codeHelperSlice();
     codeHelperFloatFormatCheck();
     codeHelperCast();
-    codeHelperSliceCap();
     codeHelperBasicTypes();
 }
 
@@ -122,12 +166,12 @@ void codeDefaultValues(TYPE *t){
     switch (t->kind)
     {
         case k_slices:
-            printf("[]");
+            printf("Slice()");
             break;
         case k_array:
-            printf("[deepcopy(");
+            printf("[");
             codeDefaultValues(t->underLineType);
-            printf(") for _ in range(%d)]", t->array_type.size);
+            printf(" for _ in range(%d)]", t->array_type.size);
             break;
         case k_type_struct:
             if (strcmp(t->id, "struct") == 0){
@@ -184,7 +228,7 @@ void codeVarSpec(VARSPEC *vs, int to_indent) {
     EXP *c = vs->exp_list;
     if (c != NULL) {
         printf("= ");
-        codeEXP(c, true, NULL);
+        codeEXP(c, true, NULL, NULL, vs->id_list);
     } else {
         printf("= ");
         ID_LIST * i = vs->id_list;
@@ -274,7 +318,7 @@ void codeTopDecl(TOPDECL *t) {
     }
 }
 
-void codeEXP(EXP *exp, bool to_copy, char *switch_clause) {
+void codeEXP(EXP *exp, bool to_copy, char *switch_clause, EXP *lhs_exp, ID_LIST *lhs_id) {
     if (exp == NULL)
         return;
     if (switch_clause != NULL){
@@ -286,202 +330,210 @@ void codeEXP(EXP *exp, bool to_copy, char *switch_clause) {
     switch (exp->kind) {
     case orExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" or ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case andExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" and ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case equalsExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" == ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case notequalsExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" != ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case lessExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" < ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case greaterExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" > ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case lessEqualsExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" <= ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case greaterEqualsExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" >= ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case plusExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" + ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case minusExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" - ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case bitwiseOrExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" | ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case bitwiseXorExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" ^ ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case bitwiseAndExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" & ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case bitClearExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" &~ ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case timesExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" * ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case divExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" / ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case modExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" %% ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case leftShiftExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" << ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case rightShiftExpr:
         printf("(");
-        codeEXP(exp->val.binary.lhs, false, NULL);
+        codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
         printf(" >> ");
-        codeEXP(exp->val.binary.rhs, false, NULL);
+        codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
     case uMinusExpr:
         printf(" -");
-        codeEXP(exp->val.unary.exp, false, NULL);
+        codeEXP(exp->val.unary.exp, false, NULL, NULL, NULL);
         break;
     case uPlusExpr:
         printf(" +");
-        codeEXP(exp->val.unary.exp, false, NULL);
+        codeEXP(exp->val.unary.exp, false, NULL, NULL, NULL);
         break;
     case uBangExpr:
         printf(" not ");
-        codeEXP(exp->val.unary.exp, false, NULL);
+        codeEXP(exp->val.unary.exp, false, NULL, NULL, NULL);
         break;
     case uCaretExpr:
         printf(" ^");
-        codeEXP(exp->val.unary.exp, false, NULL);
+        codeEXP(exp->val.unary.exp, false, NULL, NULL, NULL);
         break;
     case uBitwiseAndExpr:
         printf(" &");
-        codeEXP(exp->val.unary.exp, false, NULL);
+        codeEXP(exp->val.unary.exp, false, NULL, NULL, NULL);
         break;
 
     case funcExpr:
         printf("___%s(", exp->val.func.name->val.id);
-        codeEXP(exp->val.func.args, true, NULL);
+        codeEXP(exp->val.func.args, true, NULL, NULL, NULL);
         printf(")");
         break;
 
     case castExpr:
         printf("casting(___%s, ", exp->type->id);
-        codeEXP(exp->val.cast.exp, false, NULL);
+        codeEXP(exp->val.cast.exp, false, NULL, NULL, NULL);
         printf(")");
         break;
 
     case appendExpr:
-        codeEXP(exp->val.append.head, false, NULL);
-        printf(" + [");
-        codeEXP(exp->val.append.tail, false, NULL);
-        printf("]");
+        codeEXP(exp->val.append.head, false, NULL, NULL, NULL);
+        printf(".append_to(%llu, ", exp->val.append.head->uid);
+        codeEXP(exp->val.append.tail, false, NULL, NULL, NULL);
+        printf(")");
         break;
     case lenExpr:
-        printf("len(");
-        codeEXP(exp->val.expr, false, NULL);
-        printf(")");
+        if (isSlices(exp->type)) {
+            codeEXP(exp->val.expr, false, NULL, NULL, NULL);
+            printf(".get_length(%llu)", exp->val.expr->uid);
+        } else {
+            printf("len(");
+            codeEXP(exp->val.expr, false, NULL, NULL, NULL);
+            printf(")");
+        }
         break;
     case capExpr:
         if (isSlices(exp->type)) {
-            printf("slice_cap(");
-            codeEXP(exp->val.expr, false, NULL);
-            printf(")");
-
+            codeEXP(exp->val.expr, false, NULL, NULL, NULL);
+            printf(".get_capacity()");
         } else {
             printf("len(");
-            codeEXP(exp->val.expr, false, NULL);
+            codeEXP(exp->val.expr, false, NULL, NULL, NULL);
             printf(")");
         }
         break;
     case arrayExpr:
-    case sliceExpr:
-        codeEXP(exp->val.array.exp, false, NULL);
+        codeEXP(exp->val.array.exp, false, NULL, NULL, NULL);
         printf("[");
-        codeEXP(exp->val.array.index, false, NULL);
+        codeEXP(exp->val.array.index, false, NULL, NULL, NULL);
+        printf("]");
+        break;
+    case sliceExpr:
+        codeEXP(exp->val.array.exp, false, NULL, NULL, NULL);
+        printf("[%llu, ", exp->val.array.exp->uid);
+        codeEXP(exp->val.array.index, false, NULL, NULL, NULL);
         printf("]");
         break;
     case selectorExpr:
-        codeEXP(exp->val.selector.exp, false, NULL);
+        codeEXP(exp->val.selector.exp, false, NULL, NULL, NULL);
         printf("[\"%s\"]", exp->val.selector.name);
         break;
     case idExpr:
@@ -512,6 +564,12 @@ void codeEXP(EXP *exp, bool to_copy, char *switch_clause) {
     }
     if (to_copy && (isArray(exp->type) || isStruct(exp->type))){
         printf(")");
+    } else if (to_copy && isSlices(exp->type)){
+        if (lhs_exp != NULL){
+            printf(".copy_to(%llu, %llu)", lhs_exp->uid, exp->uid);
+        } else if (lhs_id != NULL){
+            printf(".copy_to(%llu, %llu)", lhs_id->uid, exp->uid);
+        }
     }
     if (switch_clause != NULL){
         printf(")");
@@ -522,7 +580,14 @@ void codeEXP(EXP *exp, bool to_copy, char *switch_clause) {
         } else { 
             printf(", ");
         }
-        codeEXP(exp->next, to_copy, switch_clause);
+
+        if (lhs_exp != NULL){
+            codeEXP(exp->next, to_copy, switch_clause, lhs_exp->next, NULL);
+        } else if (lhs_id != NULL){
+            codeEXP(exp->next, to_copy, switch_clause, NULL, lhs_id->next);
+        } else {
+            codeEXP(exp->next, to_copy, switch_clause, NULL, NULL);
+        }
     }
 }
 
@@ -539,7 +604,7 @@ void codeCASE_CLAUSE(CASE_CLAUSE *c, int cond_var, bool first_case, STMT *post_s
             }
             char *clause = malloc(256);
             sprintf(clause, "___%d == (", cond_var);
-            codeEXP(c->caseExp, false, clause);
+            codeEXP(c->caseExp, false, clause, NULL, NULL);
             free(clause);
             printf(":\n");
             break;
@@ -565,7 +630,7 @@ void codeCASE_CLAUSE(CASE_CLAUSE *c, int cond_var, bool first_case, STMT *post_s
 
 void codeAssignStmt(STMT *stmt) {
     if (stmt != NULL) {
-        codeEXP(stmt->val.assignStmtVal.lhs, false, NULL);
+        codeEXP(stmt->val.assignStmtVal.lhs, false, NULL, NULL, NULL);
         switch (stmt->val.assignStmtVal.assignKind) {
         case normal:
             printf(" = ");
@@ -604,7 +669,7 @@ void codeAssignStmt(STMT *stmt) {
             printf(" &= ~");
             break;
         }
-        codeEXP(stmt->val.assignStmtVal.rhs, true, NULL);
+        codeEXP(stmt->val.assignStmtVal.rhs, true, NULL, stmt->val.assignStmtVal.lhs, NULL);
     }
 }
 
@@ -633,7 +698,7 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
                 indent();
             }
             printf("if ");
-            codeEXP(stmt->val.ifStmtVal.ifCond, false, NULL);
+            codeEXP(stmt->val.ifStmtVal.ifCond, false, NULL, NULL, NULL);
             printf(":\n");
             code_indentation++;
             if (stmt->val.ifStmtVal.ifBody->val.block != NULL){
@@ -668,17 +733,17 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             break;
         case printStmt:
             printf("print(*format_check(");
-            codeEXP(stmt->val.printExpList, false, NULL);
+            codeEXP(stmt->val.printExpList, false, NULL, NULL, NULL);
             printf("), sep='', end='')");
             break;
         case printlnStmt:
             printf("print(*format_check(");
-            codeEXP(stmt->val.printlnExpList, false, NULL);
+            codeEXP(stmt->val.printlnExpList, false, NULL, NULL, NULL);
             printf("), sep=' ', end='\\n')");
             break;
         case returnStmt:
             printf("return ");
-            codeEXP(stmt->val.returnExp, false, NULL);
+            codeEXP(stmt->val.returnExp, false, NULL, NULL, NULL);
             break;
         case switchStmt:
             printf("try:\n");
@@ -692,7 +757,7 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             if (stmt->val.switchStmtVal.switchExp == NULL){
                 printf("True");
             } else {
-                codeEXP(stmt->val.switchStmtVal.switchExp, false, NULL);
+                codeEXP(stmt->val.switchStmtVal.switchExp, false, NULL, NULL, NULL);
             }
             printf("\n");
             codeCASE_CLAUSE(stmt->val.switchStmtVal.switchCases, temporaryVar, true, post_stmt);
@@ -709,24 +774,24 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
             break;
         case expStmt:
             printf("(");
-            codeEXP(stmt->val.expStmtVal, false, NULL);
+            codeEXP(stmt->val.expStmtVal, false, NULL, NULL, NULL);
             printf(")");
             break;
         case assignStmt:
             codeAssignStmt(stmt);
             break;
         case incStmt:
-            codeEXP(stmt->val.incExp, false, NULL);
+            codeEXP(stmt->val.incExp, false, NULL, NULL, NULL);
             printf("+=1");
             break;
         case decStmt:
-            codeEXP(stmt->val.decExp, false, NULL);
+            codeEXP(stmt->val.decExp, false, NULL, NULL, NULL);
             printf("-=1");
             break;
         case shortVarDecStmt:
             codeIDList(stmt->val.shortVarDecStmtVal.ids, false);
             printf(" = ");
-            codeEXP(stmt->val.shortVarDecStmtVal.exps, true, NULL);
+            codeEXP(stmt->val.shortVarDecStmtVal.exps, true, NULL, NULL, stmt->val.shortVarDecStmtVal.ids);
             break;
         case forStmt:
             printf("try:\n");
@@ -737,7 +802,7 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
                     printf("while True:\n");
                 } else {
                     printf("while ");
-                    codeEXP(stmt->val.forStmtVal.forCond, false, NULL);
+                    codeEXP(stmt->val.forStmtVal.forCond, false, NULL, NULL, NULL);
                     printf(":\n");
                 }
                 code_indentation++;
@@ -755,7 +820,7 @@ void codeSTMT(STMT *stmt, bool to_indent, bool new_line, STMT *post_stmt) {
                 if (stmt->val.forStmtVal.forClause->condtion == NULL){
                     printf("True");
                 } else {
-                    codeEXP(stmt->val.forStmtVal.forClause->condtion, false, NULL);
+                    codeEXP(stmt->val.forStmtVal.forClause->condtion, false, NULL, NULL, NULL);
                 }
                 printf(":\n");
                 code_indentation++;

@@ -371,9 +371,10 @@ bool isSlices(TYPE *t) {
     }
     if (t->kind == k_slices) {
         return true;
-    } else {
-        return isSlices(t->underLineType);
-    }
+    } 
+    // else {
+    //     return isSlices(t->underLineType);
+    // }
     return false;
 }
 
@@ -383,9 +384,10 @@ bool isArrayOrSlice(TYPE *t) {
     }
     if (t->kind == k_array || t->kind == k_slices) {
         return true;
-    } else {
-        return isArrayOrSlice(t->underLineType);
-    }
+    } 
+    // else {
+    //     return isArrayOrSlice(t->underLineType);
+    // }
     return false;
 }
 
@@ -395,9 +397,10 @@ bool isArray(TYPE *t) {
     }
     if (t->kind == k_array) {
         return true;
-    } else {
-        return isArray(t->underLineType);
     }
+    //  else {
+    //     return isArray(t->underLineType);
+    // }
     return false;
 }
 
