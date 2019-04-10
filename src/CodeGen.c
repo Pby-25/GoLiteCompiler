@@ -522,7 +522,7 @@ void codeEXP(EXP *exp, bool to_copy, char *switch_clause, EXP *lhs_exp, ID_LIST 
         printf(")");
         break;
     case lenExpr:
-        if (isSlices(exp->type)) {
+        if (isSlices(exp->val.expr->type)) {
             codeEXP(exp->val.expr, false, NULL, NULL, NULL);
             printf(".get_length(%llu)", exp->val.expr->uid);
         } else {
@@ -532,7 +532,7 @@ void codeEXP(EXP *exp, bool to_copy, char *switch_clause, EXP *lhs_exp, ID_LIST 
         }
         break;
     case capExpr:
-        if (isSlices(exp->type)) {
+        if (isSlices(exp->val.expr->type)) {
             codeEXP(exp->val.expr, false, NULL, NULL, NULL);
             printf(".get_capacity()");
         } else {
