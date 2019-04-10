@@ -301,6 +301,28 @@ void codeSig(SIGNATURE *s) {
     }
 }
 
+void codeFuncSliceParams(SIGNATURE *s){
+    if (s!= NULL && s->params != NULL){
+        PARAMS *p = s->params;
+        while (p){
+            ID_LIST *idl = p->id_list;
+            while (idl){
+                if (strcmp(idl->id, "_")==0){
+                    idl = idl->next;
+                    continue;
+                }
+                if (isSlices(idl->type)){
+                    indent();
+                    printf("_%llu = _%llu.copy_to(%llu,0)\n", idl->uid, idl->uid, idl->uid);
+                }
+                idl = idl->next;
+            }
+            p = p->next;
+        }
+
+    }
+}
+
 void codeFuncDecl(FUNCDECL *f) {
     if (f != NULL) {
         if (strcmp(f->id, "main") == 0){
@@ -311,6 +333,7 @@ void codeFuncDecl(FUNCDECL *f) {
         codeSig(f->signature);
         code_indentation++;
         if (f->body->val.block != NULL){
+            codeFuncSliceParams(f->signature);
             codeSTMT(f->body->val.block, true, true, NULL);
         } else {
             indent();
