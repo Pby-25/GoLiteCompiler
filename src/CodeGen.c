@@ -13,7 +13,7 @@
 
 int code_indentation = 0;
 int uid = 0;
-STMT *main_body = NULL; // todo execute main at end of file
+int init_count = 0;
 
 int getUID(){
     return uid++;
@@ -325,11 +325,11 @@ void codeFuncSliceParams(SIGNATURE *s){
 
 void codeFuncDecl(FUNCDECL *f) {
     if (f != NULL) {
-        if (strcmp(f->id, "main") == 0){
-            main_body = f->body->val.block;
-            return;
+        if (strcmp(f->id, "init") == 0){
+            printf("def _init%d(", init_count++);
+        } else {
+            printf("def ___%s(", f->id);
         }
-        printf("def ___%s(", f->id);
         codeSig(f->signature);
         code_indentation++;
         if (f->body->val.block != NULL){
@@ -341,10 +341,7 @@ void codeFuncDecl(FUNCDECL *f) {
         }
         code_indentation--;
 
-        if (strcmp(f->id, "init") == 0){
-            indent();
-            printf("___init()\n");
-        }
+
     }
 }
 
@@ -955,15 +952,11 @@ void codePROGRAM(PROGRAM *root, char *file_name) {
     if (root != NULL) {
         codeImports(root->imports);
         codeTopDecl(root->top_decl);
-        if (main_body != NULL){
-            indent();
-            printf("def ___main():\n");
-            code_indentation++;
-            codeSTMT(main_body, true, true, NULL);
-            code_indentation--;
-            indent();
-            printf("___main()\n");
+        int i = 0;
+        while (i < init_count){
+            printf("_init%d()\n", i++);
         }
+        printf("___main()\n");
         
     }
 

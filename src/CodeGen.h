@@ -22,6 +22,5 @@ void codeTopDecl(TOPDECL* t);
 void codeEXP(EXP *exp, bool to_copy, char *switch_clause, EXP *lhs_exp, ID_LIST *lhs_id);
 void codeCASE_CLAUSE(CASE_CLAUSE *c, int cond_var, bool first_case, STMT *post_stmt);
 void typeIdListExpList(ID_LIST *idl, EXP *el);
-
 void indent();
 #endif
