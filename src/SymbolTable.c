@@ -555,13 +555,13 @@ TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *ti, TYPE *funcType,
                    bool allowAssignment, bool check_outer_scope) {
     TYPE *typeInTable = NULL;
     TYPE *t = NULL;
-    if (ti != NULL && ti->kind==k_funcsig){
+    if (ti != NULL && ti->kind==k_funcsig && ti->result != NULL){
         t = ti->result;
     } else {
         t = ti;
     }
     if (i != NULL) {
-        if (getSymbolCurrentScope(s, i->id) != NULL && !allowAssignment && ti->result != NULL) {
+        if (getSymbolCurrentScope(s, i->id) != NULL && !allowAssignment) {
             fprintf(stderr,
                     "Error: (line %d) identifier %s has been declared\n",
                     i->lineno, i->id);
