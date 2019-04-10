@@ -76,8 +76,13 @@ void codeHelperSlice(){
     printf("    def __getitem__(self, item):\n");
     printf("        if not isinstance(item, int):\n");
     printf("            name, key = item\n");
-    printf("            if key < self.len_dict.get(name, 0) or name==0:\n");
+    printf("            if key < self.len_dict.get(name, 0):\n");
     printf("                return super().__getitem__(key)\n");
+    printf("            elif name not in self.len_dict:\n");
+    printf("                element = super().__getitem__(key)\n");
+    printf("                if element is None:\n");
+    printf("                    raise IndexError\n");
+    printf("                return element\n");
     printf("            else:\n");
     printf("                raise IndexError\n");
     printf("        else:\n");
@@ -85,7 +90,11 @@ void codeHelperSlice(){
     printf("    def __setitem__(self, item, value):\n");
     printf("        if not isinstance(item, int):\n");
     printf("            name, key = item\n");
-    printf("            if key < self.len_dict.get(name, 0) or name==0:\n");
+    printf("            if key < self.len_dict.get(name, 0):\n");
+    printf("                return super().__setitem__(key, value)\n");
+    printf("            elif name not in self.len_dict:\n");
+    printf("                if super().__getitem__(key) is None:\n");
+    printf("                    raise IndexError\n");
     printf("                return super().__setitem__(key, value)\n");
     printf("            else:\n");
     printf("                raise IndexError\n");
