@@ -182,14 +182,6 @@ bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
             // }
             
         }
-        // return ;
-        // if(t1->id_type.isBaseType && t2->id_type.isBaseType){
-        //     return strcmp(t1->id, t2->id) == 0;
-        // }else{
-        //     // printf("here\n");
-        //     return t1 == t2;
-        // }
-        // return strcmp(t1->id, t2->id) == 0 && &t1 == &t2;
         break;
     case k_type_type:
         if (t2->kind == k_type_type) {
@@ -405,21 +397,6 @@ bool isArray(TYPE *t) {
     //     return isArray(t->underLineType);
     // }
     return false;
-}
-
-bool isValidSliceType(TYPE *type) {
-    if (type == NULL)
-        return false;
-    bool valid = true;
-    char *id = type->id;
-    int i;
-    for (i = 0; i < strlen(id); i++) {
-        if (id[i] == '[' && id[i + 1] != ']') {
-            valid = false;
-            break;
-        }
-    }
-    return valid;
 }
 
 bool isStruct(TYPE *t) {
@@ -638,9 +615,6 @@ void typeEXP(EXP *exp) {
         typeEXP(exp->val.append.tail);
         if (!isSlices(exp->val.append.head->type)) {
             errorType("slice", exp->val.append.head->type->id, exp->lineno);
-        }
-        if (!isValidSliceType(exp->val.append.head->type)) {
-            errorType("slice1", exp->val.append.head->type->id, exp->lineno);
         }
         TYPE *expectedType = exp->val.append.head->type->underLineType;
         if (!checkSameType(expectedType, exp->val.append.tail->type, false)) {
@@ -882,7 +856,11 @@ bool checkExpListBaseType(EXP *exp_list) {
     EXP *temp = exp_list;
     bool base = true;
     while (temp != NULL) {
-        if (isArrayOrSlice(temp->type) || !isTypeBaseType(temp->type, true)) {
+        TYPE *t = temp->type;
+        while (isArrayOrSlice(t) && (temp->kind == arrayExpr || temp->kind == sliceExpr)) {
+            t = t->underLineType;
+        } 
+        if (!isTypeBaseType(t, true)){
             base = false;
             break;
         }

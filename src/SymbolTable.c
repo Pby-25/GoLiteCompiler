@@ -210,11 +210,8 @@ bool isTypeBaseType(TYPE *t, bool checkDeep) {
             t->id_type.baseTypeKind = btk;
             t->id_type.isBaseType = true;
             return true;
-        } else {
-            if (tc == tc->underLineType) {
-            }
-        }
-        if (!checkDeep) {
+        } 
+        if (!checkDeep || t->kind != k_type_id) {
             break;
         }
         tc = tc->underLineType;
