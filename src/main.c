@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
             int r = yyparse();
             if (r == 0) {
                 if (root != NULL) {
+                    weedPROGRAM(root);
                     prettyPROGRAM(root);
                 } else {
                     printf("root null\n");
@@ -52,6 +53,7 @@ int main(int argc, char *argv[]) {
             int r = yyparse();
             if (r == 0) {
                 if (root != NULL) {
+                    weedPROGRAM(root);
                     symbolMode();
                     makeSymbolTable(root);
                 } else {
@@ -66,6 +68,7 @@ int main(int argc, char *argv[]) {
             int r = yyparse();
             if (r == 0) {
                 if (root != NULL) {
+                    weedPROGRAM(root);
                     typeCheckProgram(root);
                     printf("OK\n");
                 } else {
@@ -81,6 +84,7 @@ int main(int argc, char *argv[]) {
             int r = yyparse();
             if (r == 0) {
                 if (root != NULL) {
+                    weedPROGRAM(root);
                     codePROGRAM(root, argv[2]);
                     printf("OK\n");
                 } else {

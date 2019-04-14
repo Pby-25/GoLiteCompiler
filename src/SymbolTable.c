@@ -453,7 +453,7 @@ void symbolVarSpec(SymbolTable *s, VARSPEC *vs, int infunc) {
                     vsPtr->type = sb->type;
                 }
             }
-            symbolIDList(s, vsPtr->id_list, vsPtr->type, NULL, false, false);
+            symbolIDList(s, vsPtr->id_list, vsPtr->type, NULL, false, false, true);
             vsPtr = vsPtr->next;
         }
         symbol_indentation--;
@@ -473,7 +473,7 @@ void symbolVarSpec(SymbolTable *s, VARSPEC *vs, int infunc) {
             }
             
         }
-        symbolIDList(s, vs->id_list, type, NULL, false, false);
+        symbolIDList(s, vs->id_list, type, NULL, false, false, true);
     }
 }
 
@@ -507,7 +507,7 @@ void symbolFieldDcl(SymbolTable *st, FIELD_DCL *fdcl, char *id, int lineno) {
             errorReDeclared(lineno, id, id);
         }
         TYPE *typeInTable =
-            symbolIDList(inner_table, f->id_list, f->type, NULL, false, true);
+            symbolIDList(inner_table, f->id_list, f->type, NULL, false, true, true);
         if (typeInTable != NULL) {
             f->type = typeInTable;
         }
@@ -552,7 +552,7 @@ bool isTypeDeclared(SymbolTable *st, TYPE *t, bool check_outer_scope) {
 }
 
 TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *ti, TYPE *funcType,
-                   bool allowAssignment, bool check_outer_scope) {
+                   bool allowAssignment, bool check_outer_scope, bool check_next) {
     TYPE *typeInTable = NULL;
     TYPE *t = NULL;
     if (ti != NULL && ti->kind==k_funcsig && ti->result != NULL){
@@ -561,7 +561,8 @@ TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *ti, TYPE *funcType,
         t = ti;
     }
     if (i != NULL) {
-        if (getSymbolCurrentScope(s, i->id) != NULL && !allowAssignment) {
+        SYMBOL *symb = getSymbolCurrentScope(s, i->id);
+        if ( symb != NULL && (!allowAssignment || symb->kind != varDcl)) {
             fprintf(stderr,
                     "Error: (line %d) identifier %s has been declared\n",
                     i->lineno, i->id);
@@ -643,8 +644,7 @@ TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *ti, TYPE *funcType,
             }
         }
 
-        symbolIDList(s, i->next, t, funcType, allowAssignment,
-                     check_outer_scope);
+        if (check_next) symbolIDList(s, i->next, t, funcType, allowAssignment, check_outer_scope, check_next);
     }
     return typeInTable;
 }
@@ -658,7 +658,7 @@ void symbolParams(SymbolTable *t, PARAMS *p, TYPE *funcType) {
                     p->type = sb->type;
             }
         }
-        symbolIDList(t, p->id_list, p->type, funcType, false, true);
+        symbolIDList(t, p->id_list, p->type, funcType, false, true, true);
         if (p->next != NULL) {
             if (printSymbol)
                 printf(", ");
@@ -1137,7 +1137,7 @@ void symbolShortVarDec(SymbolTable *st, STMT *s) {
             // already declared
             t = sb->type;
         }
-        symbolIDList(st, curr_id, t, NULL, allowAssignment, false);
+        symbolIDList(st, curr_id, t, NULL, allowAssignment, false, false);
         curr_id = next_id;
         curr_exp = curr_exp->next;
     } while (next_id);

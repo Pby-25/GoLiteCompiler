@@ -2,5 +2,7 @@ programs/
 .DS_Store
 src/*.o
 src/*.*.[ch]
-src/minic
+*minic
 .vscode/*
+programs-solution/
+test-solution.sh

@@ -40,7 +40,7 @@ void symbolVarSpec(SymbolTable *s, VARSPEC *vs, int infunc);
 void printType(TYPE *t);
 void symbolField_Dcl(FIELD_DCL *f);
 TYPE *symbolIDList(SymbolTable *s, ID_LIST *i, TYPE *t, TYPE *funcType,
-                   bool allowAssignment, bool field_dcl);
+                   bool allowAssignment, bool field_dcl, bool check_next);
 void symbolParams(SymbolTable *t, PARAMS *p, TYPE *funcType);
 void symbolResult(SymbolTable *t, SymbolTable *new_st, RESULT *r,
                   TYPE *funcType);
