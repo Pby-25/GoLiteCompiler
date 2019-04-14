@@ -10,6 +10,7 @@ bool printSymbol = false;
 PARAMS *functionParamsId = NULL;
 PARAM_TYPE *functionParamsType = NULL;
 int symbol_indentation = 0;
+SymbolTable *origin_table = NULL;
 SymbolTable *top_level_table = NULL;
 unsigned long long variable_id = 1;
 
@@ -654,6 +655,9 @@ void symbolParams(SymbolTable *t, PARAMS *p, TYPE *funcType) {
     if (p != NULL) {
         if (p->type && p->type->id){
             SYMBOL *sb = getSymbol(t, p->type->id);
+            if (strcmp(p->type->id, funcType->id)==0){
+                errorReDeclared(p->lineno, "Function params", p->type->id);
+            }
             if (sb != NULL && sb->kind == sk_typeDcl){
                     p->type = sb->type;
             }
@@ -679,6 +683,9 @@ void symbolResult(SymbolTable *t, SymbolTable *new_st, RESULT *r,
             if (printSymbol)
                 printf(")");
         } else {
+            if (strcmp(r->type->id, funcType->id)==0){
+                errorReDeclared(r->lineno, "Function params", r->type->id);
+            }
             if (printSymbol)
                 printf("%s", r->type->id);
             SYMBOL *symbol = getSymbol(t, r->type->id);
@@ -746,7 +753,7 @@ void symbolFuncDecl(SymbolTable *t, FUNCDECL *f) {
 }
 
 void symbolSpecialFuncDecl(SymbolTable *t, FUNCDECL *f, speicialFuncK spK) {
-    if (t->parent != NULL) {
+    if (t != top_level_table) {
         fprintf(stderr,
                 "Error: (line %d) special function can only be decalared at "
                 "top level \n",
@@ -1172,10 +1179,12 @@ void symbolAllBaseTypes(SymbolTable *s) {
 
 void makeSymbolTable(PROGRAM *root) {
     if (root != NULL) {
-        top_level_table = initSymbolTable();
+        origin_table = initSymbolTable();
+        top_level_table = scopeSymbolTable(origin_table);
         if (printSymbol)
             printf("{\n");
-        symbolAllBaseTypes(top_level_table);
+        symbolAllBaseTypes(origin_table);
+        
         symbolTopDecl(top_level_table, root->top_decl);
         if (printSymbol)
             printf("}\n");

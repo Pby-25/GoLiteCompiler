@@ -31,5 +31,6 @@ bool isArrayOrSlice(TYPE *t);
 bool isStruct(TYPE *t);
 bool isSlices(TYPE *t);
 bool isArray(TYPE *t);
+bool isInteger(TYPE *t);
 
 #endif

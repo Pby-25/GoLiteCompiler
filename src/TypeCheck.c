@@ -14,7 +14,7 @@ void errorType(char *expected, char *actual, int lineno) {
 }
 
 TYPE *strToType(char *s) {
-    SYMBOL *symbol = getSymbol(top_level_table, s);
+    SYMBOL *symbol = getSymbol(origin_table, s);
     return symbol->type;
 }
 
@@ -115,6 +115,7 @@ bool checkSameStruct(FIELD_DCL *field1, FIELD_DCL *field2) {
 }
 
 bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
+    
     if (t1 == NULL || t2 == NULL) {
         if (t1 && strcmp(t1->id, "_") == 0) {
             return true;
@@ -144,6 +145,7 @@ bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
         break;
     case k_array:
         if (t2->kind == k_array) {
+            
             if (strcmp(t1->id, t2->id) == 0) {
                 return true;
             }
@@ -166,17 +168,18 @@ bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
 
         break;
     case k_type_id:
+    
         if (checkBaseType) {
             return t1->id_type.baseTypeKind == t2->id_type.baseTypeKind;
         }
         if(t1 == t2){
             return true;
         }else{
-            if(isIdBaseType(t2->id)!=-1 && isIdBaseType(t2->id)!=-1){
-                return strcmp(t1->id, t2->id) == 0;
-            }else{
+            // if(isIdBaseType(t2->id)!=-1 && isIdBaseType(t2->id)!=-1){
+            //     return strcmp(t1->id, t2->id) == 0;
+            // }else{
                 return false;
-            }
+            // }
             
         }
         // return ;

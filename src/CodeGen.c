@@ -477,7 +477,12 @@ void codeEXP(EXP *exp, bool to_copy, char *switch_clause, EXP *lhs_exp, ID_LIST 
     case divExpr:
         printf("(");
         codeEXP(exp->val.binary.lhs, false, NULL, NULL, NULL);
-        printf(" / ");
+        if (isInteger(exp->val.binary.lhs->type) && isInteger(exp->val.binary.rhs->type)) {
+            printf(" // ");
+        } else {
+            printf(" / ");
+        }
+        
         codeEXP(exp->val.binary.rhs, false, NULL, NULL, NULL);
         printf(")");
         break;
@@ -515,7 +520,7 @@ void codeEXP(EXP *exp, bool to_copy, char *switch_clause, EXP *lhs_exp, ID_LIST 
         codeEXP(exp->val.unary.exp, false, NULL, NULL, NULL);
         break;
     case uCaretExpr:
-        printf(" ^");
+        printf(" ~");
         codeEXP(exp->val.unary.exp, false, NULL, NULL, NULL);
         break;
     case uBitwiseAndExpr:
