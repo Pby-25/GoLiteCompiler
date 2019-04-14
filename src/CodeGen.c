@@ -543,7 +543,7 @@ void codeEXP(EXP *exp, bool to_copy, char *switch_clause, EXP *lhs_exp, ID_LIST 
     case appendExpr:
         codeEXP(exp->val.append.head, false, NULL, NULL, NULL);
         printf(".append_to(%llu, ", exp->val.append.head->uid);
-        codeEXP(exp->val.append.tail, false, NULL, NULL, NULL);
+        codeEXP(exp->val.append.tail, true, NULL, NULL, NULL);
         printf(")");
         break;
     case lenExpr:
