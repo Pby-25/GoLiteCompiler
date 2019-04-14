@@ -44,6 +44,8 @@ void codeHelperSlice(){
     printf("            self.capacity = previous_cap*2\n");
     printf("            self.extend([None]*previous_cap)\n");
     printf("        self.len_dict = {}\n");
+    printf("    def copy(self):\n");
+    printf("        return self\n");
     printf("    def copy_to(self, new_name, old_name):\n");
     printf("        if old_name == 0:\n");
     printf("            if len(self.len_dict) > 0:\n");
@@ -365,9 +367,9 @@ void codeEXP(EXP *exp, bool to_copy, char *switch_clause, EXP *lhs_exp, ID_LIST 
     if (switch_clause != NULL){
         printf("%s", switch_clause);
     }
-    if (to_copy && (isArray(exp->type) || isStruct(exp->type))){
-        printf("deepcopy(");
-    }
+    // if (to_copy && (isArray(exp->type) || isStruct(exp->type))){
+    //     printf("deepcopy(");
+    // }
     switch (exp->kind) {
     case orExpr:
         printf("(");
@@ -609,7 +611,7 @@ void codeEXP(EXP *exp, bool to_copy, char *switch_clause, EXP *lhs_exp, ID_LIST 
         break;
     }
     if (to_copy && (isArray(exp->type) || isStruct(exp->type))){
-        printf(")");
+        printf(".copy()");
     } else if (to_copy && isSlices(exp->type)){
         if (lhs_exp != NULL){
             printf(".copy_to(%llu, %llu)", lhs_exp->uid, exp->uid);

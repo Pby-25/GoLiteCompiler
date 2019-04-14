@@ -32,5 +32,5 @@ bool isStruct(TYPE *t);
 bool isSlices(TYPE *t);
 bool isArray(TYPE *t);
 bool isInteger(TYPE *t);
-
+void errorType(char *expected, char *actual, int lineno);
 #endif

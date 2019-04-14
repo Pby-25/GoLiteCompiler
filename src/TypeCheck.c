@@ -663,16 +663,7 @@ void typeEXP(EXP *exp) {
         break;
     case selectorExpr:
         typeEXP(exp->val.selector.exp);
-        if (!isStruct(exp->val.array.exp->type)) {
-            errorType("struct", exp->val.array.exp->type->id, exp->lineno);
-        }
-        TYPE *correspondingType = findSelectorIdType(
-            exp->val.selector.name, exp->val.selector.exp->type);
-        if (correspondingType == NULL) {
-            errorType(exp->val.selector.name, "Does Not Exist", exp->lineno);
-        } else {
-            exp->type = correspondingType;
-        }
+
         break;
     default:
         break;

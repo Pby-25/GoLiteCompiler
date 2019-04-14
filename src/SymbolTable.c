@@ -897,7 +897,17 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
         break;
     case selectorExpr:
         symbolEXP(s, exp->val.selector.exp);
-        exp->type = exp->val.selector.exp->type;
+        if (!isStruct(exp->val.selector.exp->type)) {
+            errorType("struct", exp->val.selector.exp->type->id, exp->lineno);
+        }
+        TYPE *correspondingType = findSelectorIdType(
+            exp->val.selector.name, exp->val.selector.exp->type);
+        if (correspondingType == NULL) {
+            errorType(exp->val.selector.name, "Does Not Exist", exp->lineno);
+        } else {
+            exp->type = correspondingType;
+        }
+        // exp->type = exp->val.selector.exp->type;
         break;
     case idExpr:;
         if (strcmp(exp->val.id, "_") != 0) {
