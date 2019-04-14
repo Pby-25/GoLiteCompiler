@@ -883,10 +883,6 @@ void symbolEXP(SymbolTable *s, EXP *exp) {
     case sliceExpr:
         symbolEXP(s, exp->val.array.exp);
         symbolEXP(s, exp->val.array.index);
-        if (!checkSameType(exp->val.array.index->type, strToType("int"),
-                           true)) {
-            errorNotDeclared(exp->lineno, "index is not a int type", "");
-        }
         TYPE *r;
         r = resolveType(s, exp->val.array.exp->type, false);
         while (r && *r->id != '[') {

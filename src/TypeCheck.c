@@ -175,11 +175,11 @@ bool checkSameType(TYPE *t1, TYPE *t2, bool checkBaseType) {
         if(t1 == t2){
             return true;
         }else{
-            // if(isIdBaseType(t2->id)!=-1 && isIdBaseType(t2->id)!=-1){
-            //     return strcmp(t1->id, t2->id) == 0;
-            // }else{
+            if(isIdBaseType(t2->id)!=-1 && isIdBaseType(t2->id)!=-1){
+                return strcmp(t1->id, t2->id) == 0;
+            }else{
                 return false;
-            // }
+            }
             
         }
         break;
